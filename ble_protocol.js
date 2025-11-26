@@ -100,6 +100,25 @@ class BluetoothCommunity {
         return new Uint8Array(data);
     }
 
+    static commandMakeLightUp(deviceNumber, macAddress, color = [255, 255, 255], pattern = 1) {
+        // Command 0x0002: Make specific device glow
+        // Based on Firmware Command.ino
+        let data = [
+            ...DeviceCommand.makeLightUp.cmd,
+            0x00,
+            DeviceCommand.makeLightUp.cat,
+            ...this._convertDeviceNumber(deviceNumber),
+            ...this._parseMac(macAddress),
+            0x00, // Byte 12: Torc?
+            ...color, // Byte 13,14,15: R,G,B
+            pattern,  // Byte 16: Pattern
+            0x00      // Byte 17: Padding
+        ];
+        data.push(this._calculatorSumCheck(data));
+        data.push(0x00);
+        return new Uint8Array(data);
+    }
+
     static commandAddDevice(macAddress, glowType = 0) {
         let data = [
             ...DeviceCommand.addDevice.cmd,

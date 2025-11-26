@@ -145,6 +145,32 @@ function addDeviceToList(mac) {
         });
         renderDeviceList();
         saveDeviceList();
+        // Also highlight the newly added device
+        setTimeout(() => highlightDevice(mac), 100);
+    } else {
+        // If exists, just highlight it to show "I heard you"
+        highlightDevice(mac);
+    }
+}
+
+function highlightDevice(mac) {
+    // Escape colons for CSS selector or just use getElementById with a safe ID
+    // Using safe ID by stripping colons
+    const safeId = 'device-row-' + mac.replace(/:/g, '');
+    const row = document.getElementById(safeId);
+    
+    if (row) {
+        // Scroll into view if needed
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Add highlight class
+        row.style.transition = "background-color 0.2s";
+        row.style.backgroundColor = "#FFF3CD"; // Yellowish highlight
+        
+        // Remove after 1 second
+        setTimeout(() => {
+            row.style.backgroundColor = "";
+        }, 1000);
     }
 }
 
@@ -192,14 +218,15 @@ function renderDeviceList() {
     let html = '';
     deviceList.forEach((d, i) => {
         let dist = i * 2; // Assuming 2m interval for simplicity
+        const safeId = 'device-row-' + d.mac.replace(/:/g, '');
         html += `
-        <div class="device-item">
-            <div style="display:flex; align-items:center; gap:15px;">
+        <div class="device-item" id="${safeId}" onclick="testBlinkDevice(${i})" style="cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:15px; flex:1;">
                 <div style="font-weight:bold; width:30px;">#${i+1}</div>
                 <div class="device-dist">${dist}m</div>
                 <div class="device-mac">${d.mac}</div>
             </div>
-            <div style="display:flex; gap:5px;">
+            <div style="display:flex; gap:5px;" onclick="event.stopPropagation()">
                 <button class="btn-sm" onclick="moveDeviceUp(${i})">↑</button>
                 <button class="btn-sm" onclick="moveDeviceDown(${i})">↓</button>
                 <button class="btn-sm btn-outline" onclick="replaceDevice(${i})">交換</button>
@@ -224,6 +251,20 @@ function downloadCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+async function testBlinkDevice(index) {
+    const d = deviceList[index];
+    if(!d) return;
+    
+    console.log("Blinking Device:", d.mac);
+    
+    // Visual feedback on UI
+    highlightDevice(d.mac);
+    
+    // Send Command: White Flash (Pattern 1?)
+    // Color: White [255, 255, 255], Pattern: 1
+    await sendCommand(BluetoothCommunity.commandMakeLightUp(index + 1, d.mac, [255, 255, 255], 1));
 }
 
 function importCSV(input) {
