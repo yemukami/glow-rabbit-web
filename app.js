@@ -21,8 +21,9 @@ let raceState = {
 async function connectBLE() {
     try {
         console.log('Requesting Bluetooth Device...');
+        // Debug: acceptAllDevices: true to find the device even if name/UUID differs
         bluetoothDevice = await navigator.bluetooth.requestDevice({
-            filters: [{ namePrefix: 'Glow' }],
+            acceptAllDevices: true,
             optionalServices: [GLOW_SERVICE_UUID]
         });
 
