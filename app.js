@@ -244,17 +244,58 @@ function loadDeviceList() {
 
 // --- BLE Commands ---
 
-async function sendCommand(data) {
+// BLE Queue Logic
+let commandQueue = [];
+let isWriting = false;
+
+async function sendCommand(data, highPriority = false) {
     if (!bluetoothDevice || !bluetoothDevice.gatt.connected) {
-        alert("デバイスに接続されていません");
+        console.warn("Device not connected. Command ignored.");
         return;
     }
+
+    // If High Priority (e.g. Start Race), clear pending commands to ensure immediate execution
+    if (highPriority && commandQueue.length > 0) {
+        console.log("High Priority Command: Clearing " + commandQueue.length + " pending commands.");
+        commandQueue = []; 
+    }
+
+    // Add to queue
+    return new Promise((resolve, reject) => {
+        commandQueue.push({ data, resolve, reject });
+        processQueue();
+    });
+}
+
+async function processQueue() {
+    if (isWriting || commandQueue.length === 0) return;
+
+    isWriting = true;
+    const { data, resolve, reject } = commandQueue.shift();
+
     try {
-        await glowCharacteristic.writeValue(data);
+        // Add Timeout to prevent hanging forever
+        const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error("Write Timeout")), 2000));
+        const writePromise = glowCharacteristic.writeValue(data);
+        
+        await Promise.race([writePromise, timeoutPromise]);
+        
         console.log("Command Sent", data);
+        resolve();
     } catch (error) {
         console.error("Write Error:", error);
-        alert("送信エラー: " + error);
+        // Don't reject the whole flow, just this command, so queue continues
+        // Actually, we should verify connection if error is fatal
+        if(error.message.includes("Timeout")) {
+            console.warn("Command timed out, proceeding to next.");
+        }
+        resolve(); // Resolve anyway to keep queue moving? Or reject? 
+        // If we reject, the caller (await sendCommand) gets error.
+        reject(error);
+    } finally {
+        isWriting = false;
+        // Small delay to allow GATT to settle / Notify to come in
+        setTimeout(processQueue, 50); 
     }
 }
 
@@ -263,39 +304,36 @@ async function syncAllDevices() {
     
     // 1. Reset
     await sendCommand(BluetoothCommunity.commandReset());
-    await new Promise(r => setTimeout(r, 500));
     
     // 2. Add each
     for (let d of deviceList) {
+        // Normal priority
         await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
-        await new Promise(r => setTimeout(r, 200)); // Wait for Ack?
     }
     
-    alert("同期完了");
+    alert("同期コマンドを送信キューに入れました");
 }
 
 // --- Race Control Bindings ---
 async function sendStartRace() {
     if(deviceList.length === 0) {
-        // Fallback or Manual Mode?
-        // Let's use "All Start" logic or just start assuming config is done.
-        // Using commandStartRunner with devNum 1 and valid MAC if possible?
-        // Actually, commandReStartRunner might be safer if we don't want to specify MAC.
-        // But let's try standard Start.
         alert("デバイスリストが空です");
         return;
     }
     
     const topDevice = deviceList[0];
-    // Start command to the first device (Master?)
-    await sendCommand(BluetoothCommunity.commandStartRunner([1], 1, topDevice.mac));
+    // HIGH PRIORITY: Clear any pending config/sync commands and START immediately
+    console.log("Sending Start Command (High Priority)...");
+    await sendCommand(BluetoothCommunity.commandStartRunner([1], 1, topDevice.mac), true);
 }
 
 async function sendStopRace() {
-    await sendCommand(BluetoothCommunity.commandStopRunner());
+    // Stop is also high priority
+    await sendCommand(BluetoothCommunity.commandStopRunner(), true);
 }
 
 async function sendPaceConfig(distance, pace) {
+    // Normal priority
     await sendCommand(BluetoothCommunity.commandSetTimeDelay(distance, pace));
 }
 
