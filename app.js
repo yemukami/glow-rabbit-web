@@ -19,6 +19,14 @@ let raceState = {
 };
 
 async function connectBLE() {
+    // Toggle: If connected, disconnect
+    if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+        console.log('Disconnecting...');
+        bluetoothDevice.gatt.disconnect();
+        // onDisconnected event will handle the rest
+        return;
+    }
+
     try {
         console.log('Requesting Bluetooth Device...');
         // Debug: acceptAllDevices: true to find the device even if name/UUID differs
@@ -59,16 +67,33 @@ function onDisconnected(event) {
     console.log('> Bluetooth Device disconnected');
     isConnected = false;
     updateConnectionStatus(false);
+    alert("切断しました");
 }
 
 function updateConnectionStatus(connected) {
     const el = document.querySelector('.ble-status');
+    const btn = document.querySelector('.btn-connect');
+    
     if (connected) {
-        el.innerHTML = '● 接続完了';
-        el.style.color = 'var(--success-color)';
+        if(el) {
+            el.innerHTML = '● 接続完了';
+            el.style.color = 'var(--success-color)';
+        }
+        if(btn) {
+            btn.innerHTML = '🔌 切断';
+            btn.style.background = '#EEE';
+            btn.style.color = '#555';
+        }
     } else {
-        el.innerHTML = '● 未接続';
-        el.style.color = '#999';
+        if(el) {
+            el.innerHTML = '● 未接続';
+            el.style.color = '#999';
+        }
+        if(btn) {
+            btn.innerHTML = '📡 接続';
+            btn.style.background = '#EEF2F5';
+            btn.style.color = 'var(--info-color)';
+        }
     }
 }
 
