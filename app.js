@@ -381,26 +381,96 @@ async function syncAllDevices() {
 }
 
 // --- Race Control Bindings ---
-async function sendStartRace() {
+
+function getColorRGB(colorName) {
+    switch(colorName) {
+        case 'red': return [0xFF, 0x00, 0x00];
+        case 'blue': return [0x00, 0x00, 0xFF];
+        case 'green': return [0x00, 0xFF, 0x00];
+        case 'yellow': return [0xFF, 0xFF, 0x00];
+        case 'purple': return [0xA0, 0x20, 0xF0];
+        default: return [0xFF, 0xFF, 0xFF];
+    }
+}
+
+// Calculate Runner ID (1, 2, 4, 8...) from pacer index or ID logic
+// In Mock, pacer ID is 101, 201... random.
+// We need to map them to Runner 1, 2, 3, 4.
+// Let's assume index in array + 1 maps to Runner ID 1, 2, 3, 4 (Bit 1, 2, 4, 8).
+// Or we can assign them based on color?
+// Usually Red=1, Blue=2, Green=3, Yellow=4?
+// Let's use a simple mapping based on array index for now to allow multiple same colors if needed,
+// OR map by color if strictly defined. 
+// "Practice menu" usually implies Red Runner, Blue Runner.
+// Let's map by Color for consistency with "Red Pacer".
+function getRunnerBit(color) {
+    switch(color) {
+        case 'red': return 1;   // 0001
+        case 'blue': return 2;  // 0010
+        case 'green': return 4; // 0100
+        case 'yellow': return 8;// 1000
+        default: return 1;
+    }
+}
+
+async function sendRaceConfig(distance, pacers) {
+    // Send Color and Pace config for ALL pacers
+    console.log("Sending Race Config...", pacers);
+    
+    for (let p of pacers) {
+        const runnerBit = getRunnerBit(p.color);
+        const colorRgb = getColorRGB(p.color);
+        
+        // 1. Set Color
+        await sendCommand(BluetoothCommunity.commandSetColor(runnerBit, colorRgb));
+        
+        // 2. Set Pace (Time Delay)
+        // pace is sec/400m.
+        await sendCommand(BluetoothCommunity.commandSetTimeDelay(distance, p.pace, 400, 1, [runnerBit])); // 400m yard, 1m? Wait, ledSpacing.
+        // In Dart code: ledSpacing = 1.
+        // In FW: `dtime` is calculated.
+        // If we assume standard, just pass pace as time.
+    }
+}
+
+async function sendStartRace(pacers, startPos = 0) {
     if(deviceList.length === 0) {
-        alert("デバイスリストが空です");
+        alert("デバイスリストが空です (開始デバイスを特定できません)");
+        return;
+    }
+
+    // 1. Calculate Start Device Number
+    // Assuming 2m interval between devices
+    const DEVICE_INTERVAL_M = 2; 
+    let startDevIndex = Math.floor(startPos / DEVICE_INTERVAL_M);
+    
+    // Safety check
+    if (startDevIndex >= deviceList.length) {
+        alert(`スタート位置(${startPos}m)がデバイス設置範囲を超えています`);
         return;
     }
     
-    const topDevice = deviceList[0];
+    const targetDevice = deviceList[startDevIndex];
+    const startDevNo = startDevIndex + 1; // Device Number is 1-based
+    
+    // 2. Calculate Runner Bitmask (Who is running?)
+    let positionsMask = 0;
+    pacers.forEach(p => {
+        positionsMask |= getRunnerBit(p.color);
+    });
+    
+    console.log(`Starting Race from Dev#${startDevNo} (${targetDevice.mac}) for Runners: ${positionsMask}`);
+    
     // HIGH PRIORITY: Clear any pending config/sync commands and START immediately
-    console.log("Sending Start Command (High Priority)...");
-    await sendCommand(BluetoothCommunity.commandStartRunner([1], 1, topDevice.mac), true);
+    await sendCommand(
+        BluetoothCommunity.commandStartRunner([positionsMask], startDevNo, targetDevice.mac), 
+        true // High Priority
+    );
 }
 
 async function sendStopRace() {
     // Stop is also high priority
     await sendCommand(BluetoothCommunity.commandStopRunner(), true);
-}
-
-async function sendPaceConfig(distance, pace) {
-    // Normal priority
-    await sendCommand(BluetoothCommunity.commandSetTimeDelay(distance, pace));
 }
 
 // Global exports for HTML

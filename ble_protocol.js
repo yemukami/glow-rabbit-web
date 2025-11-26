@@ -119,6 +119,26 @@ class BluetoothCommunity {
         return new Uint8Array(data);
     }
 
+    static commandSetColor(positions, color = [0, 0, 0], pattern = 1) {
+        // Command 0x0004: Set Color for Runner(s)
+        let posMask = Array.isArray(positions) ? this._convertRunnerPosition(positions) : positions;
+        
+        let data = [
+            ...DeviceCommand.setColor.cmd,
+            0x00,
+            DeviceCommand.setColor.cat,
+            posMask, // Byte 4: Runner Mask
+            0x00,    // Byte 5: Read/Write? (0=Write usually)
+            0,0,0,0,0,0,0, // Bytes 6-12: Padding
+            ...color, // Byte 13,14,15: R,G,B
+            pattern,  // Byte 16: Pattern
+            0x00      // Byte 17: Padding
+        ];
+        data.push(this._calculatorSumCheck(data));
+        data.push(0x00);
+        return new Uint8Array(data);
+    }
+
     static commandAddDevice(macAddress, glowType = 0) {
         let data = [
             ...DeviceCommand.addDevice.cmd,
