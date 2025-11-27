@@ -244,6 +244,15 @@ function fillWithDummy() {
     saveDeviceList();
 }
 
+function clearDeviceList() {
+    if (deviceList.length === 0) return;
+    if (!confirm("デバイスリストを全て削除しますか？\n(Glow-Cの登録内容はリセットされません。必要なら同期を行ってください)")) return;
+    
+    deviceList = [];
+    renderDeviceList();
+    saveDeviceList();
+}
+
 function renderDeviceList() {
     const container = document.getElementById('device-list-container');
     if (!container) return;
@@ -527,6 +536,7 @@ window.downloadCSV = downloadCSV;
 window.importCSV = importCSV;
 window.syncAllDevices = syncAllDevices;
 window.fillWithDummy = fillWithDummy;
+window.clearDeviceList = clearDeviceList;
 window.sendStartRace = sendStartRace;
 window.sendStopRace = sendStopRace;
 window.sendPaceConfig = sendPaceConfig;

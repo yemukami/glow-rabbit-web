@@ -274,6 +274,7 @@
                 <button class="btn-sm btn-outline" onclick="downloadCSV()">⬇ CSV出力</button>
                 <button class="btn-sm btn-outline" onclick="document.getElementById('csv-input').click()">⬆ CSV取込</button>
                 <input type="file" id="csv-input" style="display:none" onchange="importCSV(this)" accept=".csv">
+                <button class="btn-sm btn-danger" onclick="clearDeviceList()">🗑 全削除</button>
                 <button class="btn-sm btn-primary" onclick="syncAllDevices()">🔄 全デバイス同期</button>
             </div>
         </div>
@@ -315,8 +316,8 @@
     <div class="modal-content" style="text-align:center; width:300px;">
         <img src="image_c2633c.png" style="width:60px; margin-bottom:10px;">
         <h3>Glow-Rabbit Web</h3>
-        <p style="color:#888; font-family:monospace;">Version: 1.2.0.1</p>
-        <p style="color:#CCC; font-size:12px;">Revision: 20251127-FIX-BLE</p>
+        <p style="color:#888; font-family:monospace;">Version: 1.2.0.3</p>
+        <p style="color:#CCC; font-size:12px;">Revision: 20251127-ADD-CLEAR</p>
         <button class="btn-sm btn-primary" onclick="closeVersionModal()">閉じる</button>
     </div>
 </div>
