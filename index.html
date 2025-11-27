@@ -268,7 +268,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="flex:1; margin-right:20px;">
                     <label style="font-size:11px; color:#8E8E93; display:block; margin-bottom:2px;">大会名</label>
-                    <input type="text" class="title-input" id="competition-title" value="第74回山形県長距離記録会">
+                    <input type="text" class="title-input" id="competition-title" value="第74回山形県長距離記録会" onchange="saveCompetitionTitle(this.value)">
                 </div>
                 <div class="setup-btn-group">
                     <button class="btn-sm btn-outline" onclick="alert('CSV読込')">📂 CSV読込</button>
@@ -372,8 +372,8 @@
     <div class="modal-content" style="text-align:center; width:300px;">
         <img src="image_c2633c.png" style="width:60px; margin-bottom:10px;">
         <h3>Glow-Rabbit Web</h3>
-        <p style="color:#888; font-family:monospace;">Version: 1.3.3</p>
-        <p style="color:#CCC; font-size:12px;">Revision: 20251127-AUTO-STOP</p>
+        <p style="color:#888; font-family:monospace;">Version: 1.3.4</p>
+        <p style="color:#CCC; font-size:12px;">Revision: 20251127-PERSIST-ALL</p>
         <button class="btn-sm btn-primary" onclick="closeVersionModal()">閉じる</button>
     </div>
 </div>
@@ -381,65 +381,50 @@
 <script src="ble_protocol.js"></script>
 <script src="app.js"></script>
 <script>
-    // DATA
-    let races = [];
-
-    let activeRaceId = null;
-    let expandedRaceId = null;
-    let raceInterval = null;
-    let elapsedTime = 0;
-    let editingPaces = {}; 
-    let modalTarget = { raceId: null, pacerId: null };
-    let modalSelectedColor = 'red';
+    let currentMode = 'race'; // Default
 
     window.onload = function() { 
         loadRaces();
+        loadAppState(); // New: Load Title & Mode
+        
+        // Initial Render
         renderSetup(); 
         renderRace(); 
-        // renderDevices is now handled by app.js
+        
+        // Switch to saved mode
+        if(currentMode && currentMode !== 'race') {
+            switchMode(currentMode, true); // true = skip guard for initial load
+        }
+
+        // renderDevices is now handled by app.js, but we ensure grid is ready
         if(window.deviceList) renderDeviceList();
     };
     
-    function saveRaces() {
-        localStorage.setItem('glow_races', JSON.stringify(races));
+    function loadAppState() {
+        const savedTitle = localStorage.getItem('glow_competition_title');
+        if(savedTitle) document.getElementById('competition-title').value = savedTitle;
+        
+        const savedMode = localStorage.getItem('glow_current_mode');
+        if(savedMode) currentMode = savedMode;
     }
     
-    function loadRaces() {
-        const saved = localStorage.getItem('glow_races');
-        if (saved) {
-            try {
-                races = JSON.parse(saved);
-            } catch(e) {
-                console.error("Failed to load races", e);
-                races = [];
-            }
-        } else {
-            // Default data if empty
-             races = [
-                { 
-                    id: 1, time: "09:30", name: "小学女子800m", group: 1, distance: 800, startPos: 0, count: 15, status: "finished", 
-                    pacers: [{id:101, color:"red", pace:75.0, currentDist: 800, finishTime: 150.0}], markers:[] 
-                },
-                { 
-                    id: 2, time: "09:35", name: "小学女子800m", group: 2, distance: 800, startPos: 0, count: 15, status: "ready", 
-                    pacers: [{id:201, color:"red", pace:72.0, currentDist:0, finishTime:null}, {id:202, color:"blue", pace:75.0, currentDist:0, finishTime:null}], markers:[] 
-                }
-            ];
-            saveRaces();
-        }
+    function saveCompetitionTitle(val) {
+        localStorage.setItem('glow_competition_title', val);
+        document.getElementById('race-screen-title').innerText = val;
     }
 
-    async function switchMode(mode) {
+    async function switchMode(mode, skipGuard = false) {
         // Guard: If leaving devices screen, check for dirty state
-        if (document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
+        if (!skipGuard && document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
             if (window.checkDirtyAndSync) {
+                // If checkDirtyAndSync returns false (Sync Cancelled), we stop transition
                 const proceed = await window.checkDirtyAndSync();
                 if (!proceed && window.isListDirty) return; 
             }
         }
 
         // Guard: If leaving race screen while running
-        if (document.getElementById('screen-race').classList.contains('active') && mode !== 'race') {
+        if (!skipGuard && document.getElementById('screen-race').classList.contains('active') && mode !== 'race') {
             if (activeRaceId !== null) {
                 const r = races.find(x => x.id === activeRaceId);
                 if (r && r.status === 'running') {
@@ -449,17 +434,21 @@
             }
         }
 
+        // Change UI
         document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
         document.querySelectorAll('.mode-btn').forEach(e=>e.classList.remove('active'));
         document.getElementById('screen-'+mode).classList.add('active');
         document.getElementById('btn-mode-'+mode).classList.add('active');
+        
+        currentMode = mode;
+        localStorage.setItem('glow_current_mode', mode);
+
         if(mode==='setup') renderSetup();
         if(mode==='race') {
             document.getElementById('race-screen-title').innerText = document.getElementById('competition-title').value;
             renderRace();
         }
         if(mode==='devices') {
-            // renderDeviceList is global from app.js
             if(window.renderDeviceList) window.renderDeviceList();
         }
     }
