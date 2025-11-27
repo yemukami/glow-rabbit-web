@@ -100,7 +100,7 @@ class BluetoothCommunity {
         return new Uint8Array(data);
     }
 
-    static commandMakeLightUp(deviceNumber, macAddress, color = [255, 255, 255], pattern = 1) {
+    static commandMakeLightUp(deviceNumber, macAddress, color = [255, 255, 255], pattern = 0x0A) {
         // Command 0x0002: Make specific device glow
         // Based on Firmware Command.ino
         let data = [
@@ -119,7 +119,7 @@ class BluetoothCommunity {
         return new Uint8Array(data);
     }
 
-    static commandSetColor(positions, color = [0, 0, 0], pattern = 1) {
+    static commandSetColor(positions, color = [0, 0, 0], pattern = 0x0A) {
         // Command 0x0004: Set Color for Runner(s)
         let posMask = Array.isArray(positions) ? this._convertRunnerPosition(positions) : positions;
         
