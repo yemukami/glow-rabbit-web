@@ -11,6 +11,7 @@ let isConnected = false;
 
 // Device List Management
 let deviceList = []; // { mac: "AA:BB:..", id: 1, status: "ok" }
+let isSyncing = false; // Flag to prevent self-loop addition during sync
 
 // Race State
 let raceState = {
@@ -127,6 +128,13 @@ function handleNotifications(event) {
         // Check if valid (not all zeros)
         if (macBytes.some(b => b !== 0)) {
             let macStr = macBytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(':');
+            
+            // If syncing, ignore notifications to prevent echo/loopback adding
+            if (isSyncing) return;
+            
+            // Ignore Dummy MAC if it ever appears
+            if (macStr === DUMMY_MAC) return;
+
             console.log("Received MAC:", macStr);
             
             // Add to list if not exists
@@ -393,24 +401,31 @@ async function processQueue() {
 async function syncAllDevices() {
     if(!confirm("現在のリストをGlow-Cに上書き登録しますか？\n(一度リセットしてから順番に追加します)")) return;
     
-    // 1. Reset
-    await sendCommand(BluetoothCommunity.commandReset());
+    isSyncing = true;
     
-    // 2. Add each
-    for (let i = 0; i < deviceList.length; i++) {
-        const d = deviceList[i];
-        const devNo = i + 1; // 1-based Device Number
+    try {
+        // 1. Reset
+        await sendCommand(BluetoothCommunity.commandReset());
         
-        if (d.mac === DUMMY_MAC) {
-             // Send Dummy Command (0x1A)
-             await sendCommand(BluetoothCommunity.commandAddDummyDevice(devNo));
-        } else {
-             // Send Normal Add Command (0x14)
-             await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
+        // 2. Add each
+        for (let i = 0; i < deviceList.length; i++) {
+            const d = deviceList[i];
+            const devNo = i + 1; // 1-based Device Number
+            
+            if (d.mac === DUMMY_MAC) {
+                 // Send Dummy Command (0x1A)
+                 await sendCommand(BluetoothCommunity.commandAddDummyDevice(devNo));
+            } else {
+                 // Send Normal Add Command (0x14)
+                 await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
+            }
         }
+        
+        alert("同期コマンドを送信キューに入れました");
+    } finally {
+        // Wait a bit for last ACKs to clear before re-enabling notifications
+        setTimeout(() => { isSyncing = false; }, 1000);
     }
-    
-    alert("同期コマンドを送信キューに入れました");
 }
 
 // --- Race Control Bindings ---
