@@ -166,6 +166,20 @@ class BluetoothCommunity {
         data.push(0x00);
         return new Uint8Array(data);
     }
+
+    static commandAddDummyDevice(deviceNumber) {
+        let data = [
+            ...DeviceCommand.addDummy.cmd,
+            0x00,
+            DeviceCommand.addDummy.cat,
+            0x00, 0x00,
+            ...this._convertDeviceNumber(deviceNumber),
+            0,0,0,0,0,0,0,0,0,0 // Padding
+        ];
+        data.push(this._calculatorSumCheck(data));
+        data.push(0x00);
+        return new Uint8Array(data);
+    }
     
     // New: Swap (0x13) - inferred from Command.ino
     // case 0x0013: devNo(4,5), devNo2(6,7)

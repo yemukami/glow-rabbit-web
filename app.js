@@ -3,6 +3,7 @@
 
 const GLOW_SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const GLOW_CHAR_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+const DUMMY_MAC = "00:00:00:00:00:00";
 
 let bluetoothDevice;
 let glowCharacteristic;
@@ -212,6 +213,29 @@ function replaceDevice(index) {
     }
 }
 
+function fillWithDummy() {
+    const TARGET_COUNT = 200;
+    const currentCount = deviceList.length;
+    
+    if (currentCount >= TARGET_COUNT) {
+        alert(`既に${currentCount}個のデバイスが登録されています`);
+        return;
+    }
+    
+    if (!confirm(`現在の${currentCount}個の後ろに、ダミーデバイスを追加して合計${TARGET_COUNT}個にしますか？`)) return;
+    
+    for (let i = currentCount; i < TARGET_COUNT; i++) {
+        deviceList.push({
+            mac: DUMMY_MAC,
+            id: i + 1,
+            status: 'dummy'
+        });
+    }
+    
+    renderDeviceList();
+    saveDeviceList();
+}
+
 function renderDeviceList() {
     const container = document.getElementById('device-list-container');
     if (!container) return;
@@ -373,9 +397,17 @@ async function syncAllDevices() {
     await sendCommand(BluetoothCommunity.commandReset());
     
     // 2. Add each
-    for (let d of deviceList) {
-        // Normal priority
-        await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
+    for (let i = 0; i < deviceList.length; i++) {
+        const d = deviceList[i];
+        const devNo = i + 1; // 1-based Device Number
+        
+        if (d.mac === DUMMY_MAC) {
+             // Send Dummy Command (0x1A)
+             await sendCommand(BluetoothCommunity.commandAddDummyDevice(devNo));
+        } else {
+             // Send Normal Add Command (0x14)
+             await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
+        }
     }
     
     alert("同期コマンドを送信キューに入れました");
@@ -479,6 +511,7 @@ window.connectBLE = connectBLE;
 window.downloadCSV = downloadCSV;
 window.importCSV = importCSV;
 window.syncAllDevices = syncAllDevices;
+window.fillWithDummy = fillWithDummy;
 window.sendStartRace = sendStartRace;
 window.sendStopRace = sendStopRace;
 window.sendPaceConfig = sendPaceConfig;
