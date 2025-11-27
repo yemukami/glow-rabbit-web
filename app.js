@@ -428,6 +428,9 @@ async function syncAllDevices() {
                  // Send Normal Add Command (0x14)
                  await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
             }
+            
+            // Add delay to prevent overwhelming Glow-C (especially for many dummies)
+            await new Promise(r => setTimeout(r, 100));
         }
         
         alert("同期コマンドを送信キューに入れました");
