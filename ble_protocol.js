@@ -167,13 +167,13 @@ class BluetoothCommunity {
         return new Uint8Array(data);
     }
 
-    static commandAddDummyDevice(deviceNumber) {
+    static commandAddDummyDevice(count) {
         let data = [
             ...DeviceCommand.addDummy.cmd,
             0x00,
             DeviceCommand.addDummy.cat,
             0x00, 0x00,
-            ...this._convertDeviceNumber(deviceNumber),
+            ...this._convertDeviceNumber(count), // Use converter to pack 2-byte count
             0,0,0,0,0,0,0,0,0,0 // Padding
         ];
         data.push(this._calculatorSumCheck(data));

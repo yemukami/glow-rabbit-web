@@ -418,24 +418,40 @@ async function syncAllDevices() {
         // 1. Reset
         await sendCommand(BluetoothCommunity.commandReset());
         
-        // 2. Add each
-        for (let i = 0; i < deviceList.length; i++) {
+        // 2. Add devices (Batching dummies)
+        let i = 0;
+        while (i < deviceList.length) {
             const d = deviceList[i];
-            const devNo = i + 1; // 1-based Device Number
             
             if (d.mac === DUMMY_MAC) {
-                 // Send Dummy Command (0x1A)
-                 await sendCommand(BluetoothCommunity.commandAddDummyDevice(devNo));
+                // Count consecutive dummies
+                let count = 0;
+                let j = i;
+                while (j < deviceList.length && deviceList[j].mac === DUMMY_MAC) {
+                    count++;
+                    j++;
+                }
+                
+                console.log(`Adding ${count} Dummy Devices...`);
+                // Send 0x1A with COUNT (not ID!)
+                await sendCommand(BluetoothCommunity.commandAddDummyDevice(count));
+                
+                // Skip processed dummies
+                i += count;
             } else {
-                 // Send Normal Add Command (0x14)
-                 await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
+                // Normal Device
+                await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
+                i++;
             }
             
-            // Add delay to prevent overwhelming Glow-C (especially for many dummies)
-            await new Promise(r => setTimeout(r, 100));
+            // Small delay between commands
+            await new Promise(r => setTimeout(r, 50));
         }
         
-        alert("同期コマンドを送信キューに入れました");
+        alert("同期完了！");
+    } catch(e) {
+        console.error(e);
+        alert("同期中にエラーが発生しました: " + e);
     } finally {
         // Wait a bit for last ACKs to clear before re-enabling notifications
         setTimeout(() => { isSyncing = false; }, 1000);
