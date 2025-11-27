@@ -186,12 +186,45 @@
         .input-start { width: 60px; text-align: center; font-weight: bold; color: var(--info-color); }
 
         /* --- DEVICES SCREEN --- */
-        .device-list { background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); overflow: hidden; }
-        .device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F0F0F0; }
-        .device-item:last-child { border-bottom: none; }
-        .device-dist { font-weight: bold; color: var(--primary-color); width: 60px; font-family: monospace; font-size: 16px; }
-        .device-mac { font-family: monospace; color: #555; background: #F7F7F9; padding: 4px 8px; border-radius: 4px; }
-        .device-status { color: var(--success-color); font-size: 12px; font-weight: bold; }
+        .device-settings-panel {
+            background: #FAFBFC; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #E1E5EA;
+            display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;
+        }
+        .setting-group { display: flex; flex-direction: column; gap: 5px; }
+        .setting-label { font-size: 11px; font-weight: bold; color: #8E8E93; text-transform: uppercase; }
+        .setting-input { padding: 8px 12px; border-radius: 8px; border: 1px solid #DDE2E8; font-size: 16px; font-weight: bold; width: 100px; }
+        .setting-select { padding: 8px 12px; border-radius: 8px; border: 1px solid #DDE2E8; font-size: 16px; font-weight: bold; width: 120px; background: white; }
+
+        /* GRID VIEW */
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            padding: 10px;
+        }
+        .device-cell {
+            background: #FFF; border: 1px solid #E1E5EA; border-radius: 8px;
+            padding: 8px; cursor: pointer; position: relative;
+            min-height: 60px; display: flex; flex-direction: column; justify-content: space-between;
+            transition: all 0.1s;
+        }
+        .device-cell:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: var(--primary-color); }
+        
+        .cell-header { display: flex; justify-content: space-between; font-size: 10px; color: #8E8E93; margin-bottom: 4px; }
+        .cell-id { font-weight: bold; }
+        .cell-mac { font-family: monospace; font-size: 11px; font-weight: bold; color: #333; text-align: center; background: #F2F2F7; padding: 2px; border-radius: 4px; }
+        
+        /* States */
+        .cell-active { border-left: 4px solid var(--success-color); }
+        .cell-dummy { border-left: 4px solid #FFCC00; background: #FFFDF5; }
+        .cell-empty { border: 1px dashed #CCC; background: #FAFAFA; opacity: 0.7; }
+        
+        .highlight-blink { animation: blinkAnim 0.5s 2; background-color: var(--primary-color) !important; color: white; }
+        @keyframes blinkAnim { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .menu-btn { width: 100%; padding: 12px; text-align: left; background: white; border: 1px solid #EEE; border-radius: 8px; margin-bottom: 5px; font-size: 14px; cursor: pointer; font-weight: bold; color: #444; }
+        .menu-btn:hover { background: #F9F9F9; }
+        .menu-btn.btn-danger { color: var(--danger-color); border-color: #FFEEEE; background: #FFF5F5; }
 
         /* --- MODAL STYLES --- */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
@@ -267,22 +300,43 @@
     </div>
 
     <div id="screen-devices" class="screen">
-        <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="margin:0; font-size:24px; color:var(--primary-color);">デバイス設置設定</h2>
+        <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0; font-size:24px; color:var(--primary-color);">デバイス設置</h2>
             <div style="display:flex; gap:10px;">
+                <button class="btn-sm btn-primary" onclick="syncAllDevices()">🔄 全デバイス同期</button>
+            </div>
+        </div>
+
+        <div class="device-settings-panel">
+            <div class="setting-group">
+                <label class="setting-label">総距離 (m)</label>
+                <input type="number" id="setting-distance" class="setting-input" value="400" step="100" onchange="updateRaceSettings(this.value, null)">
+            </div>
+            <div class="setting-group">
+                <label class="setting-label">間隔 (m)</label>
+                <select id="setting-interval" class="setting-select" onchange="updateRaceSettings(null, this.value)">
+                    <option value="1">1m</option>
+                    <option value="2" selected>2m</option>
+                    <option value="4">4m</option>
+                    <option value="5">5m</option>
+                </select>
+            </div>
+            <div style="flex:1; display:flex; justify-content:flex-end; gap:10px; padding-bottom:5px;">
                 <button class="btn-sm btn-outline" onclick="fillWithDummy()">＋ 残りをダミーで埋める</button>
                 <button class="btn-sm btn-outline" onclick="downloadCSV()">⬇ CSV出力</button>
                 <button class="btn-sm btn-outline" onclick="document.getElementById('csv-input').click()">⬆ CSV取込</button>
                 <input type="file" id="csv-input" style="display:none" onchange="importCSV(this)" accept=".csv">
                 <button class="btn-sm btn-danger" onclick="clearDeviceList()">🗑 全削除</button>
-                <button class="btn-sm btn-primary" onclick="syncAllDevices()">🔄 全デバイス同期</button>
             </div>
         </div>
+
         <div style="margin-bottom:10px; background:#FFF3CD; padding:10px; border-radius:8px; font-size:13px; color:#856404;">
-            ※ リストに追加するには、Glow-R本体のボタンを押してください。Glow-C経由でMACアドレスが通知されます。
+            ※ <strong>登録方法:</strong> Glow-R本体のボタンを押すと自動追加されます。<br>
+            ※ <strong>操作:</strong> マスをクリックすると「テスト点灯」「ダミー化」「交換」メニューが開きます。
         </div>
-        <div class="device-list" id="device-list-container">
-            <!-- JS Rendered -->
+        
+        <div id="device-list-container">
+            <!-- Grid Rendered by JS -->
         </div>
     </div>
 </main>

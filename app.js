@@ -20,7 +20,8 @@ let raceState = {
     isRunning: false
 };
 
-const DEVICE_INTERVAL_M = 2;
+let deviceInterval = 2; // Default 2m
+let totalDistance = 400; // Default 400m
 
 async function connectBLE() {
     // Toggle: If connected, disconnect
@@ -110,21 +111,6 @@ function handleNotifications(event) {
         data.push(value.getUint8(i));
     }
     
-    // Check for MAC Address in the packet (Index 6..11 usually)
-    // But let's be careful. Some packets are Ack.
-    // Ack packet: 01 (Cmd), 02 (Original Cmd ID)...
-    // If it's an ACK for AddDevice (0x14), it might contain the assigned ID?
-    // Command.ino:
-    // case 0x0014: dt[17]=0x01 (OK), dt[4,5] = devNo.
-    //
-    // If it's a general "I found a device" notification (not in current FW?), we might not see it.
-    // BUT, user requirement says: "Click Glow-R button -> Glow-C sends MAC -> App adds to list".
-    // This implies Glow-C FW has a mechanism to notify unexpected MACs.
-    // Or maybe the "GetGlow" command (0x01) response?
-    //
-    // Let's assume the packet contains a MAC address at offset 6.
-    // And we just naively check if it looks like a MAC.
-    
     if (data.length >= 12) {
         let macBytes = data.slice(6, 12);
         // Check if valid (not all zeros)
@@ -148,48 +134,89 @@ function handleNotifications(event) {
 // --- Device List Logic ---
 
 function addDeviceToList(mac) {
-    const exists = deviceList.find(d => d.mac === mac);
-    if (!exists) {
+    // Find first empty slot or append if within limit
+    const maxDevices = Math.ceil(totalDistance / deviceInterval);
+    
+    // Check if already exists
+    const existingIndex = deviceList.findIndex(d => d.mac === mac);
+    if (existingIndex >= 0) {
+        highlightDevice(mac);
+        return;
+    }
+
+    // Find first 'empty' or 'dummy' slot to replace? 
+    // Strategy: Just append to the first available "unassigned" slot logic.
+    // But current deviceList is just a list.
+    // Let's stick to: Append to list. If list > maxDevices, warn?
+    // Or better: Visual Grid shows maxDevices slots. deviceList holds the actual data.
+    
+    if (deviceList.length < maxDevices) {
         deviceList.push({
             mac: mac,
-            id: deviceList.length + 1, // Temporary ID until synced
+            id: deviceList.length + 1,
             status: 'new'
         });
         renderDeviceList();
         saveDeviceList();
-        // Also highlight the newly added device
         setTimeout(() => highlightDevice(mac), 100);
     } else {
-        // If exists, just highlight it to show "I heard you"
-        highlightDevice(mac);
+        console.warn("Device list full based on current distance settings.");
+        // Still add it? Or reject? Let's add it but UI might show overflow.
+        deviceList.push({
+            mac: mac,
+            id: deviceList.length + 1,
+            status: 'overflow'
+        });
+        renderDeviceList();
+        saveDeviceList();
     }
 }
 
 function highlightDevice(mac) {
-    // Escape colons for CSS selector or just use getElementById with a safe ID
-    // Using safe ID by stripping colons
-    const safeId = 'device-row-' + mac.replace(/:/g, '');
-    const row = document.getElementById(safeId);
+    const safeId = 'device-cell-' + mac.replace(/:/g, '');
+    const el = document.getElementById(safeId);
     
-    if (row) {
-        // Scroll into view if needed
-        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Add highlight class
-        row.style.transition = "background-color 0.2s";
-        row.style.backgroundColor = "#FFF3CD"; // Yellowish highlight
-        
-        // Remove after 1 second
-        setTimeout(() => {
-            row.style.backgroundColor = "";
-        }, 1000);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('highlight-blink');
+        setTimeout(() => el.classList.remove('highlight-blink'), 1000);
+    }
+}
+
+// Change Settings (Distance / Interval)
+function updateRaceSettings(dist, interval) {
+    if (dist) totalDistance = parseInt(dist);
+    if (interval) deviceInterval = parseInt(interval);
+    
+    // Recalculate logic?
+    // If distance reduced, warn user about truncation?
+    const maxDevices = Math.ceil(totalDistance / deviceInterval);
+    
+    console.log(`Settings Updated: ${totalDistance}m / ${deviceInterval}m = ${maxDevices} devices`);
+    
+    // Re-render grid
+    renderDeviceList();
+    saveDeviceList(); // Save settings too? (TODO: Save settings to localStorage)
+}
+
+function setDeviceToDummy(index) {
+    if (deviceList[index]) {
+        if(confirm(`#${index+1} を故障/ダミーとしてマークしますか？\n(同期時にスキップされます)`)) {
+            deviceList[index].mac = DUMMY_MAC;
+            deviceList[index].status = 'dummy';
+            renderDeviceList();
+            saveDeviceList();
+        }
     }
 }
 
 function removeDeviceFromList(index) {
-    deviceList.splice(index, 1);
-    renderDeviceList();
-    saveDeviceList();
+    if(confirm(`#${index+1} をリストから削除して詰め合わせますか？`)) {
+        deviceList.splice(index, 1);
+        // Re-index IDs? Currently IDs are just index+1.
+        renderDeviceList();
+        saveDeviceList();
+    }
 }
 
 function moveDeviceUp(index) {
@@ -215,26 +242,23 @@ function replaceDevice(index) {
         deviceList[index].status = 'modified';
         renderDeviceList();
         saveDeviceList();
-        
-        // Optionally send Override command immediately?
-        // For now, let's rely on "Sync/Register" button to push changes.
     } else if (newMac) {
         alert("MACアドレスの形式が正しくありません");
     }
 }
 
 function fillWithDummy() {
-    const TARGET_COUNT = 200;
+    const maxDevices = Math.ceil(totalDistance / deviceInterval);
     const currentCount = deviceList.length;
     
-    if (currentCount >= TARGET_COUNT) {
-        alert(`既に${currentCount}個のデバイスが登録されています`);
+    if (currentCount >= maxDevices) {
+        alert(`既に設定距離(${totalDistance}m)分のデバイス(${maxDevices}個)が埋まっています`);
         return;
     }
     
-    if (!confirm(`現在の${currentCount}個の後ろに、ダミーデバイスを追加して合計${TARGET_COUNT}個にしますか？`)) return;
+    if (!confirm(`残り(${maxDevices - currentCount}個)をダミーデバイスで埋めますか？`)) return;
     
-    for (let i = currentCount; i < TARGET_COUNT; i++) {
+    for (let i = currentCount; i < maxDevices; i++) {
         deviceList.push({
             mac: DUMMY_MAC,
             id: i + 1,
@@ -248,37 +272,69 @@ function fillWithDummy() {
 
 function clearDeviceList() {
     if (deviceList.length === 0) return;
-    if (!confirm("デバイスリストを全て削除しますか？\n(Glow-Cの登録内容はリセットされません。必要なら同期を行ってください)")) return;
+    if (!confirm("デバイスリストを全て削除しますか？")) return;
     
     deviceList = [];
     renderDeviceList();
     saveDeviceList();
 }
 
+// --- RENDER GRID ---
 function renderDeviceList() {
     const container = document.getElementById('device-list-container');
     if (!container) return;
     
-    let html = '';
-    deviceList.forEach((d, i) => {
-        let dist = i * DEVICE_INTERVAL_M; 
-        const safeId = 'device-row-' + d.mac.replace(/:/g, '');
+    const maxDevices = Math.ceil(totalDistance / deviceInterval);
+    let html = `<div class="device-grid">`;
+    
+    // Render existing devices + empty slots up to maxDevices
+    for (let i = 0; i < maxDevices; i++) {
+        const d = deviceList[i];
+        const dist = i * deviceInterval;
+        
+        let cellClass = 'device-cell';
+        let content = '';
+        let macDisplay = '';
+        
+        if (d) {
+            if (d.mac === DUMMY_MAC) {
+                cellClass += ' cell-dummy';
+                macDisplay = '<span style="font-size:10px; color:#AAA;">(DUMMY)</span>';
+            } else {
+                cellClass += ' cell-active';
+                // Show last 2 bytes of MAC for compactness
+                const shortMac = d.mac.split(':').slice(-2).join(':');
+                macDisplay = `<div class="cell-mac">${shortMac}</div>`;
+            }
+        } else {
+            cellClass += ' cell-empty';
+            macDisplay = '<span style="color:#EEE;">--</span>';
+        }
+        
+        // Safe ID for highlighting
+        const safeId = d ? 'device-cell-' + d.mac.replace(/:/g, '') : '';
+        
+        // OnClick handler for action menu
+        const onClick = `openDeviceActionMenu(${i})`;
+
         html += `
-        <div class="device-item" id="${safeId}" onclick="testBlinkDevice(${i})" style="cursor:pointer;">
-            <div style="display:flex; align-items:center; gap:15px; flex:1;">
-                <div style="font-weight:bold; width:30px;">#${i+1}</div>
-                <div class="device-dist">${dist}m</div>
-                <div class="device-mac">${d.mac}</div>
+            <div class="${cellClass}" id="${safeId}" onclick="${onClick}">
+                <div class="cell-header">
+                    <span class="cell-id">#${i+1}</span>
+                    <span class="cell-dist">${dist}m</span>
+                </div>
+                ${macDisplay}
             </div>
-            <div style="display:flex; gap:5px;" onclick="event.stopPropagation()">
-                <button class="btn-sm" onclick="moveDeviceUp(${i})">↑</button>
-                <button class="btn-sm" onclick="moveDeviceDown(${i})">↓</button>
-                <button class="btn-sm btn-outline" onclick="replaceDevice(${i})">交換</button>
-                <button class="btn-sm btn-danger" onclick="removeDeviceFromList(${i})">削除</button>
-            </div>
-        </div>`;
-    });
+        `;
+    }
+    html += `</div>`;
     container.innerHTML = html;
+    
+    // Update settings UI inputs if they exist (to sync with loaded data)
+    const distInput = document.getElementById('setting-distance');
+    const intInput = document.getElementById('setting-interval');
+    if(distInput && document.activeElement !== distInput) distInput.value = totalDistance;
+    if(intInput && document.activeElement !== intInput) intInput.value = deviceInterval;
 }
 
 // --- CSV I/O ---
@@ -286,7 +342,7 @@ function renderDeviceList() {
 function downloadCSV() {
     let csvContent = "data:text/csv;charset=utf-8,Index,Distance,MAC\n";
     deviceList.forEach((d, i) => {
-        csvContent += `${i+1},${i*2},${d.mac}\n`;
+        csvContent += `${i+1},${i*deviceInterval},${d.mac}\n`;
     });
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -299,16 +355,13 @@ function downloadCSV() {
 
 async function testBlinkDevice(index) {
     const d = deviceList[index];
-    if(!d) return;
+    if(!d || d.mac === DUMMY_MAC) return;
     
     console.log("Blinking Device:", d.mac);
-    
-    // Visual feedback on UI
     highlightDevice(d.mac);
     
-    // Send Command: White Flash (Pattern 1?)
-    // Color: White [255, 255, 255], Pattern: 1
-    await sendCommand(BluetoothCommunity.commandMakeLightUp(index + 1, d.mac, [255, 255, 255], 1));
+    // Send Command: White Flash
+    await sendCommand(BluetoothCommunity.commandMakeLightUp(index + 1, d.mac, [255, 255, 255], 0x0A)); // Pattern 0x0A for Color
 }
 
 function importCSV(input) {
@@ -340,13 +393,22 @@ function importCSV(input) {
 
 function saveDeviceList() {
     localStorage.setItem('glow_device_list', JSON.stringify(deviceList));
+    localStorage.setItem('glow_settings', JSON.stringify({ totalDistance, deviceInterval }));
 }
 
 function loadDeviceList() {
-    const saved = localStorage.getItem('glow_device_list');
-    if (saved) {
+    const savedList = localStorage.getItem('glow_device_list');
+    const savedSettings = localStorage.getItem('glow_settings');
+    
+    if (savedSettings) {
+        const s = JSON.parse(savedSettings);
+        if(s.totalDistance) totalDistance = s.totalDistance;
+        if(s.deviceInterval) deviceInterval = s.deviceInterval;
+    }
+
+    if (savedList) {
         try {
-            deviceList = JSON.parse(saved);
+            deviceList = JSON.parse(savedList);
             renderDeviceList();
         } catch(e) { console.error(e); }
     }
@@ -497,8 +559,8 @@ async function sendRaceConfig(distance, pacers) {
         // IMPORTANT: commandSetTimeDelay expects the Distance corresponding to the Time provided.
         // p.pace is "Seconds per 400m". So we MUST pass 400 as the distance here.
         // Do NOT pass the full race distance (r.distance).
-        // Also pass DEVICE_INTERVAL_M (2) as ledSpacing so calculation assumes 2m per hop.
-        await sendCommand(BluetoothCommunity.commandSetTimeDelay(400, p.pace, 400, DEVICE_INTERVAL_M, [runnerId])); 
+        // Also pass deviceInterval as ledSpacing.
+        await sendCommand(BluetoothCommunity.commandSetTimeDelay(400, p.pace, 400, deviceInterval, [runnerId])); 
     }
 }
 
@@ -509,8 +571,8 @@ async function sendStartRace(pacers, startPos = 0) {
     }
 
     // 1. Calculate Start Device Number
-    // Assuming 2m interval between devices (Global Constant)
-    let startDevIndex = Math.floor(startPos / DEVICE_INTERVAL_M);
+    // Assuming deviceInterval interval between devices
+    let startDevIndex = Math.floor(startPos / deviceInterval);
     
     // Safety check
     if (startDevIndex >= deviceList.length) {
@@ -519,6 +581,11 @@ async function sendStartRace(pacers, startPos = 0) {
     }
     
     const targetDevice = deviceList[startDevIndex];
+    // If start device is dummy, warn or find next?
+    if(targetDevice.mac === DUMMY_MAC) {
+        if(!confirm("スタート位置のデバイスがダミー(故障中)です。続行しますか？")) return;
+    }
+
     const startDevNo = startDevIndex + 1; // Device Number is 1-based
     
     // 2. Calculate Runner Bitmask (Who is running?)
@@ -551,6 +618,103 @@ async function sendPaceConfig(distance, pacers) {
     return sendRaceConfig(distance, pacers);
 }
 
+// --- Device Action Menu UI ---
+function openDeviceActionMenu(index) {
+    // Remove existing menu if any
+    const existing = document.getElementById('device-action-menu-overlay');
+    if (existing) existing.remove();
+
+    const d = deviceList[index];
+    const dist = index * deviceInterval;
+    const isDummy = d && d.mac === DUMMY_MAC;
+    const isEmpty = !d;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'device-action-menu-overlay';
+    overlay.style.cssText = `
+        position: fixed; top:0; left:0; right:0; bottom:0; 
+        background: rgba(0,0,0,0.5); z-index: 2000; 
+        display:flex; justify-content:center; align-items:center;
+    `;
+    overlay.onclick = (e) => { if(e.target===overlay) overlay.remove(); };
+
+    let actionsHtml = '';
+
+    if (!isEmpty) {
+        // Blink Button
+        if (!isDummy) {
+            actionsHtml += `<button class="menu-btn" onclick="window.triggerBlink(${index})">💡 テスト点灯 (Blink)</button>`;
+            actionsHtml += `<button class="menu-btn" onclick="window.triggerDummy(${index})">⚠️ 故障/ダミー化</button>`;
+        }
+        actionsHtml += `<button class="menu-btn" onclick="window.triggerReplace(${index})">🔄 デバイス交換 (MAC入力)</button>`;
+        actionsHtml += `<button class="menu-btn btn-danger" onclick="window.triggerRemove(${index})">🗑 削除 (詰める)</button>`;
+        
+        // Move buttons
+        actionsHtml += `
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="menu-btn" style="flex:1;" onclick="window.triggerMoveUp(${index})">↑ 前へ</button>
+                <button class="menu-btn" style="flex:1;" onclick="window.triggerMoveDown(${index})">↓ 次へ</button>
+            </div>
+        `;
+    } else {
+        actionsHtml += `<div style="padding:10px; color:#888;">未登録スロット</div>`;
+        actionsHtml += `<button class="menu-btn" onclick="window.triggerReplace(${index})">＋ MACアドレスを手入力登録</button>`;
+    }
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white; padding: 20px; border-radius: 16px; width: 300px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    `;
+    content.innerHTML = `
+        <h3 style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+            #${index+1} (${dist}m)
+            <button onclick="document.getElementById('device-action-menu-overlay').remove()" style="border:none; background:none; font-size:20px;">✖</button>
+        </h3>
+        <p style="font-family:monospace; background:#F5F5F5; padding:5px; border-radius:4px;">
+            ${d ? d.mac : 'Empty'}
+        </p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            ${actionsHtml}
+        </div>
+    `;
+
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+
+    // Helper triggers to close modal then act
+    window.triggerBlink = (i) => { overlay.remove(); testBlinkDevice(i); };
+    window.triggerDummy = (i) => { overlay.remove(); setDeviceToDummy(i); };
+    window.triggerReplace = (i) => { overlay.remove(); replaceDevice(i); }; // If empty, replaceDevice acts as "Add at index" if we tweak it?
+    // Wait, replaceDevice currently assumes deviceList[index] exists.
+    // If index >= deviceList.length, we need to fill gaps?
+    // Let's tweak replaceDevice logic below locally or assume 'replaceDevice' handles it.
+    // Actually, replaceDevice needs d to exist. 
+    // Let's fix replaceDevice to handle empty slot.
+    window.triggerReplace = (i) => { 
+        overlay.remove(); 
+        if(!deviceList[i]) {
+            // Fill gaps with dummies up to i? or just push?
+            // For now, only allow replacing existing.
+            // If empty slot clicked (which is rendered by loop), it means index < maxDevices but index >= deviceList.length
+            // So we need to expand list.
+            expandListToIndex(i);
+        }
+        replaceDevice(i); 
+    };
+
+    window.triggerRemove = (i) => { overlay.remove(); removeDeviceFromList(i); };
+    window.triggerMoveUp = (i) => { overlay.remove(); moveDeviceUp(i); };
+    window.triggerMoveDown = (i) => { overlay.remove(); moveDeviceDown(i); };
+}
+
+function expandListToIndex(index) {
+    while(deviceList.length <= index) {
+        deviceList.push({ mac: DUMMY_MAC, id: deviceList.length+1, status:'dummy' });
+    }
+}
+
+
 // Global exports for HTML
 window.connectBLE = connectBLE;
 window.downloadCSV = downloadCSV;
@@ -561,4 +725,9 @@ window.clearDeviceList = clearDeviceList;
 window.sendStartRace = sendStartRace;
 window.sendStopRace = sendStopRace;
 window.sendPaceConfig = sendPaceConfig;
+window.updateRaceSettings = updateRaceSettings; // New
+window.openDeviceActionMenu = openDeviceActionMenu; // New
 window.deviceList = deviceList; // Debug
+
+// Auto-load on startup
+loadDeviceList();
