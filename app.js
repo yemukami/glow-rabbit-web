@@ -29,10 +29,9 @@ async function connectBLE() {
 
     try {
         console.log('Requesting Bluetooth Device...');
-        // Debug: acceptAllDevices: true to find the device even if name/UUID differs
+        // Filter by Service UUID to show only Glow-C devices
         bluetoothDevice = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: [GLOW_SERVICE_UUID]
+            filters: [{ services: [GLOW_SERVICE_UUID] }]
         });
 
         bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
@@ -389,52 +388,37 @@ function getColorRGB(colorName) {
         case 'green': return [0x00, 0xFF, 0x00];
         case 'yellow': return [0xFF, 0xFF, 0x00];
         case 'purple': return [0xA0, 0x20, 0xF0];
+        case 'white': return [0xFF, 0xFF, 0xFF];
         default: return [0xFF, 0xFF, 0xFF];
     }
 }
 
-// Calculate Runner ID (1, 2, 4, 8...) from pacer index or ID logic
-// In Mock, pacer ID is 101, 201... random.
-// We need to map them to Runner 1, 2, 3, 4.
-// Let's assume index in array + 1 maps to Runner ID 1, 2, 3, 4 (Bit 1, 2, 4, 8).
-// Or we can assign them based on color?
-// Usually Red=1, Blue=2, Green=3, Yellow=4?
-// Let's use a simple mapping based on array index for now to allow multiple same colors if needed,
-// OR map by color if strictly defined. 
-// "Practice menu" usually implies Red Runner, Blue Runner.
-// Let's map by Color for consistency with "Red Pacer".
-function getRunnerIndex(color) {
-    switch(color) {
-        case 'red': return 1;   // Runner 1
-        case 'blue': return 2;  // Runner 2
-        case 'green': return 3; // Runner 3
-        case 'yellow': return 4;// Runner 4
-        default: return 1;
-    }
-}
-
-function getRunnerBitmask(index) {
-    return 1 << (index - 1);
+// Helper to get bitmask for a runner ID (1-based)
+function getRunnerBitmask(runnerId) {
+    return 1 << (runnerId - 1);
 }
 
 async function sendRaceConfig(distance, pacers) {
     // Send Color and Pace config for ALL pacers
     console.log("Sending Race Config...", pacers);
     
-    for (let p of pacers) {
-        const runnerIndex = getRunnerIndex(p.color);
-        const runnerMask = getRunnerBitmask(runnerIndex);
+    // Use Index to assign Runner IDs (1, 2, 3...) regardless of color.
+    // This allows multiple runners of the same color.
+    for (let i = 0; i < pacers.length; i++) {
+        const p = pacers[i];
+        const runnerId = i + 1; // 1-based ID
         const colorRgb = getColorRGB(p.color);
         
+        console.log(`Configuring Runner #${runnerId} (${p.color}, ${p.pace}s/400m)`);
+
         // 1. Set Color
-        await sendCommand(BluetoothCommunity.commandSetColor([runnerIndex], colorRgb));
+        await sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
         
         // 2. Set Pace (Time Delay)
-        // pace is sec/400m.
-        await sendCommand(BluetoothCommunity.commandSetTimeDelay(distance, p.pace, 400, 1, [runnerIndex])); // 400m yard, 1m? Wait, ledSpacing.
-        // In Dart code: ledSpacing = 1.
-        // In FW: `dtime` is calculated.
-        // If we assume standard, just pass pace as time.
+        // IMPORTANT: commandSetTimeDelay expects the Distance corresponding to the Time provided.
+        // p.pace is "Seconds per 400m". So we MUST pass 400 as the distance here.
+        // Do NOT pass the full race distance (r.distance).
+        await sendCommand(BluetoothCommunity.commandSetTimeDelay(400, p.pace, 400, 1, [runnerId])); 
     }
 }
 
@@ -460,12 +444,16 @@ async function sendStartRace(pacers, startPos = 0) {
     
     // 2. Calculate Runner Bitmask (Who is running?)
     let positionsMask = 0;
-    const runnerIndices = pacers.map(p => getRunnerIndex(p.color));
-    runnerIndices.forEach(idx => {
-        positionsMask |= getRunnerBitmask(idx);
+    let runnerIndices = [];
+    
+    // We must use the SAME logic as sendRaceConfig: ID = Index + 1
+    pacers.forEach((p, i) => {
+        const runnerId = i + 1;
+        runnerIndices.push(runnerId);
+        positionsMask |= getRunnerBitmask(runnerId);
     });
     
-    console.log(`Starting Race from Dev#${startDevNo} (${targetDevice.mac}) for Runners: ${positionsMask}`);
+    console.log(`Starting Race from Dev#${startDevNo} (${targetDevice.mac}) for Runners: ${positionsMask} (IDs: ${runnerIndices})`);
     
     // HIGH PRIORITY: Clear any pending config/sync commands and START immediately
     await sendCommand(

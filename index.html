@@ -87,6 +87,8 @@
         .bg-blue { background: #007AFF; } .text-blue { color: #007AFF; }
         .bg-green { background: #4CD964; } .text-green { color: #4CD964; }
         .bg-yellow { background: #FFCC00; } .text-yellow { color: #E6B800; }
+        .bg-purple { background: #A020F0; } .text-purple { color: #A020F0; }
+        .bg-white { background: #FFFFFF; border: 1px solid #E1E5EA; } .text-white { color: #666; }
         
         /* TABLE / CARDS */
         .data-table {
@@ -218,6 +220,7 @@
     <div class="header-right">
         <div class="ble-status">● BLE未接続</div>
         <button class="btn-sm btn-connect" onclick="connectBLE()">📡 接続</button>
+        <button class="btn-sm" style="border:none; background:transparent; font-size:18px; cursor:pointer;" onclick="openVersionModal()">⚙️</button>
         <div class="mode-switch">
             <button class="mode-btn" id="btn-mode-setup" onclick="switchMode('setup')">設定</button>
             <button class="mode-btn active" id="btn-mode-race" onclick="switchMode('race')">実行</button>
@@ -290,6 +293,8 @@
             <div class="color-option bg-blue" onclick="selectModalColor('blue')"></div>
             <div class="color-option bg-green" onclick="selectModalColor('green')"></div>
             <div class="color-option bg-yellow" onclick="selectModalColor('yellow')"></div>
+            <div class="color-option bg-purple" onclick="selectModalColor('purple')"></div>
+            <div class="color-option bg-white" onclick="selectModalColor('white')"></div>
         </div>
         <div style="display:flex; align-items:center; gap:10px; margin:30px 0;">
             <input type="number" id="modal-pace-input" step="0.1" value="72.0" style="font-size:32px; width:120px; text-align:right; padding:10px; border-radius:10px; border:1px solid #ddd;">
@@ -302,6 +307,16 @@
                 <button class="btn-sm btn-primary" style="padding:10px 24px; font-size:14px;" onclick="saveModalData()">設定を保存</button>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="modal-version" class="modal-overlay" onclick="if(event.target===this) closeVersionModal()">
+    <div class="modal-content" style="text-align:center; width:300px;">
+        <img src="image_c2633c.png" style="width:60px; margin-bottom:10px;">
+        <h3>Glow-Rabbit Web</h3>
+        <p style="color:#888; font-family:monospace;">Version: 1.2.0</p>
+        <p style="color:#CCC; font-size:12px;">Revision: 20251127-FIX</p>
+        <button class="btn-sm btn-primary" onclick="closeVersionModal()">閉じる</button>
     </div>
 </div>
 
@@ -635,6 +650,8 @@
     function saveModalData() { const r=races.find(x=>x.id===modalTarget.raceId); const v=parseFloat(document.getElementById('modal-pace-input').value); if(modalTarget.pacerId) { const p=r.pacers.find(x=>x.id===modalTarget.pacerId); p.color=modalSelectedColor; p.pace=v; } else { r.pacers.push({id:Date.now(), color:modalSelectedColor, pace:v, currentDist:0, finishTime:null}); } closeModal(); renderSetup(); }
     function deletePacerFromModal() { if(modalTarget.pacerId && confirm('削除?')) { const r=races.find(x=>x.id===modalTarget.raceId); r.pacers=r.pacers.filter(x=>x.id!==modalTarget.pacerId); } closeModal(); renderSetup(); }
     function closeModal() { document.getElementById('modal-settings').classList.remove('open'); }
+    function openVersionModal() { document.getElementById('modal-version').classList.add('open'); }
+    function closeVersionModal() { document.getElementById('modal-version').classList.remove('open'); }
     function openReconnectModal() { document.getElementById('modal-reconnect').classList.add('open'); }
     function closeReconnectModal() { document.getElementById('modal-reconnect').classList.remove('open'); }
     function formatTime(s) { if(s<0) return "00:00.0"; let m=Math.floor(s/60), sec=Math.floor(s%60), ms=Math.floor((s*10)%10); return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}.${ms}`; }
