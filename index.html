@@ -370,8 +370,8 @@
     <div class="modal-content" style="text-align:center; width:300px;">
         <img src="image_c2633c.png" style="width:60px; margin-bottom:10px;">
         <h3>Glow-Rabbit Web</h3>
-        <p style="color:#888; font-family:monospace;">Version: 1.2.0.7</p>
-        <p style="color:#CCC; font-size:12px;">Revision: 20251127-FIX-DUMMY-PROTOCOL</p>
+        <p style="color:#888; font-family:monospace;">Version: 1.3.1</p>
+        <p style="color:#CCC; font-size:12px;">Revision: 20251127-GRID-FIX</p>
         <button class="btn-sm btn-primary" onclick="closeVersionModal()">閉じる</button>
     </div>
 </div>
@@ -380,16 +380,7 @@
 <script src="app.js"></script>
 <script>
     // DATA
-    let races = [
-        { 
-            id: 1, time: "09:30", name: "小学女子800m", group: 1, distance: 800, startPos: 0, count: 15, status: "finished", 
-            pacers: [{id:101, color:"red", pace:75.0, currentDist: 800, finishTime: 150.0}], markers:[] 
-        },
-        { 
-            id: 2, time: "09:35", name: "小学女子800m", group: 2, distance: 800, startPos: 0, count: 15, status: "ready", 
-            pacers: [{id:201, color:"red", pace:72.0, currentDist:0, finishTime:null}, {id:202, color:"blue", pace:75.0, currentDist:0, finishTime:null}], markers:[] 
-        }
-    ];
+    let races = [];
 
     let activeRaceId = null;
     let expandedRaceId = null;
@@ -400,11 +391,41 @@
     let modalSelectedColor = 'red';
 
     window.onload = function() { 
+        loadRaces();
         renderSetup(); 
         renderRace(); 
         // renderDevices is now handled by app.js
         if(window.deviceList) renderDeviceList();
     };
+    
+    function saveRaces() {
+        localStorage.setItem('glow_races', JSON.stringify(races));
+    }
+    
+    function loadRaces() {
+        const saved = localStorage.getItem('glow_races');
+        if (saved) {
+            try {
+                races = JSON.parse(saved);
+            } catch(e) {
+                console.error("Failed to load races", e);
+                races = [];
+            }
+        } else {
+            // Default data if empty
+             races = [
+                { 
+                    id: 1, time: "09:30", name: "小学女子800m", group: 1, distance: 800, startPos: 0, count: 15, status: "finished", 
+                    pacers: [{id:101, color:"red", pace:75.0, currentDist: 800, finishTime: 150.0}], markers:[] 
+                },
+                { 
+                    id: 2, time: "09:35", name: "小学女子800m", group: 2, distance: 800, startPos: 0, count: 15, status: "ready", 
+                    pacers: [{id:201, color:"red", pace:72.0, currentDist:0, finishTime:null}, {id:202, color:"blue", pace:75.0, currentDist:0, finishTime:null}], markers:[] 
+                }
+            ];
+            saveRaces();
+        }
+    }
 
     function switchMode(mode) {
         document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
@@ -597,6 +618,7 @@
     function updateStartPos(id, val) {
         const r = races.find(x=>x.id===id);
         r.startPos = parseInt(val) || 0;
+        saveRaces();
     }
 
     function startRace(id) {
@@ -611,6 +633,7 @@
             const inp = document.getElementById(`pace-input-${p.id}`);
             if(inp) p.pace = parseFloat(inp.value);
         });
+        saveRaces();
         
         // UI Animation Loop
         renderRace();
@@ -653,16 +676,16 @@
         if(fill) fill.style.width = Math.min((maxDist / totalScale) * 100, 100) + '%';
     }
 
-    function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); r.status = 'review'; renderRace(); }
-    function finalizeRace(id) { const r = races.find(x=>x.id===id); r.status = 'finished'; activeRaceId = null; expandedRaceId = null; renderRace(); }
-    function resetRace(id) { const r = races.find(x=>x.id===id); r.status = 'ready'; r.pacers.forEach(p=>{ p.currentDist=0; p.finishTime=null; }); renderRace(); }
+    function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); r.status = 'review'; renderRace(); saveRaces(); }
+    function finalizeRace(id) { const r = races.find(x=>x.id===id); r.status = 'finished'; activeRaceId = null; expandedRaceId = null; renderRace(); saveRaces(); }
+    function resetRace(id) { const r = races.find(x=>x.id===id); r.status = 'ready'; r.pacers.forEach(p=>{ p.currentDist=0; p.finishTime=null; }); renderRace(); saveRaces(); }
 
     function startEditing(pid, v) { editingPaces[pid]=parseFloat(v); updateUI(pid); }
     function updateEditValue(pid, v) { editingPaces[pid]=parseFloat(v); updateUI(pid); }
     function adjustPace(pid, d) { let cur = editingPaces[pid]!==undefined ? editingPaces[pid] : getBasePace(pid); editingPaces[pid] = parseFloat((cur+d).toFixed(1)); document.getElementById('pace-input-'+pid).value = editingPaces[pid]; updateUI(pid); }
     function updateUI(pid) { document.getElementById('pace-input-'+pid).classList.add('changed'); document.getElementById('btn-group-'+pid).classList.add('visible'); }
     function cancelPace(rid, pid) { delete editingPaces[pid]; const p = getPacer(rid, pid); const inp = document.getElementById('pace-input-'+pid); inp.value = p.pace; inp.classList.remove('changed'); document.getElementById('btn-group-'+pid).classList.remove('visible'); }
-    function commitPace(rid, pid) { const p = getPacer(rid, pid); if(editingPaces[pid]!==undefined) { const r = races.find(x=>x.id===rid); const isRunning = (r.status === 'running'); p.pace = editingPaces[pid]; delete editingPaces[pid]; if(isRunning) { r.markers.push({ dist: p.currentDist, time: elapsedTime, pace: p.pace, color: p.color }); } renderRace(); } }
+    function commitPace(rid, pid) { const p = getPacer(rid, pid); if(editingPaces[pid]!==undefined) { const r = races.find(x=>x.id===rid); const isRunning = (r.status === 'running'); p.pace = editingPaces[pid]; delete editingPaces[pid]; if(isRunning) { r.markers.push({ dist: p.currentDist, time: elapsedTime, pace: p.pace, color: p.color }); } renderRace(); saveRaces(); } }
     function getBasePace(pid) { for(let r of races) { let p = r.pacers.find(x=>x.id===pid); if(p) return p.pace; } return 72.0; }
     function getPacer(rid, pid) { return races.find(r=>r.id===rid).pacers.find(p=>p.id===pid); }
 
@@ -693,18 +716,20 @@
                 // Auto Calc: 400 - mod(dist/400)
                 let mod = d % 400;
                 r.startPos = (mod === 0) ? 0 : (400 - mod);
+                saveRaces();
                 renderSetup(); // Re-render to show start pos
             } else {
                 r[f] = (f==='count'||f==='group'||f==='startPos')?parseInt(v)||0:v; 
+                saveRaces();
             }
         } 
     }
-    function addNewRow() { races.push({id:Date.now(), time:"10:00", name:"New Race", group:1, distance:1000, startPos:200, count:10, status:"ready", pacers:[], markers:[]}); renderSetup(); }
-    function deleteRow(id) { if(confirm("削除?")){races=races.filter(r=>r.id!==id);renderSetup();} }
+    function addNewRow() { races.push({id:Date.now(), time:"10:00", name:"New Race", group:1, distance:1000, startPos:200, count:10, status:"ready", pacers:[], markers:[]}); saveRaces(); renderSetup(); }
+    function deleteRow(id) { if(confirm("削除?")){races=races.filter(r=>r.id!==id); saveRaces(); renderSetup();} }
     function openModal(rid, pid) { modalTarget={raceId:rid, pacerId:pid}; const r=races.find(x=>x.id===rid); if(pid){ const p=r.pacers.find(x=>x.id===pid); selectModalColor(p.color); document.getElementById('modal-pace-input').value=p.pace; } else { selectModalColor('red'); document.getElementById('modal-pace-input').value=72.0; } document.getElementById('modal-settings').classList.add('open'); }
     function selectModalColor(c) { modalSelectedColor=c; document.querySelectorAll('.color-option').forEach(e=>e.classList.remove('selected')); document.querySelector('.bg-'+c).classList.add('selected'); }
-    function saveModalData() { const r=races.find(x=>x.id===modalTarget.raceId); const v=parseFloat(document.getElementById('modal-pace-input').value); if(modalTarget.pacerId) { const p=r.pacers.find(x=>x.id===modalTarget.pacerId); p.color=modalSelectedColor; p.pace=v; } else { r.pacers.push({id:Date.now(), color:modalSelectedColor, pace:v, currentDist:0, finishTime:null}); } closeModal(); renderSetup(); }
-    function deletePacerFromModal() { if(modalTarget.pacerId && confirm('削除?')) { const r=races.find(x=>x.id===modalTarget.raceId); r.pacers=r.pacers.filter(x=>x.id!==modalTarget.pacerId); } closeModal(); renderSetup(); }
+    function saveModalData() { const r=races.find(x=>x.id===modalTarget.raceId); const v=parseFloat(document.getElementById('modal-pace-input').value); if(modalTarget.pacerId) { const p=r.pacers.find(x=>x.id===modalTarget.pacerId); p.color=modalSelectedColor; p.pace=v; } else { r.pacers.push({id:Date.now(), color:modalSelectedColor, pace:v, currentDist:0, finishTime:null}); } saveRaces(); closeModal(); renderSetup(); }
+    function deletePacerFromModal() { if(modalTarget.pacerId && confirm('削除?')) { const r=races.find(x=>x.id===modalTarget.raceId); r.pacers=r.pacers.filter(x=>x.id!==modalTarget.pacerId); saveRaces(); } closeModal(); renderSetup(); }
     function closeModal() { document.getElementById('modal-settings').classList.remove('open'); }
     function openVersionModal() { document.getElementById('modal-version').classList.add('open'); }
     function closeVersionModal() { document.getElementById('modal-version').classList.remove('open'); }

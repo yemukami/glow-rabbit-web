@@ -137,9 +137,12 @@ function addDeviceToList(mac) {
     // Find first empty slot or append if within limit
     const maxDevices = Math.ceil(totalDistance / deviceInterval);
     
+    console.log(`Adding Device: ${mac}. Current: ${deviceList.length}, Max: ${maxDevices}`);
+
     // Check if already exists
     const existingIndex = deviceList.findIndex(d => d.mac === mac);
     if (existingIndex >= 0) {
+        console.log("Device already exists at index " + existingIndex);
         highlightDevice(mac);
         return;
     }
@@ -161,14 +164,11 @@ function addDeviceToList(mac) {
         setTimeout(() => highlightDevice(mac), 100);
     } else {
         console.warn("Device list full based on current distance settings.");
+        alert(`デバイスリストが一杯です(最大${maxDevices}個)。設定距離を延ばすか、不要なデバイスを削除してください。`);
         // Still add it? Or reject? Let's add it but UI might show overflow.
-        deviceList.push({
-            mac: mac,
-            id: deviceList.length + 1,
-            status: 'overflow'
-        });
-        renderDeviceList();
-        saveDeviceList();
+        // deviceList.push({ mac: mac, id: deviceList.length + 1, status: 'overflow' });
+        // renderDeviceList();
+        // saveDeviceList();
     }
 }
 
@@ -402,15 +402,22 @@ function loadDeviceList() {
     
     if (savedSettings) {
         const s = JSON.parse(savedSettings);
-        if(s.totalDistance) totalDistance = s.totalDistance;
-        if(s.deviceInterval) deviceInterval = s.deviceInterval;
+        if(s.totalDistance) totalDistance = parseInt(s.totalDistance);
+        if(s.deviceInterval) deviceInterval = parseInt(s.deviceInterval);
     }
+    
+    // Validate settings
+    if(!totalDistance || isNaN(totalDistance) || totalDistance <= 0) totalDistance = 400;
+    if(!deviceInterval || isNaN(deviceInterval) || deviceInterval <= 0) deviceInterval = 2;
 
     if (savedList) {
         try {
             deviceList = JSON.parse(savedList);
             renderDeviceList();
         } catch(e) { console.error(e); }
+    } else {
+        // Initial Render even if empty
+        renderDeviceList();
     }
 }
 
