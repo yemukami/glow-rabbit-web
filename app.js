@@ -20,6 +20,8 @@ let raceState = {
     isRunning: false
 };
 
+const DEVICE_INTERVAL_M = 2;
+
 async function connectBLE() {
     // Toggle: If connected, disconnect
     if (bluetoothDevice && bluetoothDevice.gatt.connected) {
@@ -259,7 +261,7 @@ function renderDeviceList() {
     
     let html = '';
     deviceList.forEach((d, i) => {
-        let dist = i * 2; // Assuming 2m interval for simplicity
+        let dist = i * DEVICE_INTERVAL_M; 
         const safeId = 'device-row-' + d.mac.replace(/:/g, '');
         html += `
         <div class="device-item" id="${safeId}" onclick="testBlinkDevice(${i})" style="cursor:pointer;">
@@ -479,7 +481,8 @@ async function sendRaceConfig(distance, pacers) {
         // IMPORTANT: commandSetTimeDelay expects the Distance corresponding to the Time provided.
         // p.pace is "Seconds per 400m". So we MUST pass 400 as the distance here.
         // Do NOT pass the full race distance (r.distance).
-        await sendCommand(BluetoothCommunity.commandSetTimeDelay(400, p.pace, 400, 1, [runnerId])); 
+        // Also pass DEVICE_INTERVAL_M (2) as ledSpacing so calculation assumes 2m per hop.
+        await sendCommand(BluetoothCommunity.commandSetTimeDelay(400, p.pace, 400, DEVICE_INTERVAL_M, [runnerId])); 
     }
 }
 
@@ -490,8 +493,7 @@ async function sendStartRace(pacers, startPos = 0) {
     }
 
     // 1. Calculate Start Device Number
-    // Assuming 2m interval between devices
-    const DEVICE_INTERVAL_M = 2; 
+    // Assuming 2m interval between devices (Global Constant)
     let startDevIndex = Math.floor(startPos / DEVICE_INTERVAL_M);
     
     // Safety check
