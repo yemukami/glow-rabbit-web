@@ -29,9 +29,11 @@ async function connectBLE() {
 
     try {
         console.log('Requesting Bluetooth Device...');
-        // Filter by Service UUID to show only Glow-C devices
+        // Filter by Name Prefix "GLOW_C" to specifically target the Controller
+        // and avoid picking up hundreds of Glow-R devices on the field.
         bluetoothDevice = await navigator.bluetooth.requestDevice({
-            filters: [{ services: [GLOW_SERVICE_UUID] }]
+            filters: [{ namePrefix: "GLOW_C" }],
+            optionalServices: [GLOW_SERVICE_UUID]
         });
 
         bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
