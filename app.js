@@ -736,5 +736,10 @@ window.updateRaceSettings = updateRaceSettings; // New
 window.openDeviceActionMenu = openDeviceActionMenu; // New
 window.deviceList = deviceList; // Debug
 
+window.checkDirtyAndSync = checkDirtyAndSync; // New
+window.updateDeviceStatusUI = updateDeviceStatusUI; // New
+// Expose dirty flag via getter to ensure it's always fresh
+Object.defineProperty(window, 'isListDirty', { get: () => isListDirty });
+
 // Auto-load on startup
 loadDeviceList();

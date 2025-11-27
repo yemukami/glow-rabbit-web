@@ -302,8 +302,9 @@
     <div id="screen-devices" class="screen">
         <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
             <h2 style="margin:0; font-size:24px; color:var(--primary-color);">デバイス設置</h2>
-            <div style="display:flex; gap:10px;">
-                <button class="btn-sm btn-primary" onclick="syncAllDevices()">🔄 全デバイス同期</button>
+            <div style="text-align:right;">
+                <div id="device-sync-status" class="status-badge status-clean" style="font-size:12px; margin-bottom:4px;">✓ 同期完了</div>
+                <div style="font-size:11px; color:#888;">設置数: <span id="device-count-display">0 / 0</span></div>
             </div>
         </div>
 
@@ -327,6 +328,7 @@
                 <button class="btn-sm btn-outline" onclick="document.getElementById('csv-input').click()">⬆ CSV取込</button>
                 <input type="file" id="csv-input" style="display:none" onchange="importCSV(this)" accept=".csv">
                 <button class="btn-sm btn-danger" onclick="clearDeviceList()">🗑 全削除</button>
+                <button class="btn-sm btn-primary" onclick="syncAllDevices()">🔄 同期</button>
             </div>
         </div>
 
@@ -370,8 +372,8 @@
     <div class="modal-content" style="text-align:center; width:300px;">
         <img src="image_c2633c.png" style="width:60px; margin-bottom:10px;">
         <h3>Glow-Rabbit Web</h3>
-        <p style="color:#888; font-family:monospace;">Version: 1.3.1</p>
-        <p style="color:#CCC; font-size:12px;">Revision: 20251127-GRID-FIX</p>
+        <p style="color:#888; font-family:monospace;">Version: 1.3.3</p>
+        <p style="color:#CCC; font-size:12px;">Revision: 20251127-AUTO-STOP</p>
         <button class="btn-sm btn-primary" onclick="closeVersionModal()">閉じる</button>
     </div>
 </div>
@@ -427,7 +429,26 @@
         }
     }
 
-    function switchMode(mode) {
+    async function switchMode(mode) {
+        // Guard: If leaving devices screen, check for dirty state
+        if (document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
+            if (window.checkDirtyAndSync) {
+                const proceed = await window.checkDirtyAndSync();
+                if (!proceed && window.isListDirty) return; 
+            }
+        }
+
+        // Guard: If leaving race screen while running
+        if (document.getElementById('screen-race').classList.contains('active') && mode !== 'race') {
+            if (activeRaceId !== null) {
+                const r = races.find(x => x.id === activeRaceId);
+                if (r && r.status === 'running') {
+                    if (!confirm("レース実行中です。停止して画面を移動しますか？")) return;
+                    stopRaceWrapper(activeRaceId);
+                }
+            }
+        }
+
         document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
         document.querySelectorAll('.mode-btn').forEach(e=>e.classList.remove('active'));
         document.getElementById('screen-'+mode).classList.add('active');
@@ -655,7 +676,11 @@
             }
         });
         updateDom(race);
-        if(allFinished) freezeRace(race.id);
+        if(allFinished) {
+             // Send Stop Command to BLE to ensure lights are off/stopped
+             if(window.sendStopRace) window.sendStopRace();
+             freezeRace(race.id);
+        }
     }
 
     function updateDom(race) {
