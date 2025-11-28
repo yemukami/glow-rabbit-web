@@ -572,7 +572,8 @@
                         if(p.currentDist > 0) avgPace = (elapsedTime / p.currentDist) * 400;
                     }
                     let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${avgPace.toFixed(1)}</span>` : "";
-                    const isDisabled = (r.status === 'review' || r.status === 'finished');
+                    // Disable controls if running, review, or finished (Race Mode is strict)
+                    const isDisabled = (r.status === 'running' || r.status === 'review' || r.status === 'finished');
 
                     return `
                     <div class="pacer-control-row" onclick="event.stopPropagation()">
@@ -700,6 +701,9 @@
         });
         saveRaces();
         
+        // Init Calibration logic for this race (Defined in app.js)
+        if(window.initCalibration) window.initCalibration(r);
+
         // UI Animation Loop
         renderRace();
         raceInterval = setInterval(() => updateState(r), 100);
@@ -709,6 +713,12 @@
         elapsedTime += 0.1;
         let allFinished = true;
         const limit = race.distance + 50;
+        
+        // Run Calibration Check (Defined in app.js)
+        if(window.checkAndCalibrate && race.status === 'running') {
+             window.checkAndCalibrate(race, elapsedTime);
+        }
+
         race.pacers.forEach(p => {
             if (p.currentDist < limit) {
                 let speed = 400.0 / p.pace;

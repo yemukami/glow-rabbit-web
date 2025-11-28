@@ -722,6 +722,109 @@ function expandListToIndex(index) {
 }
 
 
+// --- Auto Calibration Logic (Dynamic Lap Adjustment) ---
+// Absorbs the +/- 0.1s error caused by 2m interval integer rounding.
+// Future-proof for "Split Pacing" (Build-up).
+
+let calibrationState = {}; // { pacerId: { nextCheckDist: 350, lapIndex: 0 } }
+
+function initCalibration(race) {
+    calibrationState = {};
+    race.pacers.forEach(p => {
+        calibrationState[p.id] = {
+            nextCheckDist: 350, // First check at 350m (50m before end of lap 1)
+            lapIndex: 0,
+            currentDelaySetting: null // Will store last sent delay to calc predictions
+        };
+    });
+    console.log("Calibration Initialized for Race:", race.id);
+}
+
+function checkAndCalibrate(race, currentElapsedTime) {
+    // Run logic for each pacer
+    race.pacers.forEach(p => {
+        const state = calibrationState[p.id];
+        if (!state) return;
+
+        // Check if we passed the checkpoint (e.g. 350m)
+        if (p.currentDist >= state.nextCheckDist) {
+            // 1. Calculate Target for END of NEXT lap (e.g. at 800m)
+            // Currently assuming constant pace. Future: Lookup segment pace.
+            const targetPace = p.pace; 
+            const nextLapIndex = state.lapIndex + 1;
+            const targetTotalDist = (nextLapIndex + 1) * 400; // e.g. 800m
+            
+            // Ideal time at 800m
+            // Future: If build-up, sum(pace_i)
+            const idealTotalTime = targetTotalDist / 400.0 * targetPace; 
+            
+            // 2. Predict "Current Reality"
+            // We don't have real feedback, so we assume previous commands worked.
+            // Actually, we should calculate what "Delay" value is needed for the NEXT 400m (200 devices).
+            
+            // Let's simplify:
+            // "I want to finish the next 400m segment so that the total time becomes idealTotalTime."
+            
+            // Current Time (Est): currentElapsedTime
+            // Remaining Distance to Target: targetTotalDist - p.currentDist (approx 400m + 50m)
+            // This is tricky because we are sending command NOW (at 350m).
+            // The command will apply to the "Next Lit LED".
+            // Assuming delay applies immediately.
+            
+            // Simple Logic: "Reset the clock for the next lap"
+            // We want the NEXT 400m (from 400m point to 800m point) to act to cancel out error.
+            
+            // Current predicted error at end of THIS lap (400m):
+            // standardDelay = round(pace * 5)
+            // actualLapTime = standardDelay * 200 / 1000
+            // errorPerLap = actualLapTime - pace
+            // accumulatedError = errorPerLap * (state.lapIndex + 1)
+            
+            // We want to subtract `accumulatedError` from the NEXT lap's target.
+            // nextLapTargetTime = pace - accumulatedError
+            
+            const stdVal = Math.round(targetPace * 5);
+            const actualLap = (stdVal * 200) / 1000;
+            const error = actualLap - targetPace;
+            const accError = error * (state.lapIndex + 1);
+            
+            // If we do nothing, next lap will also add error.
+            // We want adjusted delay for next lap.
+            // Next Lap Time Goal = targetPace - accError
+            
+            // Calculate required Delay per device (2m interval -> 200 devs)
+            // Delay * 200 / 1000 = (targetPace - accError)
+            // Delay = (targetPace - accError) * 5
+            
+            const nextLapGoal = targetPace - accError;
+            const newDelay = Math.round(nextLapGoal * 5);
+            
+            console.log(`[Calib #${p.id}] Lap ${state.lapIndex}->${nextLapIndex}. AccError: ${accError.toFixed(3)}s. AdjGoal: ${nextLapGoal.toFixed(3)}s. NewDelay: ${newDelay}ms`);
+            
+            // 3. Send Command
+            // Use Runner ID (Index in array + 1)
+            const runnerId = race.pacers.indexOf(p) + 1;
+            
+            // sendCommand but minimal (Delay Only)
+            // We use setTimeDelay. Note: It applies to ALL future LEDs for this runner.
+            // 400 = Distance for Pace calc (Base)
+            // We manually construct the delay value? 
+            // No, use commandSetTimeDelay but reverse-calc the "Pace" arg?
+            // setTimeDelay takes "Pace". 
+            // Pace = Delay / 5.
+            const adjustedPace = newDelay / 5.0;
+            
+            // Only send if different from base or strict accuracy needed
+            // Sending every lap ensures sync.
+            sendCommand(BluetoothCommunity.commandSetTimeDelay(400, adjustedPace, 400, deviceInterval, [runnerId]));
+
+            // 4. Update State
+            state.nextCheckDist += 400;
+            state.lapIndex++;
+        }
+    });
+}
+
 // Global exports for HTML
 window.connectBLE = connectBLE;
 window.downloadCSV = downloadCSV;
@@ -732,13 +835,14 @@ window.clearDeviceList = clearDeviceList;
 window.sendStartRace = sendStartRace;
 window.sendStopRace = sendStopRace;
 window.sendPaceConfig = sendPaceConfig;
-window.updateRaceSettings = updateRaceSettings; // New
-window.openDeviceActionMenu = openDeviceActionMenu; // New
-window.deviceList = deviceList; // Debug
+window.updateRaceSettings = updateRaceSettings; 
+window.openDeviceActionMenu = openDeviceActionMenu; 
+window.deviceList = deviceList; 
 
-window.checkDirtyAndSync = checkDirtyAndSync; // New
-window.updateDeviceStatusUI = updateDeviceStatusUI; // New
-// Expose dirty flag via getter to ensure it's always fresh
+window.checkDirtyAndSync = checkDirtyAndSync; 
+window.updateDeviceStatusUI = updateDeviceStatusUI; 
+window.initCalibration = initCalibration; // New
+window.checkAndCalibrate = checkAndCalibrate; // New
 Object.defineProperty(window, 'isListDirty', { get: () => isListDirty });
 
 // Auto-load on startup
