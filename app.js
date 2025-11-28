@@ -12,6 +12,7 @@ let isConnected = false;
 // Device List Management
 let deviceList = []; // { mac: "AA:BB:..", id: 1, status: "ok" }
 let isSyncing = false; // Flag to prevent self-loop addition during sync
+
 // Interaction State for Replace/Swap
 let deviceInteraction = {
     mode: 'normal', // 'normal', 'replacing', 'swapping'
@@ -22,26 +23,6 @@ let isListDirty = false; // Flag for unsaved/unsynced changes
 
 // Race State
 let raceState = {
-// ... existing ...
-
-// ... inside syncAllDevices or nearby ...
-async function checkDirtyAndSync() {
-    if (isListDirty) {
-        if (confirm("デバイスリストに変更があります。同期しますか？\n(キャンセルすると変更は破棄されませんが、Glow-Cには反映されません)")) {
-            await syncAllDevices();
-            return true; // Synced
-        }
-        return false; // Not Synced
-    }
-    return true; // No changes
-}
-
-async function syncAllDevices() {
-// ... existing ...
-        alert("同期完了！");
-        isListDirty = false; // Clear dirty flag
-    } catch(e) {
-// ... existing ...
     distance: 1600,
     pace: 72.0,
     isRunning: false
@@ -180,12 +161,6 @@ function addDeviceToList(mac) {
         highlightDevice(mac);
         return;
     }
-
-    // Find first 'empty' or 'dummy' slot to replace? 
-    // Strategy: Just append to the first available "unassigned" slot logic.
-    // But current deviceList is just a list.
-    // Let's stick to: Append to list. If list > maxDevices, warn?
-    // Or better: Visual Grid shows maxDevices slots. deviceList holds the actual data.
     
     if (deviceList.length < maxDevices) {
         deviceList.push({
@@ -199,10 +174,6 @@ function addDeviceToList(mac) {
     } else {
         console.warn("Device list full based on current distance settings.");
         alert(`デバイスリストが一杯です(最大${maxDevices}個)。設定距離を延ばすか、不要なデバイスを削除してください。`);
-        // Still add it? Or reject? Let's add it but UI might show overflow.
-        // deviceList.push({ mac: mac, id: deviceList.length + 1, status: 'overflow' });
-        // renderDeviceList();
-        // saveDeviceList();
     }
 }
 
@@ -223,14 +194,12 @@ function updateRaceSettings(dist, interval) {
     if (interval) deviceInterval = parseInt(interval);
     
     // Recalculate logic?
-    // If distance reduced, warn user about truncation?
     const maxDevices = Math.ceil(totalDistance / deviceInterval);
-    
     console.log(`Settings Updated: ${totalDistance}m / ${deviceInterval}m = ${maxDevices} devices`);
     
     // Re-render grid
     renderDeviceList();
-    saveDeviceList(); // Save settings too? (TODO: Save settings to localStorage)
+    saveDeviceList(); 
 }
 
 function setDeviceToDummy(index) {
@@ -513,12 +482,10 @@ async function processQueue() {
     } catch (error) {
         console.error("Write Error:", error);
         // Don't reject the whole flow, just this command, so queue continues
-        // Actually, we should verify connection if error is fatal
         if(error.message.includes("Timeout")) {
             console.warn("Command timed out, proceeding to next.");
         }
-        resolve(); // Resolve anyway to keep queue moving? Or reject? 
-        // If we reject, the caller (await sendCommand) gets error.
+        resolve(); 
         reject(error);
     } finally {
         isWriting = false;
@@ -608,11 +575,8 @@ function getRunnerBitmask(runnerId) {
 }
 
 async function sendRaceConfig(distance, pacers) {
-    // Send Color and Pace config for ALL pacers
     console.log("Sending Race Config...", pacers);
     
-    // Use Index to assign Runner IDs (1, 2, 3...) regardless of color.
-    // This allows multiple runners of the same color.
     for (let i = 0; i < pacers.length; i++) {
         const p = pacers[i];
         const runnerId = i + 1; // 1-based ID
@@ -624,10 +588,6 @@ async function sendRaceConfig(distance, pacers) {
         await sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
         
         // 2. Set Pace (Time Delay)
-        // IMPORTANT: commandSetTimeDelay expects the Distance corresponding to the Time provided.
-        // p.pace is "Seconds per 400m". So we MUST pass 400 as the distance here.
-        // Do NOT pass the full race distance (r.distance).
-        // Also pass deviceInterval as ledSpacing.
         await sendCommand(BluetoothCommunity.commandSetTimeDelay(400, p.pace, 400, deviceInterval, [runnerId])); 
     }
 }
@@ -639,7 +599,6 @@ async function sendStartRace(pacers, startPos = 0) {
     }
 
     // 1. Calculate Start Device Number
-    // Assuming deviceInterval interval between devices
     let startDevIndex = Math.floor(startPos / deviceInterval);
     
     // Safety check
@@ -649,18 +608,16 @@ async function sendStartRace(pacers, startPos = 0) {
     }
     
     const targetDevice = deviceList[startDevIndex];
-    // If start device is dummy, warn or find next?
     if(targetDevice.mac === DUMMY_MAC) {
         if(!confirm("スタート位置のデバイスがダミー(故障中)です。続行しますか？")) return;
     }
 
     const startDevNo = startDevIndex + 1; // Device Number is 1-based
     
-    // 2. Calculate Runner Bitmask (Who is running?)
+    // 2. Calculate Runner Bitmask
     let positionsMask = 0;
     let runnerIndices = [];
     
-    // We must use the SAME logic as sendRaceConfig: ID = Index + 1
     pacers.forEach((p, i) => {
         const runnerId = i + 1;
         runnerIndices.push(runnerId);
@@ -669,19 +626,17 @@ async function sendStartRace(pacers, startPos = 0) {
     
     console.log(`Starting Race from Dev#${startDevNo} (${targetDevice.mac}) for Runners: ${positionsMask} (IDs: ${runnerIndices})`);
     
-    // HIGH PRIORITY: Clear any pending config/sync commands and START immediately
+    // HIGH PRIORITY
     await sendCommand(
-        BluetoothCommunity.commandStartRunner(runnerIndices, startDevNo, targetDevice.mac), 
-        true // High Priority
+        BluetoothCommunity.commandStartRunner(runnerIndices, startDevNo, targetDevice.mac),
+        true 
     );
 }
 
 async function sendStopRace() {
-    // Stop is also high priority
     await sendCommand(BluetoothCommunity.commandStopRunner(), true);
 }
 
-// Pace設定だけを送る用途のラッパー（現状はsendRaceConfigと同等）
 async function sendPaceConfig(distance, pacers) {
     return sendRaceConfig(distance, pacers);
 }
@@ -762,10 +717,7 @@ function openDeviceActionMenu(index) {
     window.triggerReplace = (i) => { 
         overlay.remove(); 
         if(!deviceList[i]) {
-            // Fill gaps with dummies up to i? or just push?
-            // For now, only allow replacing existing.
-            // If empty slot clicked (which is rendered by loop), it means index < maxDevices but index >= deviceList.length
-            // So we need to expand list.
+            // Fill gaps if empty
             expandListToIndex(i);
         }
         replaceDevice(i); 
@@ -906,53 +858,18 @@ function checkAndCalibrate(race, currentElapsedTime) {
 
         // Check if we passed the checkpoint (e.g. 350m)
         if (p.currentDist >= state.nextCheckDist) {
-            // 1. Calculate Target for END of NEXT lap (e.g. at 800m)
-            // Currently assuming constant pace. Future: Lookup segment pace.
             const targetPace = p.pace; 
             const nextLapIndex = state.lapIndex + 1;
             const targetTotalDist = (nextLapIndex + 1) * 400; // e.g. 800m
             
             // Ideal time at 800m
-            // Future: If build-up, sum(pace_i)
             const idealTotalTime = targetTotalDist / 400.0 * targetPace; 
             
-            // 2. Predict "Current Reality"
-            // We don't have real feedback, so we assume previous commands worked.
-            // Actually, we should calculate what "Delay" value is needed for the NEXT 400m (200 devices).
-            
-            // Let's simplify:
-            // "I want to finish the next 400m segment so that the total time becomes idealTotalTime."
-            
-            // Current Time (Est): currentElapsedTime
-            // Remaining Distance to Target: targetTotalDist - p.currentDist (approx 400m + 50m)
-            // This is tricky because we are sending command NOW (at 350m).
-            // The command will apply to the "Next Lit LED".
-            // Assuming delay applies immediately.
-            
-            // Simple Logic: "Reset the clock for the next lap"
-            // We want the NEXT 400m (from 400m point to 800m point) to act to cancel out error.
-            
             // Current predicted error at end of THIS lap (400m):
-            // standardDelay = round(pace * 5)
-            // actualLapTime = standardDelay * 200 / 1000
-            // errorPerLap = actualLapTime - pace
-            // accumulatedError = errorPerLap * (state.lapIndex + 1)
-            
-            // We want to subtract `accumulatedError` from the NEXT lap's target.
-            // nextLapTargetTime = pace - accumulatedError
-            
             const stdVal = Math.round(targetPace * 5);
             const actualLap = (stdVal * 200) / 1000;
             const error = actualLap - targetPace;
             const accError = error * (state.lapIndex + 1);
-            
-            // If we do nothing, next lap will also add error.
-            // We want adjusted delay for next lap.
-            // Next Lap Time Goal = targetPace - accError
-            
-            // Calculate required Delay per device (2m interval -> 200 devs)
-            // Delay * 200 / 1000 = (targetPace - accError)
-            // Delay = (targetPace - accError) * 5
             
             const nextLapGoal = targetPace - accError;
             const newDelay = Math.round(nextLapGoal * 5);
@@ -960,16 +877,7 @@ function checkAndCalibrate(race, currentElapsedTime) {
             console.log(`[Calib #${p.id}] Lap ${state.lapIndex}->${nextLapIndex}. AccError: ${accError.toFixed(3)}s. AdjGoal: ${nextLapGoal.toFixed(3)}s. NewDelay: ${newDelay}ms`);
             
             // 3. Send Command
-            // Use Runner ID (Index in array + 1)
             const runnerId = race.pacers.indexOf(p) + 1;
-            
-            // sendCommand but minimal (Delay Only)
-            // We use setTimeDelay. Note: It applies to ALL future LEDs for this runner.
-            // 400 = Distance for Pace calc (Base)
-            // We manually construct the delay value? 
-            // No, use commandSetTimeDelay but reverse-calc the "Pace" arg?
-            // setTimeDelay takes "Pace". 
-            // Pace = Delay / 5.
             const adjustedPace = newDelay / 5.0;
             
             // Only send if different from base or strict accuracy needed
@@ -999,8 +907,19 @@ window.deviceList = deviceList;
 
 window.checkDirtyAndSync = checkDirtyAndSync; 
 window.updateDeviceStatusUI = updateDeviceStatusUI; 
-window.initCalibration = initCalibration; // New
-window.checkAndCalibrate = checkAndCalibrate; // New
+window.initCalibration = initCalibration; 
+window.checkAndCalibrate = checkAndCalibrate;
+window.triggerStartReplace = startReplaceMode; // For modal direct calls if needed
+window.triggerStartSwap = startSwapMode;
+
+// Define helper trigger functions for window scope if called from string-based onclick
+// (Already defined inside openDeviceActionMenu, but adding here just in case)
+window.triggerBlink = (i) => testBlinkDevice(i);
+window.triggerDummy = (i) => setDeviceToDummy(i);
+window.triggerRemove = (i) => removeDeviceFromList(i);
+window.triggerMoveUp = (i) => moveDeviceUp(i);
+window.triggerMoveDown = (i) => moveDeviceDown(i);
+
 Object.defineProperty(window, 'isListDirty', { get: () => isListDirty });
 
 // Auto-load on startup
