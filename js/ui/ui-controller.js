@@ -7,8 +7,12 @@ let expandedRaceId = null;
 let editingPaces = {};
 let raceInterval = null;
 let elapsedTime = 0;
-let modalTarget = {};
-let modalSelectedColor = 'red';
+// modalTarget and modalSelectedColor are now part of modalState
+let modalState = {
+    target: {},
+    selectedColor: 'red',
+    activeTab: 'simple'
+};
 
 export function initUI() {
     console.log("[Init] Starting UI Initialization...");
@@ -611,7 +615,7 @@ function updateStartPos(id, val) { const r = races.find(x=>x.id===id); r.startPo
 
 // --- MODAL ---
 function openModal(rid, pid) { 
-    modalTarget={raceId:rid, pacerId:pid}; 
+    modalState.target = {raceId:rid, pacerId:pid}; 
     const r=races.find(x=>x.id===rid); 
     
     // Reset Tab
@@ -627,12 +631,9 @@ function openModal(rid, pid) {
             renderSegmentTable(p.segments);
         } else {
             // Simple Mode
-            // Convert stored pace/time to display
-            // If we have targetTime stored, use it. Or calculate from pace.
             let tVal = "";
             if (p.targetTime) tVal = formatTime(p.targetTime);
             else if (p.pace) {
-                // Estimate total time
                 let totalSec = (r.distance / 400) * p.pace;
                 tVal = formatTime(totalSec);
             }
@@ -650,10 +651,14 @@ function openModal(rid, pid) {
 }
 
 function closeModal() { document.getElementById('modal-settings').classList.remove('open'); }
-function selectModalColor(c) { modalSelectedColor=c; document.querySelectorAll('.color-option').forEach(e=>e.classList.remove('selected')); document.querySelector('.bg-'+c).classList.add('selected'); }
+function selectModalColor(c) { 
+    modalState.selectedColor = c; 
+    document.querySelectorAll('.color-option').forEach(e=>e.classList.remove('selected')); 
+    document.querySelector('.bg-'+c).classList.add('selected'); 
+}
 
 function switchModalTab(tab) {
-    modalActiveTab = tab;
+    modalState.activeTab = tab;
     document.querySelectorAll('.modal-tab').forEach(e => e.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
     document.getElementById('tab-btn-'+tab).classList.add('active');
@@ -663,7 +668,7 @@ function switchModalTab(tab) {
 function updateCalcPace() {
     const val = document.getElementById('modal-target-time').value;
     const sec = parseTimeStr(val);
-    const r = races.find(x => x.id === modalTarget.raceId);
+    const r = races.find(x => x.id === modalState.target.raceId);
     if (sec > 0 && r && r.distance > 0) {
         const pace = (sec / r.distance) * 400;
         document.getElementById('modal-calc-pace').innerText = pace.toFixed(1);
@@ -673,7 +678,6 @@ function updateCalcPace() {
 }
 
 function parseTimeStr(str) {
-    // Supports "3:00", "180", "3:00.0"
     if (!str) return 0;
     const parts = str.split(':');
     if (parts.length === 2) {
@@ -686,12 +690,10 @@ function parseTimeStr(str) {
 function renderSegmentTable(segments) {
     const tbody = document.getElementById('segment-tbody');
     tbody.innerHTML = '';
-    // If empty, add one row at least? No, let user add.
-    // But for existing segments:
     segments.forEach((s, idx) => {
         addSegmentRow(s.distance, s.pace);
     });
-    if (segments.length === 0) addSegmentRow(400, 72); // Default row
+    if (segments.length === 0) addSegmentRow(400, 72); 
 }
 
 function addSegmentRow(dist = "", pace = "") {
@@ -710,27 +712,25 @@ function removeSegmentRow(btn) {
 }
 
 function saveModalData() { 
-    const r = races.find(x => x.id === modalTarget.raceId);
+    const r = races.find(x => x.id === modalState.target.raceId);
     let pacerData = {
-        id: modalTarget.pacerId || Date.now(),
-        color: modalSelectedColor,
+        id: modalState.target.pacerId || Date.now(),
+        color: modalState.selectedColor,
         currentDist: 0,
         finishTime: null
     };
 
-    if (modalActiveTab === 'simple') {
+    if (modalState.activeTab === 'simple') {
         const tStr = document.getElementById('modal-target-time').value;
         const totalSec = parseTimeStr(tStr);
         if (totalSec <= 0) return alert("目標タイムを入力してください");
         
         pacerData.type = 'target_time';
         pacerData.targetTime = totalSec;
-        pacerData.pace = (totalSec / r.distance) * 400; // Calculated Avg Pace for display
-        // Create Plan
+        pacerData.pace = (totalSec / r.distance) * 400; 
         pacerData.runPlan = PaceCalculator.createPlanFromTargetTime(r.distance, totalSec, 400);
         
     } else {
-        // Segments
         const rows = document.querySelectorAll('#segment-tbody tr');
         const segments = [];
         rows.forEach(tr => {
@@ -744,16 +744,13 @@ function saveModalData() {
         
         pacerData.type = 'segments';
         pacerData.segments = segments;
-        pacerData.pace = segments[0].pace; // Display first pace
-        // Create Plan
+        pacerData.pace = segments[0].pace; 
         pacerData.runPlan = PaceCalculator.createPlanFromSegments(segments, 400);
     }
 
-    // Update or Push
-    if (modalTarget.pacerId) {
-        const idx = r.pacers.findIndex(x => x.id === modalTarget.pacerId);
+    if (modalState.target.pacerId) {
+        const idx = r.pacers.findIndex(x => x.id === modalState.target.pacerId);
         if (idx >= 0) {
-            // Merge to keep runtime state if needed? No, config change resets state usually.
             r.pacers[idx] = { ...r.pacers[idx], ...pacerData };
         }
     } else {
@@ -765,7 +762,7 @@ function saveModalData() {
     renderSetup(); 
 }
 
-function deletePacerFromModal() { if(modalTarget.pacerId && confirm('削除?')) { const r=races.find(x=>x.id===modalTarget.raceId); r.pacers=r.pacers.filter(x=>x.id!==modalTarget.pacerId); saveRaces(); } closeModal(); renderSetup(); }
+function deletePacerFromModal() { if(modalState.target.pacerId && confirm('削除?')) { const r=races.find(x=>x.id===modalState.target.raceId); r.pacers=r.pacers.filter(x=>x.id!==modalState.target.pacerId); saveRaces(); } closeModal(); renderSetup(); }
 
 function startEditing(pid, v) { editingPaces[pid]=parseFloat(v); renderRace(); }
 function updateEditValue(pid, v) { editingPaces[pid]=parseFloat(v); /* don't re-render on every key, just store */ }
