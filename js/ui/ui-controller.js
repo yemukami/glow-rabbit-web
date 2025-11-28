@@ -421,8 +421,53 @@ function startRaceWrapper(id) {
     setActiveRaceId(id);
     const r = races.find(x=>x.id===id);
     
-    sendRaceConfig(r);
-    sendStartRace(r, r.startPos || 0, "00:00:00:00:00:00"); 
+    // Re-generate plans if missing (backward compatibility or race distance changed)
+    r.pacers.forEach(p => {
+        if (!p.runPlan) {
+            // Fallback to simple pace
+            const targetTime = (r.distance / 400) * (p.pace || 72);
+            p.runPlan = PaceCalculator.createPlanFromTargetTime(r.distance, targetTime, 400);
+        }
+        p.currentSegmentIdx = 0; // Plan index
+    });
+
+    // Send Initial Config (First Segment)
+    // Note: We assume all pacers start at 0m or use startPos offset. 
+    // If startPos > 0, we need to fast-forward the plan? 
+    // For now, we assume startPos is physical offset, but time starts at 0.
+    // commandSetTimeDelay sets the pace for the NEXT segment.
+    
+    for (let i = 0; i < r.pacers.length; i++) {
+        const p = r.pacers[i];
+        const firstSeg = p.runPlan[0];
+        const runnerId = i + 1; 
+        const colorRgb = getColorRGB(p.color);
+        
+        // Color
+        sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
+        
+        // Initial Pace
+        if (firstSeg) {
+            sendCommand(BluetoothCommunity.commandSetTimeDelay(400, firstSeg.paceFor400m, 400, deviceSettings.interval, [runnerId]));
+        }
+    }
+
+    // sendStartRace(r, r.startPos || 0, "00:00:00:00:00:00"); 
+    // Use default MAC for now or auto-scan logic
+    // We need to start the runner.
+    let runnerIndices = [];
+    r.pacers.forEach((p, i) => runnerIndices.push(i + 1));
+    
+    // Start
+    // The firmware expects 'startDevIndex' to be where the runner appears.
+    // Usually 1 if startPos=0. 
+    // startPos in meters -> device index = floor(startPos / interval) + 1
+    const startDevIdx = Math.floor((r.startPos || 0) / deviceSettings.interval) + 1;
+    
+    sendCommand(
+        BluetoothCommunity.commandStartRunner(runnerIndices, startDevIdx, "00:00:00:00:00:00"), 
+        true 
+    );
     
     r.status = 'running';
     r.markers = [];
@@ -430,9 +475,19 @@ function startRaceWrapper(id) {
     elapsedTime = 0; 
     saveRaces();
     
-    // No initCalibration here anymore
     renderRace();
     raceInterval = setInterval(() => updateState(r), 100);
+}
+
+function getColorRGB(colorName) {
+    switch(colorName) {
+        case 'red': return [0xFF, 0x00, 0x00];
+        case 'blue': return [0x00, 0x00, 0xFF];
+        case 'green': return [0x00, 0xFF, 0x00];
+        case 'yellow': return [0xFF, 0xFF, 0x00];
+        case 'purple': return [0xA0, 0x20, 0xF0];
+        default: return [0xFF, 0xFF, 0xFF];
+    }
 }
 
 function stopRaceWrapper(id) {
@@ -443,14 +498,54 @@ function stopRaceWrapper(id) {
 function updateState(race) {
     elapsedTime += 0.1;
     let allFinished = true;
-    const limit = race.distance + 50;
+    const limit = race.distance + 50; // Run a bit past finish
     
-    // Removed checkAndCalibrate(race);
-
-    race.pacers.forEach(p => {
-        if (p.currentDist < limit) {
-            let speed = 400.0 / p.pace;
+    race.pacers.forEach((p, idx) => {
+        const runnerId = idx + 1;
+        
+        // 1. Update Distance based on current segment speed
+        // Find which segment we are in based on currentDist?
+        // Or simply use the active segment from plan.
+        
+        if (!p.runPlan) return;
+        
+        let currentSeg = p.runPlan[p.currentSegmentIdx];
+        
+        // If we are done with all segments
+        if (!currentSeg) {
+            // Keep running at last known pace or stop?
+            // Just assume last pace.
+            // But actually we should be finished.
+        } else {
+            // Move
+            const speed = 400.0 / currentSeg.paceFor400m; // m/s
             p.currentDist += (speed * 0.1);
+            
+            // Check if we crossed segment boundary
+            if (p.currentDist >= currentSeg.endDist) {
+                // Advance to next segment
+                p.currentSegmentIdx++;
+                const nextSeg = p.runPlan[p.currentSegmentIdx];
+                
+                if (nextSeg) {
+                    // SEND COMMAND for next segment
+                    console.log(`[Pacer ${p.id}] Entering Seg ${p.currentSegmentIdx} (${nextSeg.startDist}-${nextSeg.endDist}m) @ ${nextSeg.paceFor400m.toFixed(1)}s`);
+                    
+                    // Note: In real world, we should send this A BIT BEFORE reaching the end.
+                    // Because latency.
+                    // For now, we send it exactly when crossed.
+                    // Ideally: sendCommand( ... nextSeg.paceFor400m ... )
+                    
+                    sendCommand(
+                        BluetoothCommunity.commandSetTimeDelay(400, nextSeg.paceFor400m, 400, deviceSettings.interval, [runnerId])
+                    );
+                    
+                    currentSeg = nextSeg;
+                }
+            }
+        }
+
+        if (p.currentDist < limit) {
             allFinished = false;
             if (p.currentDist >= race.distance && p.finishTime === null) p.finishTime = elapsedTime;
         } else {
@@ -480,11 +575,10 @@ function updateState(race) {
             let estStr = "";
              if (p.finishTime !== null) {
                 estStr = `Goal (${formatTime(p.finishTime)})`;
-            } else {
-                const speed = 400 / p.pace; 
-                const remDist = race.distance - p.currentDist;
-                const remSec = remDist / speed;
-                estStr = formatTime(elapsedTime + remSec);
+            } else if (p.runPlan) {
+                // Use runPlan total duration
+                const lastSeg = p.runPlan[p.runPlan.length - 1];
+                if(lastSeg) estStr = `Goal (${formatTime(lastSeg.endTime)})`;
             }
             estEl.innerText = estStr;
         }
@@ -516,10 +610,161 @@ function resetRace(id) { const r = races.find(x=>x.id===id); r.status = 'ready';
 function updateStartPos(id, val) { const r = races.find(x=>x.id===id); r.startPos = parseInt(val)||0; saveRaces(); }
 
 // --- MODAL ---
-function openModal(rid, pid) { modalTarget={raceId:rid, pacerId:pid}; const r=races.find(x=>x.id===rid); const el=document.getElementById('modal-pace-input'); if(pid){ const p=r.pacers.find(x=>x.id===pid); selectModalColor(p.color); el.value=p.pace; } else { selectModalColor('red'); el.value=72.0; } document.getElementById('modal-settings').classList.add('open'); }
+function openModal(rid, pid) { 
+    modalTarget={raceId:rid, pacerId:pid}; 
+    const r=races.find(x=>x.id===rid); 
+    
+    // Reset Tab
+    switchModalTab('simple');
+    
+    if(pid){ 
+        const p=r.pacers.find(x=>x.id===pid); 
+        selectModalColor(p.color); 
+        
+        // Load Data
+        if (p.type === 'segments' && p.segments && p.segments.length > 0) {
+            switchModalTab('segments');
+            renderSegmentTable(p.segments);
+        } else {
+            // Simple Mode
+            // Convert stored pace/time to display
+            // If we have targetTime stored, use it. Or calculate from pace.
+            let tVal = "";
+            if (p.targetTime) tVal = formatTime(p.targetTime);
+            else if (p.pace) {
+                // Estimate total time
+                let totalSec = (r.distance / 400) * p.pace;
+                tVal = formatTime(totalSec);
+            }
+            document.getElementById('modal-target-time').value = tVal;
+            updateCalcPace();
+        }
+    } else { 
+        // New Pacer
+        selectModalColor('red'); 
+        document.getElementById('modal-target-time').value = "";
+        document.getElementById('modal-calc-pace').innerText = "--.-";
+        renderSegmentTable([]);
+    } 
+    document.getElementById('modal-settings').classList.add('open'); 
+}
+
 function closeModal() { document.getElementById('modal-settings').classList.remove('open'); }
 function selectModalColor(c) { modalSelectedColor=c; document.querySelectorAll('.color-option').forEach(e=>e.classList.remove('selected')); document.querySelector('.bg-'+c).classList.add('selected'); }
-function saveModalData() { const r=races.find(x=>x.id===modalTarget.raceId); const v=parseFloat(document.getElementById('modal-pace-input').value); if(modalTarget.pacerId) { const p=r.pacers.find(x=>x.id===modalTarget.pacerId); p.color=modalSelectedColor; p.pace=v; } else { r.pacers.push({id:Date.now(), color:modalSelectedColor, pace:v, currentDist:0, finishTime:null}); } saveRaces(); closeModal(); renderSetup(); }
+
+function switchModalTab(tab) {
+    modalActiveTab = tab;
+    document.querySelectorAll('.modal-tab').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.getElementById('tab-btn-'+tab).classList.add('active');
+    document.getElementById('tab-content-'+tab).classList.add('active');
+}
+
+function updateCalcPace() {
+    const val = document.getElementById('modal-target-time').value;
+    const sec = parseTimeStr(val);
+    const r = races.find(x => x.id === modalTarget.raceId);
+    if (sec > 0 && r && r.distance > 0) {
+        const pace = (sec / r.distance) * 400;
+        document.getElementById('modal-calc-pace').innerText = pace.toFixed(1);
+    } else {
+        document.getElementById('modal-calc-pace').innerText = "--.-";
+    }
+}
+
+function parseTimeStr(str) {
+    // Supports "3:00", "180", "3:00.0"
+    if (!str) return 0;
+    const parts = str.split(':');
+    if (parts.length === 2) {
+        return (parseInt(parts[0]) * 60) + parseFloat(parts[1]);
+    } else {
+        return parseFloat(str);
+    }
+}
+
+function renderSegmentTable(segments) {
+    const tbody = document.getElementById('segment-tbody');
+    tbody.innerHTML = '';
+    // If empty, add one row at least? No, let user add.
+    // But for existing segments:
+    segments.forEach((s, idx) => {
+        addSegmentRow(s.distance, s.pace);
+    });
+    if (segments.length === 0) addSegmentRow(400, 72); // Default row
+}
+
+function addSegmentRow(dist = "", pace = "") {
+    const tbody = document.getElementById('segment-tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="number" class="segment-input inp-dist" value="${dist}" step="100"></td>
+        <td><input type="number" class="segment-input inp-pace" value="${pace}" step="0.1"></td>
+        <td><button class="btn-sm btn-danger" onclick="removeSegmentRow(this)">×</button></td>
+    `;
+    tbody.appendChild(tr);
+}
+
+function removeSegmentRow(btn) {
+    btn.closest('tr').remove();
+}
+
+function saveModalData() { 
+    const r = races.find(x => x.id === modalTarget.raceId);
+    let pacerData = {
+        id: modalTarget.pacerId || Date.now(),
+        color: modalSelectedColor,
+        currentDist: 0,
+        finishTime: null
+    };
+
+    if (modalActiveTab === 'simple') {
+        const tStr = document.getElementById('modal-target-time').value;
+        const totalSec = parseTimeStr(tStr);
+        if (totalSec <= 0) return alert("目標タイムを入力してください");
+        
+        pacerData.type = 'target_time';
+        pacerData.targetTime = totalSec;
+        pacerData.pace = (totalSec / r.distance) * 400; // Calculated Avg Pace for display
+        // Create Plan
+        pacerData.runPlan = PaceCalculator.createPlanFromTargetTime(r.distance, totalSec, 400);
+        
+    } else {
+        // Segments
+        const rows = document.querySelectorAll('#segment-tbody tr');
+        const segments = [];
+        rows.forEach(tr => {
+            const d = parseFloat(tr.querySelector('.inp-dist').value);
+            const p = parseFloat(tr.querySelector('.inp-pace').value);
+            if (d > 0 && p > 0) segments.push({ distance: d, pace: p });
+        });
+        if (segments.length === 0) return alert("区間を入力してください");
+        
+        segments.sort((a,b) => a.distance - b.distance);
+        
+        pacerData.type = 'segments';
+        pacerData.segments = segments;
+        pacerData.pace = segments[0].pace; // Display first pace
+        // Create Plan
+        pacerData.runPlan = PaceCalculator.createPlanFromSegments(segments, 400);
+    }
+
+    // Update or Push
+    if (modalTarget.pacerId) {
+        const idx = r.pacers.findIndex(x => x.id === modalTarget.pacerId);
+        if (idx >= 0) {
+            // Merge to keep runtime state if needed? No, config change resets state usually.
+            r.pacers[idx] = { ...r.pacers[idx], ...pacerData };
+        }
+    } else {
+        r.pacers.push(pacerData);
+    }
+    
+    saveRaces(); 
+    closeModal(); 
+    renderSetup(); 
+}
+
 function deletePacerFromModal() { if(modalTarget.pacerId && confirm('削除?')) { const r=races.find(x=>x.id===modalTarget.raceId); r.pacers=r.pacers.filter(x=>x.id!==modalTarget.pacerId); saveRaces(); } closeModal(); renderSetup(); }
 
 function startEditing(pid, v) { editingPaces[pid]=parseFloat(v); renderRace(); }
