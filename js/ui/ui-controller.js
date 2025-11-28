@@ -2,6 +2,7 @@ import { races, saveRaces, loadRaces, activeRaceId, setActiveRaceId, sendRaceCon
 import { deviceList, deviceSettings, deviceInteraction, isListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
+import { PaceCalculator } from '../core/pace-calculator.js';
 
 let expandedRaceId = null;
 let editingPaces = {};
@@ -433,6 +434,7 @@ function startRaceWrapper(id) {
             p.runPlan = PaceCalculator.createPlanFromTargetTime(r.distance, targetTime, 400);
         }
         p.currentSegmentIdx = 0; // Plan index
+        p.nextCommandPrepared = false; // send next segment ahead of time only once
     });
 
     // Send Initial Config (First Segment)
@@ -503,6 +505,7 @@ function updateState(race) {
     elapsedTime += 0.1;
     let allFinished = true;
     const limit = race.distance + 50; // Run a bit past finish
+    const PREP_MARGIN = 10; // meters before boundary to send next pace
     
     race.pacers.forEach((p, idx) => {
         const runnerId = idx + 1;
@@ -514,38 +517,25 @@ function updateState(race) {
         if (!p.runPlan) return;
         
         let currentSeg = p.runPlan[p.currentSegmentIdx];
+        const nextSeg = p.runPlan[p.currentSegmentIdx + 1];
         
         // If we are done with all segments
-        if (!currentSeg) {
-            // Keep running at last known pace or stop?
-            // Just assume last pace.
-            // But actually we should be finished.
-        } else {
-            // Move
+        if (currentSeg) {
             const speed = 400.0 / currentSeg.paceFor400m; // m/s
             p.currentDist += (speed * 0.1);
-            
-            // Check if we crossed segment boundary
+
+            // Pre-send next segment pace slightly before boundary
+            if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - PREP_MARGIN)) {
+                sendCommand(
+                    BluetoothCommunity.commandSetTimeDelay(400, nextSeg.paceFor400m, 400, deviceSettings.interval, [runnerId])
+                );
+                p.nextCommandPrepared = true;
+            }
+
+            // Boundary crossed
             if (p.currentDist >= currentSeg.endDist) {
-                // Advance to next segment
                 p.currentSegmentIdx++;
-                const nextSeg = p.runPlan[p.currentSegmentIdx];
-                
-                if (nextSeg) {
-                    // SEND COMMAND for next segment
-                    console.log(`[Pacer ${p.id}] Entering Seg ${p.currentSegmentIdx} (${nextSeg.startDist}-${nextSeg.endDist}m) @ ${nextSeg.paceFor400m.toFixed(1)}s`);
-                    
-                    // Note: In real world, we should send this A BIT BEFORE reaching the end.
-                    // Because latency.
-                    // For now, we send it exactly when crossed.
-                    // Ideally: sendCommand( ... nextSeg.paceFor400m ... )
-                    
-                    sendCommand(
-                        BluetoothCommunity.commandSetTimeDelay(400, nextSeg.paceFor400m, 400, deviceSettings.interval, [runnerId])
-                    );
-                    
-                    currentSeg = nextSeg;
-                }
+                p.nextCommandPrepared = false;
             }
         }
 
@@ -713,6 +703,7 @@ function removeSegmentRow(btn) {
 
 function saveModalData() { 
     const r = races.find(x => x.id === modalState.target.raceId);
+    if (!r || !r.distance) return alert("レース距離を設定してください");
     let pacerData = {
         id: modalState.target.pacerId || Date.now(),
         color: modalState.selectedColor,
@@ -739,8 +730,11 @@ function saveModalData() {
             if (d > 0 && p > 0) segments.push({ distance: d, pace: p });
         });
         if (segments.length === 0) return alert("区間を入力してください");
-        
+        // ensure ascending cumulative distance
         segments.sort((a,b) => a.distance - b.distance);
+        if (segments[segments.length - 1].distance < r.distance) {
+            segments.push({ distance: r.distance, pace: segments[segments.length - 1].pace });
+        }
         
         pacerData.type = 'segments';
         pacerData.segments = segments;

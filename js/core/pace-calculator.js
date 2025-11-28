@@ -3,7 +3,23 @@
  * Calculates split times and command schedules based on target time or segments.
  */
 export class PaceCalculator {
+    static #round(val, precision = 0.1) {
+        return Math.round(val / precision) * precision;
+    }
     
+    static #pushChunk(plan, { startDist, endDist, duration, startTime }) {
+        const segmentDist = endDist - startDist;
+        const paceCmd = (duration / segmentDist) * 400;
+        plan.push({
+            startDist,
+            endDist,
+            startTime,
+            endTime: startTime + duration,
+            duration,
+            paceFor400m: paceCmd,
+        });
+    }
+
     /**
      * Create a run plan based on a fixed target time for the total distance.
      * It adjusts pace every 'interval' meters to ensure the total time matches targetTime.
@@ -15,45 +31,32 @@ export class PaceCalculator {
      */
     static createPlanFromTargetTime(totalDistanceMeters, targetTimeSeconds, intervalMeters = 400) {
         const plan = [];
-        
-        // Basic pace per meter
         const baseSecondsPerMeter = targetTimeSeconds / totalDistanceMeters;
-        
+
         let currentDist = 0;
         let elapsedTime = 0;
-        
+        let carry = 0; // rounding residual carried to next chunk
+
         while (currentDist < totalDistanceMeters) {
-            let nextDist = Math.min(currentDist + intervalMeters, totalDistanceMeters);
-            let segmentDist = nextDist - currentDist;
-            
-            // Ideal time at nextDist
-            let idealTimeAtNext = nextDist * baseSecondsPerMeter;
-            
-            // Duration for this segment to hit the ideal time
-            // We might add logic here later to round to 0.1s and carry over error
-            let segmentDuration = idealTimeAtNext - elapsedTime;
-            
-            // Rounding to 0.1s precision as per requirement
-            // But we must carry the error to the next segment to avoid drift
-            // For now, let's calculate raw ideal duration first.
-            
-            // Convert to 400m pace for command
-            // paceCmd = seconds per 400m
-            let paceCmd = (segmentDuration / segmentDist) * 400;
-            
-            plan.push({
+            const nextDist = Math.min(currentDist + intervalMeters, totalDistanceMeters);
+            const idealRawDuration = (nextDist - currentDist) * baseSecondsPerMeter;
+
+            // apply carry from previous rounding before rounding again
+            const adjustedDuration = idealRawDuration + carry;
+            const roundedDuration = this.#round(adjustedDuration, 0.1);
+            carry = adjustedDuration - roundedDuration;
+
+            this.#pushChunk(plan, {
                 startDist: currentDist,
                 endDist: nextDist,
+                duration: roundedDuration,
                 startTime: elapsedTime,
-                endTime: idealTimeAtNext, // logical exact time
-                duration: segmentDuration,
-                paceFor400m: paceCmd
             });
-            
+
             currentDist = nextDist;
-            elapsedTime = idealTimeAtNext;
+            elapsedTime += roundedDuration;
         }
-        
+
         return plan;
     }
 
@@ -66,33 +69,34 @@ export class PaceCalculator {
         const plan = [];
         let currentDist = 0;
         let elapsedTime = 0;
-        
+        let carry = 0;
+
         // Segment definition: "Up to X meters, run at Y sec/400m"
         // We need to chop this into 'intervalMeters' chunks for the controller
         
         for (const seg of segments) {
             // seg.distance is the cumulative distance (e.g. 400, 800, 1000)
             // seg.pace is sec/400m
-            
+
             while (currentDist < seg.distance) {
-                let nextDist = Math.min(currentDist + intervalMeters, seg.distance);
-                let chunkDist = nextDist - currentDist;
-                
-                // Calculate duration for this chunk based on specified pace
-                let speedMetersPerSec = 400.0 / seg.pace;
-                let chunkDuration = chunkDist / speedMetersPerSec;
-                
-                plan.push({
+                const nextDist = Math.min(currentDist + intervalMeters, seg.distance);
+                const chunkDist = nextDist - currentDist;
+                const speedMetersPerSec = 400.0 / seg.pace;
+
+                const idealRawDuration = chunkDist / speedMetersPerSec;
+                const adjustedDuration = idealRawDuration + carry;
+                const roundedDuration = this.#round(adjustedDuration, 0.1);
+                carry = adjustedDuration - roundedDuration;
+
+                this.#pushChunk(plan, {
                     startDist: currentDist,
                     endDist: nextDist,
+                    duration: roundedDuration,
                     startTime: elapsedTime,
-                    endTime: elapsedTime + chunkDuration,
-                    duration: chunkDuration,
-                    paceFor400m: seg.pace
                 });
-                
+
                 currentDist = nextDist;
-                elapsedTime += chunkDuration;
+                elapsedTime += roundedDuration;
             }
         }
         
