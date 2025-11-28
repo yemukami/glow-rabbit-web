@@ -565,10 +565,6 @@ function importCSV(input) {}
 function fillWithDummy() {}
 function testBlinkDevice(i) { sendCommand(BluetoothCommunity.commandMakeLightUp(i+1, deviceList[i].mac)); }
 
-function openDeviceActionMenu(i) {
-    // ... Overlay generation ...
-    // Port logic from app.js
-}
 function startReplaceMode(i) {
     deviceInteraction.mode = 'replacing';
     deviceInteraction.targetIndex = i;
