@@ -18,9 +18,30 @@ let deviceInteraction = {
     targetIndex: -1, // Index being replaced or swap-source
     scannedMac: null // Temp storage for replacement
 };
+let isListDirty = false; // Flag for unsaved/unsynced changes
 
 // Race State
 let raceState = {
+// ... existing ...
+
+// ... inside syncAllDevices or nearby ...
+async function checkDirtyAndSync() {
+    if (isListDirty) {
+        if (confirm("デバイスリストに変更があります。同期しますか？\n(キャンセルすると変更は破棄されませんが、Glow-Cには反映されません)")) {
+            await syncAllDevices();
+            return true; // Synced
+        }
+        return false; // Not Synced
+    }
+    return true; // No changes
+}
+
+async function syncAllDevices() {
+// ... existing ...
+        alert("同期完了！");
+        isListDirty = false; // Clear dirty flag
+    } catch(e) {
+// ... existing ...
     distance: 1600,
     pace: 72.0,
     isRunning: false
@@ -506,6 +527,17 @@ async function processQueue() {
     }
 }
 
+async function checkDirtyAndSync() {
+    if (isListDirty) {
+        if (confirm("デバイスリストに変更があります。同期しますか？\n(キャンセルすると変更は破棄されませんが、Glow-Cには反映されません)")) {
+            await syncAllDevices();
+            return true; 
+        }
+        return false; 
+    }
+    return true; 
+}
+
 async function syncAllDevices() {
     if(!confirm("現在のリストをGlow-Cに上書き登録しますか？\n(一度リセットしてから順番に追加します)")) return;
     
@@ -546,6 +578,7 @@ async function syncAllDevices() {
         }
         
         alert("同期完了！");
+        isListDirty = false;
     } catch(e) {
         console.error(e);
         alert("同期中にエラーが発生しました: " + e);
