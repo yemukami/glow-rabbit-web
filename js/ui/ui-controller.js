@@ -1,5 +1,5 @@
 import { races, saveRaces, loadRaces, activeRaceId, setActiveRaceId, sendRaceConfig, sendStartRace, sendStopRace } from '../core/race-manager.js';
-import { deviceList, deviceSettings, deviceInteraction, isListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync } from '../core/device-manager.js';
+import { deviceList, deviceSettings, deviceInteraction, isListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 
@@ -537,6 +537,13 @@ function renderDeviceList() {
     const container = document.getElementById('device-list-container');
     if (!container) return;
     const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
+    
+    // Update Count Display
+    const countEl = document.getElementById('device-count-display');
+    if (countEl) {
+        countEl.innerText = `${deviceList.length} / ${maxDevices}`;
+    }
+
     let html = `<div class="device-grid ${deviceInteraction.mode === 'swapping' ? 'mode-swapping' : ''}">`;
     for (let i = 0; i < maxDevices; i++) {
         const d = deviceList[i];
@@ -562,7 +569,12 @@ function renderDeviceList() {
 // CSV functions...
 function downloadCSV() {}
 function importCSV(input) {}
-function fillWithDummy() {}
+function fillWithDummy() {
+    if(confirm("未設定の箇所をすべてダミーとして埋めますか？")) {
+        fillRemainingWithDummy();
+        renderDeviceList();
+    }
+}
 function testBlinkDevice(i) { sendCommand(BluetoothCommunity.commandMakeLightUp(i+1, deviceList[i].mac)); }
 
 function startReplaceMode(i) {

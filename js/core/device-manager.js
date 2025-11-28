@@ -129,6 +129,17 @@ export function setDeviceToDummy(index) {
     saveDeviceList();
 }
 
+export function fillRemainingWithDummy() {
+    const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
+    if (deviceList.length >= maxDevices) return; // Already full
+
+    while (deviceList.length < maxDevices) {
+        deviceList.push({ mac: DUMMY_MAC, id: deviceList.length + 1, status: 'dummy' });
+    }
+    isListDirty = true;
+    saveDeviceList();
+}
+
 export async function checkDirtyAndSync() {
     if (isListDirty) {
         if (confirm("Device list has changed. Sync with Glow-C now?")) {
