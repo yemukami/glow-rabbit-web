@@ -46,6 +46,9 @@ export function initUI() {
     window.openModal = openModal;
     window.closeModal = closeModal;
     window.selectModalColor = selectModalColor;
+    window.switchModalTab = switchModalTab;
+    window.addSegmentRow = addSegmentRow;
+    window.removeSegmentRow = removeSegmentRow;
     window.saveModalData = saveModalData;
     window.deletePacerFromModal = deletePacerFromModal;
     window.updateData = updateData;
