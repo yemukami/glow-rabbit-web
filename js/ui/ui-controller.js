@@ -11,9 +11,19 @@ let modalTarget = {};
 let modalSelectedColor = 'red';
 
 export function initUI() {
-    loadRaces();
-    loadDeviceList();
-    loadAppState();
+    console.log("[Init] Starting UI Initialization...");
+    
+    try {
+        loadRaces();
+        console.log("[Init] Races loaded:", races.length);
+        
+        loadDeviceList();
+        console.log("[Init] Devices loaded:", deviceList.length);
+        
+        loadAppState();
+    } catch (e) {
+        console.error("[Init] Data Load Error:", e);
+    }
     
     // Bind Globals
     window.switchMode = switchMode;
@@ -77,9 +87,23 @@ export function initUI() {
     window.cancelReplace = cancelReplace;
     window.confirmReplace = confirmReplace;
 
+    console.log("[Init] Globals bound. Switching mode...");
+
     // Initial Render
     const savedMode = localStorage.getItem('glow_current_mode') || 'race';
-    switchMode(savedMode, true);
+    try {
+        switchMode(savedMode, true);
+    } catch(e) {
+        console.error("[Init] Switch Mode Failed, falling back to 'setup'", e);
+        switchMode('setup', true);
+    }
+    
+    // If no races, add a default one so the screen isn't empty
+    if (races.length === 0) {
+        console.log("[Init] No races found. Adding default race.");
+        addNewRow(); 
+        switchMode('setup', true); // Force setup view
+    }
 }
 
 function handleNotification(event) {
