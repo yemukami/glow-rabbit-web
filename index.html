@@ -572,16 +572,44 @@
                         if(p.currentDist > 0) avgPace = (elapsedTime / p.currentDist) * 400;
                     }
                     let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${avgPace.toFixed(1)}</span>` : "";
-                    // Disable controls if running, review, or finished (Race Mode is strict)
-                    const isDisabled = (r.status === 'running' || r.status === 'review' || r.status === 'finished');
+                    // Show adjust buttons only if NOT running/review/finished
+                    const showAdjust = (r.status !== 'running' && r.status !== 'review' && r.status !== 'finished');
+                    
+                    // Pace Input: Read-only style if running
+                    const valClass = isEditing ? "pace-input changed" : "pace-input";
+                    const inputReadonly = !showAdjust ? "readonly" : "";
+                    const inputStyle = !showAdjust ? "border:none; background:transparent; color:var(--text-main);" : "";
+
+                    // Buttons
+                    const btnMinus = showAdjust ? `<button class="btn-adjust" onclick="adjustPace(${p.id}, 0.5)">+</button>` : "";
+                    const btnPlus = showAdjust ? `<button class="btn-adjust" onclick="adjustPace(${p.id}, -0.5)">−</button>` : "";
+                    const btnGroupClass = isEditing ? "btn-commit-group visible" : "btn-commit-group";
+                    
+                    let estStr = "--:--";
+                    // ... (Calculation logic same as before) ...
+                    if (p.finishTime !== null) {
+                        estStr = `Goal (${formatTime(p.finishTime)})`;
+                        avgPace = (p.finishTime / r.distance) * 400; 
+                    } else if (r.status === 'ready') {
+                        let speed = 400 / displayPace; 
+                        let estSec = r.distance / speed;
+                        estStr = `Est (${formatTime(estSec)})`;
+                    } else {
+                        const speed = 400 / displayPace; 
+                        const remDist = r.distance - p.currentDist;
+                        const remSec = remDist / speed;
+                        estStr = formatTime(elapsedTime + remSec);
+                        if(p.currentDist > 0) avgPace = (elapsedTime / p.currentDist) * 400;
+                    }
+                    let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${avgPace.toFixed(1)}</span>` : "";
 
                     return `
                     <div class="pacer-control-row" onclick="event.stopPropagation()">
                         <div class="pacer-info"><span class="dot-large bg-${p.color}"></span></div>
                         <div class="pacer-adjust">
-                            <button class="btn-adjust" ${isDisabled?'disabled':''} onclick="adjustPace(${p.id}, 0.5)">+</button>
-                            <div><input type="number" class="${valClass}" id="pace-input-${p.id}" value="${displayPace}" step="0.1" ${isDisabled?'disabled':''} onfocus="startEditing(${p.id}, this.value)" oninput="updateEditValue(${p.id}, this.value)">${avgLabel}</div>
-                            <button class="btn-adjust" ${isDisabled?'disabled':''} onclick="adjustPace(${p.id}, -0.5)">−</button>
+                            ${btnMinus}
+                            <div><input type="number" class="${valClass}" id="pace-input-${p.id}" value="${displayPace}" step="0.1" ${inputReadonly} style="${inputStyle}" onfocus="startEditing(${p.id}, this.value)" oninput="updateEditValue(${p.id}, this.value)">${avgLabel}</div>
+                            ${btnPlus}
                             <div class="${btnGroupClass}" id="btn-group-${p.id}"><button class="btn-cancel" onclick="cancelPace(${r.id}, ${p.id})">✖</button><button class="btn-commit" onclick="commitPace(${r.id}, ${p.id})">確定</button></div>
                         </div>
                         <div class="pacer-est-time">${estStr}</div>
