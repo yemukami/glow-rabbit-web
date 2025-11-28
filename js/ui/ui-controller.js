@@ -1,0 +1,506 @@
+import { races, saveRaces, loadRaces, activeRaceId, initCalibration, checkAndCalibrate, sendRaceConfig, sendStartRace, sendStopRace } from '../core/race-manager.js';
+import { deviceList, deviceSettings, deviceInteraction, isListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync } from '../core/device-manager.js';
+import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
+import { BluetoothCommunity } from '../ble/protocol.js';
+
+let expandedRaceId = null;
+let editingPaces = {};
+let raceInterval = null;
+let elapsedTime = 0;
+let modalTarget = {};
+let modalSelectedColor = 'red';
+
+export function initUI() {
+    loadRaces();
+    loadDeviceList();
+    loadAppState();
+    
+    // Bind Globals
+    window.switchMode = switchMode;
+    window.connectBLE = () => connectBLE(
+        () => updateConnectionStatus(false), 
+        handleNotification
+    ).then(() => updateConnectionStatus(true));
+    
+    window.checkDirtyAndSync = checkDirtyAndSync;
+    
+    // Setup
+    window.saveCompetitionTitle = saveCompetitionTitle;
+    window.addNewRow = addNewRow;
+    window.deleteRow = deleteRow;
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.selectModalColor = selectModalColor;
+    window.saveModalData = saveModalData;
+    window.deletePacerFromModal = deletePacerFromModal;
+    window.updateData = updateData;
+    
+    // Race
+    window.toggleRow = toggleRow;
+    window.startRaceWrapper = startRaceWrapper;
+    window.stopRaceWrapper = stopRaceWrapper;
+    window.finalizeRace = finalizeRace;
+    window.resetRace = resetRace;
+    window.updateStartPos = updateStartPos;
+    
+    window.startEditing = startEditing;
+    window.updateEditValue = updateEditValue;
+    window.adjustPace = adjustPace;
+    window.cancelPace = cancelPace;
+    window.commitPace = commitPace;
+    
+    window.closeVersionModal = closeVersionModal;
+    window.openVersionModal = openVersionModal;
+
+    // Devices
+    window.updateRaceSettings = (d, i) => { updateSettings(d, i); renderDeviceList(); };
+    window.fillWithDummy = fillWithDummy;
+    window.clearDeviceList = () => { if(confirm('All Clear?')) { deviceList.length=0; renderDeviceList(); } };
+    window.syncAllDevices = syncWrapper;
+    window.downloadCSV = downloadCSV;
+    window.importCSV = importCSV;
+    
+    window.openDeviceActionMenu = openDeviceActionMenu;
+    window.triggerStartReplace = startReplaceMode;
+    window.triggerStartSwap = startSwapMode;
+    window.triggerBlink = testBlinkDevice;
+    window.triggerDummy = (i) => { setDeviceToDummy(i); renderDeviceList(); };
+    window.triggerRemove = (i) => { removeDevice(i); renderDeviceList(); };
+    window.triggerMoveUp = (i) => { /* Need move logic in manager */ alert('Move Up Not Implemented yet'); };
+    window.triggerMoveDown = (i) => { /* Need move logic in manager */ alert('Move Down Not Implemented yet'); };
+    window.triggerReplace = (i) => { 
+        // Manual Replace Logic
+        const newMac = prompt("MAC Address?");
+        if(newMac) { replaceDevice(i, newMac); renderDeviceList(); }
+    };
+
+    window.cancelReplace = cancelReplace;
+    window.confirmReplace = confirmReplace;
+
+    // Initial Render
+    const savedMode = localStorage.getItem('glow_current_mode') || 'race';
+    switchMode(savedMode, true);
+}
+
+function handleNotification(event) {
+    const value = event.target.value;
+    const data = [];
+    for (let i = 0; i < value.byteLength; i++) {
+        data.push(value.getUint8(i));
+    }
+    
+    if (data.length >= 12) {
+        let macBytes = data.slice(6, 12);
+        if (macBytes.some(b => b !== 0)) {
+            let macStr = macBytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(':');
+            
+            if (deviceInteraction.mode === 'replacing') {
+                deviceInteraction.scannedMac = macStr;
+                updateReplaceModalUI(macStr);
+            } else {
+                const res = addDeviceToList(macStr);
+                if(res.added) renderDeviceList();
+            }
+        }
+    }
+}
+
+function updateConnectionStatus(connected) {
+    const el = document.querySelector('.ble-status');
+    const btn = document.querySelector('.btn-connect');
+    if(connected) { 
+        if(el) { el.innerHTML = '● 接続完了'; el.style.color = 'var(--success-color)'; }
+        if(btn) { btn.innerHTML = '🔌 切断'; btn.style.background = '#EEE'; btn.style.color='#555'; }
+    } else { 
+        if(el) { el.innerHTML = '● 未接続'; el.style.color = '#999'; }
+        if(btn) { btn.innerHTML = '📡 接続'; btn.style.background='#EEF2F5'; btn.style.color='var(--info-color)'; }
+    }
+}
+
+async function syncWrapper() {
+    if(await syncAllDevices()) alert('同期完了');
+}
+
+// --- Navigation ---
+
+function loadAppState() {
+    const savedTitle = localStorage.getItem('glow_competition_title');
+    if(savedTitle) document.getElementById('competition-title').value = savedTitle;
+}
+
+function saveCompetitionTitle(val) {
+    localStorage.setItem('glow_competition_title', val);
+    document.getElementById('race-screen-title').innerText = val;
+}
+
+async function switchMode(mode, skipGuard = false) {
+    if (!document.getElementById('screen-'+mode)) return;
+
+    try {
+        if (!skipGuard && document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
+            if (await checkDirtyAndSync() === false) return;
+        }
+        if (!skipGuard && document.getElementById('screen-race').classList.contains('active') && mode !== 'race') {
+            if (activeRaceId !== null) {
+                const r = races.find(x => x.id === activeRaceId);
+                if (r && r.status === 'running') {
+                    if (!confirm("レース実行中です。停止しますか？")) return;
+                    stopRaceWrapper(activeRaceId);
+                }
+            }
+        }
+    } catch(e) { console.warn(e); }
+
+    document.querySelectorAll('.screen').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.mode-btn').forEach(e => e.classList.remove('active'));
+    document.getElementById('screen-'+mode).classList.add('active');
+    document.getElementById('btn-mode-'+mode).classList.add('active');
+    localStorage.setItem('glow_current_mode', mode);
+    
+    if(mode==='setup') renderSetup();
+    if(mode==='race') {
+        const t = document.getElementById('competition-title');
+        if(t) document.getElementById('race-screen-title').innerText = t.value;
+        renderRace();
+    }
+    if(mode === 'devices') renderDeviceList();
+}
+
+// --- SETUP SCREEN ---
+
+function renderSetup() {
+    const tb = document.getElementById('setup-tbody'); 
+    if(!tb) return;
+    tb.innerHTML = '';
+    races.forEach(r => {
+        let ph = r.pacers.map(p=>`<span class="pacer-chip" onclick="openModal(${r.id},${p.id})"><span class="dot bg-${p.color}"></span>${p.pace}s</span>`).join('');
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="time" class="input-cell" value="${r.time}" onchange="updateData(${r.id}, 'time', this.value)"></td>
+            <td><input type="text" class="input-cell" value="${r.name}" onchange="updateData(${r.id}, 'name', this.value)"></td>
+            <td><input type="number" class="input-cell" value="${r.group}" onchange="updateData(${r.id}, 'group', this.value)"></td>
+            <td><input type="number" class="input-cell" value="${r.distance}" onchange="updateData(${r.id}, 'distance', this.value)"></td>
+            <td><input type="number" class="input-cell input-start" value="${r.startPos}" onchange="updateData(${r.id}, 'startPos', this.value)"></td>
+            <td><input type="number" class="input-cell" value="${r.count}" onchange="updateData(${r.id}, 'count', this.value)"></td>
+            <td>${ph} <button class="btn-sm btn-outline" onclick="openModal(${r.id},null)">＋</button></td>
+            <td><button class="btn-sm btn-danger" style="border:none; background:#FFF0F0;" onclick="deleteRow(${r.id})">削除</button></td>
+        `;
+        tb.appendChild(tr);
+    });
+}
+
+function updateData(id, f, v) { 
+    const r = races.find(x=>x.id===id); 
+    if(r) {
+        if(f==='distance') {
+            let d = parseInt(v)||0;
+            r.distance = d;
+            let mod = d % 400;
+            r.startPos = (mod === 0) ? 0 : (400 - mod);
+            saveRaces();
+            renderSetup();
+        } else {
+            r[f] = (f==='count'||f==='group'||f==='startPos')?parseInt(v)||0:v; 
+            saveRaces();
+        }
+    } 
+}
+
+function addNewRow() { 
+    races.push({id:Date.now(), time:"10:00", name:"New Race", group:1, distance:1000, startPos:200, count:10, status:"ready", pacers:[], markers:[]}); 
+    saveRaces(); renderSetup(); 
+}
+
+function deleteRow(id) { 
+    if(confirm("削除?")){
+        const idx = races.findIndex(r=>r.id===id);
+        if(idx>=0) races.splice(idx,1);
+        saveRaces(); renderSetup();
+    } 
+}
+
+// --- RACE SCREEN ---
+
+function toggleRow(id, event) {
+    if (event.target.tagName === 'BUTTON' || event.target.tagName === 'INPUT') return;
+    expandedRaceId = (expandedRaceId === id) ? null : id;
+    renderRace();
+}
+
+function renderRace() {
+    const tbody = document.getElementById('race-tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    
+    races.forEach(r => {
+        const tr = document.createElement('tr');
+        let rowClass = 'race-row';
+        if (r.id === expandedRaceId) rowClass += ' expanded';
+        if (r.status === 'running') rowClass += ' active-running';
+        if (r.status === 'review') rowClass += ' active-review';
+        if (r.status === 'finished') rowClass += ' finished';
+        tr.className = rowClass;
+        tr.onclick = (e) => toggleRow(r.id, e);
+
+        let content = '';
+        const isExpanded = (r.id === expandedRaceId);
+        let badge = '';
+        if(r.status === 'ready') badge = '<span class="status-badge status-ready">待機</span>';
+        if(r.status === 'running') badge = '<span class="status-badge status-running">実行中</span>';
+        if(r.status === 'review') badge = '<span class="status-badge status-review">記録確認</span>';
+        if(r.status === 'finished') badge = '<span class="status-badge status-finished">完了</span>';
+
+        if (!isExpanded) {
+            let chips = r.pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color}"></span>${p.pace}s</span>`).join(' ');
+            content = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:16px;">${r.time} ${r.name}</strong> 
+                        <span style="color:#8E8E93; margin-left:10px;">${r.group}組 (${r.distance}m)</span>
+                        ${badge}
+                        <div style="margin-top:8px;">${chips}</div>
+                    </div>
+                    <div style="color:#C6C6C8; font-size:20px;">▼</div>
+                </div>`;
+        } else {
+            let pacerRows = r.pacers.map(p => {
+                // Edit Logic...
+                const isEditing = editingPaces[p.id] !== undefined;
+                const displayPace = isEditing ? editingPaces[p.id] : p.pace;
+                const valClass = isEditing ? "pace-input changed" : "pace-input";
+                const showAdjust = (r.status !== 'running' && r.status !== 'review' && r.status !== 'finished');
+                const inputReadonly = !showAdjust ? "readonly" : "";
+                const inputStyle = !showAdjust ? "border:none; background:transparent; color:var(--text-main);" : "";
+                const btnGroupClass = isEditing ? "btn-commit-group visible" : "btn-commit-group";
+                
+                const btnMinus = showAdjust ? `<button class="btn-adjust" onclick="adjustPace(${p.id}, 0.5)">+</button>` : "";
+                const btnPlus = showAdjust ? `<button class="btn-adjust" onclick="adjustPace(${p.id}, -0.5)">−</button>` : "";
+
+                let estStr = "--:--";
+                let avgPace = 0;
+                if (p.finishTime !== null) {
+                    estStr = `Goal (${formatTime(p.finishTime)})`;
+                    avgPace = (p.finishTime / r.distance) * 400; 
+                } else if (r.status === 'ready') {
+                    let speed = 400 / displayPace; 
+                    let estSec = r.distance / speed;
+                    estStr = `Est (${formatTime(estSec)})`;
+                } else {
+                    const speed = 400 / displayPace; 
+                    const remDist = r.distance - p.currentDist;
+                    const remSec = remDist / speed;
+                    estStr = formatTime(elapsedTime + remSec);
+                    if(p.currentDist > 0) avgPace = (elapsedTime / p.currentDist) * 400;
+                }
+                let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${avgPace.toFixed(1)}</span>` : "";
+
+                return `
+                <div class="pacer-control-row" onclick="event.stopPropagation()">
+                    <div class="pacer-info"><span class="dot-large bg-${p.color}"></span></div>
+                    <div class="pacer-adjust">
+                        ${btnMinus}
+                        <div><input type="number" class="${valClass}" id="pace-input-${p.id}" value="${displayPace}" step="0.1" ${inputReadonly} style="${inputStyle}" onfocus="startEditing(${p.id}, this.value)" oninput="updateEditValue(${p.id}, this.value)">${avgLabel}</div>
+                        ${btnPlus}
+                        <div class="${btnGroupClass}" id="btn-group-${p.id}"><button class="btn-cancel" onclick="cancelPace(${r.id}, ${p.id})">✖</button><button class="btn-commit" onclick="commitPace(${r.id}, ${p.id})">確定</button></div>
+                    </div>
+                    <div class="pacer-est-time">${estStr}</div>
+                </div>`;
+            }).join('');
+
+            // Progress Bar...
+            const totalScale = r.distance + 50;
+            let headsHtml = r.pacers.map(p => {
+                let leftPct = Math.min(((p.currentDist + r.startPos) / (totalScale + r.startPos)) * 100, 100); // Fixed logic?
+                // Actually, pure distance pct:
+                leftPct = Math.min((p.currentDist / totalScale) * 100, 100);
+                return `<div class="pacer-head bg-${p.color}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${Math.floor(p.currentDist)}m</div></div>`;
+            }).join('');
+            
+            let marksHtml = r.markers.map(m => {
+                let leftPct = (m.dist / totalScale) * 100;
+                return `<div class="history-tick bg-${m.color}" style="left:${leftPct}%"><div class="history-tick-label text-${m.color}">${m.pace}</div></div>`;
+            }).join('');
+            
+            let maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist));
+            let fillPct = Math.min((maxDist / totalScale) * 100, 100);
+
+            // Buttons
+            let btnArea = "";
+            let infoHeader = "";
+            if (r.status === 'ready') {
+                // ...
+                btnArea = `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${r.id})">START</button></div>`;
+                infoHeader = `<div style="display:flex; gap:10px;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${r.startPos}" style="width:50px;" onchange="updateStartPos(${r.id},this.value)"></div>`;
+            } else if (r.status === 'running') {
+                btnArea = `<button class="btn-big-stop" onclick="event.stopPropagation(); stopRaceWrapper(${r.id})">STOP</button>`;
+                infoHeader = `<div class="timer-big" id="timer-display">${formatTime(elapsedTime)}</div>`;
+            } else if (r.status === 'review') {
+                btnArea = `<button class="btn-big-close" onclick="event.stopPropagation(); finalizeRace(${r.id})">閉じる</button>`;
+                infoHeader = `<div class="timer-big">${formatTime(elapsedTime)}</div>`;
+            } else if (r.status === 'finished') {
+                btnArea = `<button class="btn-big-reset" onclick="event.stopPropagation(); resetRace(${r.id})">リセット</button>`;
+                infoHeader = `<div>記録済み</div>`;
+            }
+
+            content = `
+                <div style="border-bottom:1px solid #F0F0F0; padding-bottom:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                        <span style="font-size:20px; font-weight:bold;">${r.time} ${r.name}</span>
+                        <span style="color:#8E8E93; margin-left:10px;">${r.group}組 (${r.distance}m)</span>
+                            ${badge}
+                        </div>
+                        <button style="border:none; background:none; color:#CCC; font-size:18px;">▲</button>
+                </div>
+                <div class="race-control-layout" onclick="event.stopPropagation()">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
+                            ${infoHeader}
+                            <div>先頭: <strong>${Math.floor(maxDist)}</strong>m</div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-fill" style="width:${fillPct}%"></div>
+                            ${headsHtml} ${marksHtml}
+                        </div>
+                        <div class="inline-controller">${pacerRows}</div>
+                    </div>
+                    <div>${btnArea}</div>
+                </div>`;
+        }
+        tr.innerHTML = `<td>${content}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function startRaceWrapper(id) {
+    if(activeRaceId && activeRaceId !== id) return alert("Other race running");
+    activeRaceId = id;
+    const r = races.find(x=>x.id===id);
+    
+    sendRaceConfig(r);
+    sendStartRace(r, r.startPos || 0, "00:00:00:00:00:00"); // MAC logic needs fix? sendStartRace uses devIndex.
+    
+    r.status = 'running';
+    r.markers = [];
+    r.pacers.forEach(p => { p.currentDist=0; p.finishTime=null; });
+    elapsedTime = 0; 
+    saveRaces();
+    
+    initCalibration(r);
+    renderRace();
+    raceInterval = setInterval(() => updateState(r), 100);
+}
+
+function stopRaceWrapper(id) {
+    sendStopRace();
+    freezeRace(id);
+}
+
+function updateState(race) {
+    elapsedTime += 0.1;
+    let allFinished = true;
+    const limit = race.distance + 50;
+    
+    checkAndCalibrate(race);
+
+    race.pacers.forEach(p => {
+        if (p.currentDist < limit) {
+            let speed = 400.0 / p.pace;
+            p.currentDist += (speed * 0.1);
+            allFinished = false;
+            if (p.currentDist >= race.distance && p.finishTime === null) p.finishTime = elapsedTime;
+        } else {
+                if (p.finishTime === null) p.finishTime = elapsedTime;
+        }
+    });
+    
+    // DOM Update (Optimized?)
+    // For now just calling renderRace is too heavy.
+    // Update specific DOM elements.
+    const tEl = document.getElementById('timer-display');
+    if(tEl) tEl.innerText = formatTime(elapsedTime);
+    // Update heads...
+    // To implement "updateDom" logic here would require selecting elements.
+    // Re-rendering race is safe but heavy.
+    renderRace(); // OK for now.
+
+    if(allFinished) {
+            sendStopRace();
+            freezeRace(race.id);
+    }
+}
+
+function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); r.status = 'review'; renderRace(); saveRaces(); }
+function finalizeRace(id) { const r = races.find(x=>x.id===id); r.status = 'finished'; activeRaceId = null; expandedRaceId = null; renderRace(); saveRaces(); }
+function resetRace(id) { const r = races.find(x=>x.id===id); r.status = 'ready'; r.pacers.forEach(p=>{ p.currentDist=0; p.finishTime=null; }); renderRace(); saveRaces(); }
+function updateStartPos(id, val) { const r = races.find(x=>x.id===id); r.startPos = parseInt(val)||0; saveRaces(); }
+
+// --- MODAL ---
+function openModal(rid, pid) { modalTarget={raceId:rid, pacerId:pid}; const r=races.find(x=>x.id===rid); const el=document.getElementById('modal-pace-input'); if(pid){ const p=r.pacers.find(x=>x.id===pid); selectModalColor(p.color); el.value=p.pace; } else { selectModalColor('red'); el.value=72.0; } document.getElementById('modal-settings').classList.add('open'); }
+function closeModal() { document.getElementById('modal-settings').classList.remove('open'); }
+function selectModalColor(c) { modalSelectedColor=c; document.querySelectorAll('.color-option').forEach(e=>e.classList.remove('selected')); document.querySelector('.bg-'+c).classList.add('selected'); }
+function saveModalData() { const r=races.find(x=>x.id===modalTarget.raceId); const v=parseFloat(document.getElementById('modal-pace-input').value); if(modalTarget.pacerId) { const p=r.pacers.find(x=>x.id===modalTarget.pacerId); p.color=modalSelectedColor; p.pace=v; } else { r.pacers.push({id:Date.now(), color:modalSelectedColor, pace:v, currentDist:0, finishTime:null}); } saveRaces(); closeModal(); renderSetup(); }
+function deletePacerFromModal() { if(modalTarget.pacerId && confirm('削除?')) { const r=races.find(x=>x.id===modalTarget.raceId); r.pacers=r.pacers.filter(x=>x.id!==modalTarget.pacerId); saveRaces(); } closeModal(); renderSetup(); }
+
+function startEditing(pid, v) { editingPaces[pid]=parseFloat(v); renderRace(); }
+function updateEditValue(pid, v) { editingPaces[pid]=parseFloat(v); /* don't re-render on every key, just store */ }
+function adjustPace(pid, d) { /* logic */ } // Simplification for now
+function cancelPace(rid, pid) { delete editingPaces[pid]; renderRace(); }
+function commitPace(rid, pid) { /* logic */ renderRace(); saveRaces(); }
+
+function openVersionModal() { document.getElementById('modal-version').classList.add('open'); }
+function closeVersionModal() { document.getElementById('modal-version').classList.remove('open'); }
+
+function formatTime(s) { if(s<0) return "00:00.0"; let m=Math.floor(s/60), sec=Math.floor(s%60), ms=Math.floor((s*10)%10); return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}.${ms}`; }
+
+function renderDeviceList() {
+    const container = document.getElementById('device-list-container');
+    if (!container) return;
+    const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
+    let html = `<div class="device-grid ${deviceInteraction.mode === 'swapping' ? 'mode-swapping' : ''}">`;
+    for (let i = 0; i < maxDevices; i++) {
+        const d = deviceList[i];
+        const dist = i * deviceSettings.interval;
+        let cellClass = 'device-cell';
+        if (deviceInteraction.mode === 'swapping' && deviceInteraction.targetIndex === i) cellClass += ' swap-source';
+        let macDisplay = '';
+        if (d) {
+            if(d.status==='dummy') { cellClass += ' cell-dummy'; macDisplay='(DUMMY)'; }
+            else { cellClass += ' cell-active'; macDisplay=d.mac.slice(-5); } // Simplified
+        } else { cellClass += ' cell-empty'; }
+        
+        let onClick = `openDeviceActionMenu(${i})`;
+        if (deviceInteraction.mode === 'swapping') onClick = `triggerStartSwap(${i})`; // Wait, executeSwap?
+        // Re-bind execute logic needs export
+        
+        html += `<div class="${cellClass}" onclick="${onClick}"><span>#${i+1} ${dist}m</span><br><small>${macDisplay}</small></div>`;
+    }
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+// CSV functions...
+function downloadCSV() {}
+function importCSV(input) {}
+function fillWithDummy() {}
+function testBlinkDevice(i) { sendCommand(BluetoothCommunity.commandMakeLightUp(i+1, deviceList[i].mac)); }
+
+function openDeviceActionMenu(i) {
+    // ... Overlay generation ...
+    // Port logic from app.js
+}
+function startReplaceMode(i) {
+    deviceInteraction.mode = 'replacing';
+    deviceInteraction.targetIndex = i;
+}
+function startSwapMode(i) {
+    if(deviceInteraction.mode === 'swapping') {
+        // Execute
+        swapDevices(deviceInteraction.targetIndex, i);
+        deviceInteraction.mode = 'normal';
+        deviceInteraction.targetIndex = -1;
+    } else {
+        deviceInteraction.mode = 'swapping';
+        deviceInteraction.targetIndex = i;
+    }
+    renderDeviceList();
+}

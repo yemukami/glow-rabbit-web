@@ -1,0 +1,11 @@
+        /* GRID VIEW */
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            padding: 10px;
+        }
+        /* Swap Mode Styles */
+        .device-grid.mode-swapping .device-cell { cursor: alias; opacity: 0.6; }
+        .device-grid.mode-swapping .device-cell:hover { opacity: 1; transform: scale(1.05); border-color: var(--info-color); }
+        .device-grid.mode-swapping .device-cell.swap-source { background: #E3F2FD; border-color: var(--info-color); opacity: 1; box-shadow: 0 0 8px rgba(0,122,255,0.3); }

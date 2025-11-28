@@ -1,0 +1,123 @@
+import { sendCommand } from '../ble/controller.js';
+import { BluetoothCommunity } from '../ble/protocol.js';
+
+export let deviceList = []; 
+const DUMMY_MAC = "00:00:00:00:00:00";
+
+export let deviceSettings = {
+    interval: 2,
+    totalDistance: 400
+};
+
+export let deviceInteraction = {
+    mode: 'normal', 
+    targetIndex: -1, 
+    scannedMac: null 
+};
+
+export let isListDirty = false;
+export let isSyncing = false;
+
+export function loadDeviceList() {
+    const savedList = localStorage.getItem('glow_device_list');
+    const savedSettings = localStorage.getItem('glow_settings');
+    
+    if (savedSettings) {
+        const s = JSON.parse(savedSettings);
+        if(s.totalDistance) deviceSettings.totalDistance = parseInt(s.totalDistance);
+        if(s.deviceInterval) deviceSettings.interval = parseInt(s.deviceInterval);
+    }
+    
+    if (savedList) {
+        try {
+            deviceList = JSON.parse(savedList);
+        } catch(e) { console.error(e); }
+    }
+}
+
+export function saveDeviceList() {
+    localStorage.setItem('glow_device_list', JSON.stringify(deviceList));
+    localStorage.setItem('glow_settings', JSON.stringify({ 
+        totalDistance: deviceSettings.totalDistance, 
+        deviceInterval: deviceSettings.interval 
+    }));
+}
+
+export function addDeviceToList(mac) {
+    const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
+    const existingIndex = deviceList.findIndex(d => d.mac === mac);
+    if (existingIndex >= 0) return { added: false, index: existingIndex };
+
+    if (deviceList.length < maxDevices) {
+        deviceList.push({ mac: mac, id: deviceList.length + 1, status: 'new' });
+        saveDeviceList();
+        return { added: true, index: deviceList.length - 1 };
+    } else {
+        return { added: false, full: true };
+    }
+}
+
+export function expandListToIndex(index) {
+    while(deviceList.length <= index) {
+        deviceList.push({ mac: DUMMY_MAC, id: deviceList.length+1, status:'dummy' });
+    }
+}
+
+export async function syncAllDevices() {
+    isSyncing = true;
+    try {
+        await sendCommand(BluetoothCommunity.commandReset());
+        let i = 0;
+        while (i < deviceList.length) {
+            const d = deviceList[i];
+            if (d.mac === DUMMY_MAC) {
+                let count = 0;
+                let j = i;
+                while (j < deviceList.length && deviceList[j].mac === DUMMY_MAC) { count++; j++; }
+                await sendCommand(BluetoothCommunity.commandAddDummyDevice(count));
+                i += count;
+            } else {
+                await sendCommand(BluetoothCommunity.commandAddDevice(d.mac));
+                i++;
+            }
+            await new Promise(r => setTimeout(r, 50));
+        }
+        isListDirty = false;
+        return true;
+    } catch(e) {
+        console.error(e);
+        throw e;
+    } finally {
+        setTimeout(() => { isSyncing = false; }, 1000);
+    }
+}
+
+// ... Swap/Replace logic helpers ...
+export function swapDevices(idx1, idx2) {
+    expandListToIndex(Math.max(idx1, idx2));
+    const temp = deviceList[idx1];
+    deviceList[idx1] = deviceList[idx2];
+    deviceList[idx2] = temp;
+    if(deviceList[idx1]) deviceList[idx1].id = idx1 + 1;
+    if(deviceList[idx2]) deviceList[idx2].id = idx2 + 1;
+    isListDirty = true;
+    saveDeviceList();
+}
+
+export function replaceDevice(idx, mac) {
+    expandListToIndex(idx);
+    deviceList[idx] = { mac: mac, id: idx + 1, status: 'replaced' };
+    isListDirty = true;
+    saveDeviceList();
+}
+
+export function removeDevice(idx) {
+    deviceList.splice(idx, 1);
+    saveDeviceList();
+}
+
+export function updateSettings(dist, interval) {
+    if (dist) deviceSettings.totalDistance = parseInt(dist);
+    if (interval) deviceSettings.interval = parseInt(interval);
+    saveDeviceList();
+}
