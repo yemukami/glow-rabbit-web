@@ -202,6 +202,10 @@
             gap: 10px;
             padding: 10px;
         }
+        /* Swap Mode Styles */
+        .device-grid.mode-swapping .device-cell { cursor: alias; opacity: 0.6; }
+        .device-grid.mode-swapping .device-cell:hover { opacity: 1; transform: scale(1.05); border-color: var(--info-color); }
+        .device-grid.mode-swapping .device-cell.swap-source { background: #E3F2FD; border-color: var(--info-color); opacity: 1; box-shadow: 0 0 8px rgba(0,122,255,0.3); }
         .device-cell {
             background: #FFF; border: 1px solid #E1E5EA; border-radius: 8px;
             padding: 8px; cursor: pointer; position: relative;
@@ -398,14 +402,23 @@
         if (saved) {
             try {
                 races = JSON.parse(saved);
-                // Reset volatile states
+                if(!Array.isArray(races)) races = [];
+                // Validation & Recovery
                 races.forEach(r => {
-                    if(r.status === 'running') r.status = 'ready'; // Crash recovery
+                    if(!r.status) r.status = 'ready';
+                    if(r.status === 'running') r.status = 'ready';
                     r.markers = r.markers || [];
+                    r.pacers = r.pacers || [];
+                    r.pacers.forEach(p => {
+                         if(typeof p.pace !== 'number') p.pace = 72.0;
+                         if(p.currentDist === undefined) p.currentDist = 0;
+                         if(p.finishTime === undefined) p.finishTime = null;
+                    });
                 });
-            } catch(e) { console.error("Load Error:", e); }
+            } catch(e) { console.error("Load Error:", e); races = []; }
+        } else {
+            races = [];
         }
-        if(!races) races = [];
     }
 
     function saveRaces() {

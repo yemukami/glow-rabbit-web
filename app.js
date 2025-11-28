@@ -12,6 +12,12 @@ let isConnected = false;
 // Device List Management
 let deviceList = []; // { mac: "AA:BB:..", id: 1, status: "ok" }
 let isSyncing = false; // Flag to prevent self-loop addition during sync
+// Interaction State for Replace/Swap
+let deviceInteraction = {
+    mode: 'normal', // 'normal', 'replacing', 'swapping'
+    targetIndex: -1, // Index being replaced or swap-source
+    scannedMac: null // Temp storage for replacement
+};
 
 // Race State
 let raceState = {
@@ -119,13 +125,20 @@ function handleNotifications(event) {
             
             // If syncing, ignore notifications to prevent echo/loopback adding
             if (isSyncing) return;
-            
-            // Ignore Dummy MAC if it ever appears
+            // Ignore Dummy MAC
             if (macStr === DUMMY_MAC) return;
 
             console.log("Received MAC:", macStr);
             
-            // Add to list if not exists
+            // Mode Check
+            if (deviceInteraction.mode === 'replacing') {
+                // Capture MAC for replacement
+                deviceInteraction.scannedMac = macStr;
+                updateReplaceModalUI(macStr); // Update the modal if open
+                return; // Do NOT add to list
+            }
+
+            // Normal: Add to list if not exists
             addDeviceToList(macStr);
         }
     }
@@ -284,8 +297,15 @@ function renderDeviceList() {
     const container = document.getElementById('device-list-container');
     if (!container) return;
     
+    // Update Grid Container Class for Swap Mode
+    const gridEl = document.querySelector('.device-grid');
+    if(gridEl) {
+        if(deviceInteraction.mode === 'swapping') gridEl.classList.add('mode-swapping');
+        else gridEl.classList.remove('mode-swapping');
+    }
+
     const maxDevices = Math.ceil(totalDistance / deviceInterval);
-    let html = `<div class="device-grid">`;
+    let html = `<div class="device-grid ${deviceInteraction.mode === 'swapping' ? 'mode-swapping' : ''}">`;
     
     // Render existing devices + empty slots up to maxDevices
     for (let i = 0; i < maxDevices; i++) {
@@ -293,6 +313,11 @@ function renderDeviceList() {
         const dist = i * deviceInterval;
         
         let cellClass = 'device-cell';
+        // Swap Source Highlight
+        if (deviceInteraction.mode === 'swapping' && deviceInteraction.targetIndex === i) {
+            cellClass += ' swap-source';
+        }
+
         let content = '';
         let macDisplay = '';
         
@@ -314,8 +339,11 @@ function renderDeviceList() {
         // Safe ID for highlighting
         const safeId = d ? 'device-cell-' + d.mac.replace(/:/g, '') : '';
         
-        // OnClick handler for action menu
-        const onClick = `openDeviceActionMenu(${i})`;
+        // OnClick handler
+        let onClick = `openDeviceActionMenu(${i})`;
+        if (deviceInteraction.mode === 'swapping') {
+            onClick = `executeSwap(${i})`;
+        }
 
         html += `
             <div class="${cellClass}" id="${safeId}" onclick="${onClick}">
@@ -653,7 +681,12 @@ function openDeviceActionMenu(index) {
             actionsHtml += `<button class="menu-btn" onclick="window.triggerBlink(${index})">💡 テスト点灯 (Blink)</button>`;
             actionsHtml += `<button class="menu-btn" onclick="window.triggerDummy(${index})">⚠️ 故障/ダミー化</button>`;
         }
-        actionsHtml += `<button class="menu-btn" onclick="window.triggerReplace(${index})">🔄 デバイス交換 (MAC入力)</button>`;
+        
+        // Replace & Swap
+        actionsHtml += `<button class="menu-btn" onclick="window.triggerStartReplace(${index})">🔄 デバイス交換 (ボタン押下)</button>`;
+        actionsHtml += `<button class="menu-btn" style="font-size:12px; color:#888;" onclick="window.triggerReplace(${index})">✏️ 手入力で交換</button>`;
+        actionsHtml += `<button class="menu-btn" onclick="window.triggerStartSwap(${index})">⇄ 場所を入れ替え (Swap)</button>`;
+        
         actionsHtml += `<button class="menu-btn btn-danger" onclick="window.triggerRemove(${index})">🗑 削除 (詰める)</button>`;
         
         // Move buttons
@@ -665,6 +698,7 @@ function openDeviceActionMenu(index) {
         `;
     } else {
         actionsHtml += `<div style="padding:10px; color:#888;">未登録スロット</div>`;
+        actionsHtml += `<button class="menu-btn" onclick="window.triggerStartReplace(${index})">🔄 デバイス追加 (ボタン押下)</button>`;
         actionsHtml += `<button class="menu-btn" onclick="window.triggerReplace(${index})">＋ MACアドレスを手入力登録</button>`;
     }
 
@@ -692,12 +726,6 @@ function openDeviceActionMenu(index) {
     // Helper triggers to close modal then act
     window.triggerBlink = (i) => { overlay.remove(); testBlinkDevice(i); };
     window.triggerDummy = (i) => { overlay.remove(); setDeviceToDummy(i); };
-    window.triggerReplace = (i) => { overlay.remove(); replaceDevice(i); }; // If empty, replaceDevice acts as "Add at index" if we tweak it?
-    // Wait, replaceDevice currently assumes deviceList[index] exists.
-    // If index >= deviceList.length, we need to fill gaps?
-    // Let's tweak replaceDevice logic below locally or assume 'replaceDevice' handles it.
-    // Actually, replaceDevice needs d to exist. 
-    // Let's fix replaceDevice to handle empty slot.
     window.triggerReplace = (i) => { 
         overlay.remove(); 
         if(!deviceList[i]) {
@@ -713,6 +741,10 @@ function openDeviceActionMenu(index) {
     window.triggerRemove = (i) => { overlay.remove(); removeDeviceFromList(i); };
     window.triggerMoveUp = (i) => { overlay.remove(); moveDeviceUp(i); };
     window.triggerMoveDown = (i) => { overlay.remove(); moveDeviceDown(i); };
+    
+    // New triggers
+    window.triggerStartReplace = (i) => { overlay.remove(); startReplaceMode(i); };
+    window.triggerStartSwap = (i) => { overlay.remove(); startSwapMode(i); };
 }
 
 function expandListToIndex(index) {
@@ -721,6 +753,99 @@ function expandListToIndex(index) {
     }
 }
 
+
+// --- Swap & Replace Logic ---
+function startSwapMode(index) {
+    deviceInteraction.mode = 'swapping';
+    deviceInteraction.targetIndex = index;
+    renderDeviceList();
+    alert("入れ替えモード: 入れ替え先のマスをクリックしてください。");
+}
+
+function executeSwap(targetIndex) {
+    const srcIndex = deviceInteraction.targetIndex;
+    if (srcIndex === -1 || srcIndex === targetIndex) {
+        // Cancel if clicked same
+        deviceInteraction.mode = 'normal';
+        deviceInteraction.targetIndex = -1;
+        renderDeviceList();
+        return;
+    }
+    
+    // Auto expand list if clicking empty slot
+    expandListToIndex(Math.max(srcIndex, targetIndex));
+    
+    const temp = deviceList[srcIndex];
+    deviceList[srcIndex] = deviceList[targetIndex];
+    deviceList[targetIndex] = temp;
+    
+    // Update IDs (optional, purely visual if IDs track index)
+    if(deviceList[srcIndex]) deviceList[srcIndex].id = srcIndex + 1;
+    if(deviceList[targetIndex]) deviceList[targetIndex].id = targetIndex + 1;
+
+    isListDirty = true;
+    deviceInteraction.mode = 'normal';
+    deviceInteraction.targetIndex = -1;
+    renderDeviceList();
+    alert(`#${srcIndex+1} と #${targetIndex+1} を入れ替えました。\n(同期ボタンを押して確定してください)`);
+}
+
+function startReplaceMode(index) {
+    deviceInteraction.mode = 'replacing';
+    deviceInteraction.targetIndex = index;
+    deviceInteraction.scannedMac = null;
+    
+    // Show Modal
+    const overlay = document.createElement('div');
+    overlay.id = 'replace-modal-overlay';
+    overlay.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:3000;display:flex;justify-content:center;align-items:center;color:white;`;
+    overlay.innerHTML = `
+        <div style="background:white;color:black;padding:30px;border-radius:16px;text-align:center;width:300px;">
+            <h3 style="margin-top:0;">デバイス交換 (#${index+1})</h3>
+            <p>新しいGlow-Rのボタンを押してください...</p>
+            <div id="replace-scan-status" style="font-size:24px;font-weight:bold;margin:20px 0;color:#CCC;">Wait...</div>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button class="btn-sm btn-outline" onclick="window.cancelReplace()">キャンセル</button>
+                <button id="btn-confirm-replace" class="btn-sm btn-primary" disabled onclick="window.confirmReplace()">このMACで更新</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function updateReplaceModalUI(mac) {
+    const el = document.getElementById('replace-scan-status');
+    const btn = document.getElementById('btn-confirm-replace');
+    if(el) { el.innerText = mac; el.style.color = "var(--primary-color)"; }
+    if(btn) btn.disabled = false;
+}
+
+window.cancelReplace = function() {
+    const el = document.getElementById('replace-modal-overlay');
+    if(el) el.remove();
+    deviceInteraction.mode = 'normal';
+    deviceInteraction.targetIndex = -1;
+};
+
+window.confirmReplace = function() {
+    if(!deviceInteraction.scannedMac) return;
+    const idx = deviceInteraction.targetIndex;
+    
+    // Update List
+    expandListToIndex(idx);
+    deviceList[idx] = {
+        mac: deviceInteraction.scannedMac,
+        id: idx + 1,
+        status: 'replaced'
+    };
+    
+    isListDirty = true;
+    window.cancelReplace();
+    renderDeviceList();
+    alert(`#${idx+1} を更新しました。\n(同期ボタンを押して確定してください)`);
+};
+
+// --- End Swap & Replace Logic ---
 
 // --- Auto Calibration Logic (Dynamic Lap Adjustment) ---
 // Absorbs the +/- 0.1s error caused by 2m interval integer rounding.
