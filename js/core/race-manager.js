@@ -6,6 +6,10 @@ export let races = [];
 export let activeRaceId = null;
 let calibrationState = {};
 
+export function setActiveRaceId(id) {
+    activeRaceId = id;
+}
+
 export function loadRaces() {
     const saved = localStorage.getItem('glow_races');
     if (saved) {

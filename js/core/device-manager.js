@@ -121,3 +121,21 @@ export function updateSettings(dist, interval) {
     if (interval) deviceSettings.interval = parseInt(interval);
     saveDeviceList();
 }
+
+export function setDeviceToDummy(index) {
+    expandListToIndex(index);
+    deviceList[index] = { mac: DUMMY_MAC, id: index + 1, status: 'dummy' };
+    isListDirty = true;
+    saveDeviceList();
+}
+
+export async function checkDirtyAndSync() {
+    if (isListDirty) {
+        if (confirm("Device list has changed. Sync with Glow-C now?")) {
+            await syncAllDevices();
+            return true;
+        }
+        return false;
+    }
+    return true;
+}

@@ -1,4 +1,4 @@
-import { races, saveRaces, loadRaces, activeRaceId, initCalibration, checkAndCalibrate, sendRaceConfig, sendStartRace, sendStopRace } from '../core/race-manager.js';
+import { races, saveRaces, loadRaces, activeRaceId, setActiveRaceId, initCalibration, checkAndCalibrate, sendRaceConfig, sendStartRace, sendStopRace } from '../core/race-manager.js';
 import { deviceList, deviceSettings, deviceInteraction, isListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
@@ -373,7 +373,7 @@ function renderRace() {
 
 function startRaceWrapper(id) {
     if(activeRaceId && activeRaceId !== id) return alert("Other race running");
-    activeRaceId = id;
+    setActiveRaceId(id);
     const r = races.find(x=>x.id===id);
     
     sendRaceConfig(r);
@@ -430,7 +430,7 @@ function updateState(race) {
 }
 
 function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); r.status = 'review'; renderRace(); saveRaces(); }
-function finalizeRace(id) { const r = races.find(x=>x.id===id); r.status = 'finished'; activeRaceId = null; expandedRaceId = null; renderRace(); saveRaces(); }
+function finalizeRace(id) { const r = races.find(x=>x.id===id); r.status = 'finished'; setActiveRaceId(null); expandedRaceId = null; renderRace(); saveRaces(); }
 function resetRace(id) { const r = races.find(x=>x.id===id); r.status = 'ready'; r.pacers.forEach(p=>{ p.currentDist=0; p.finishTime=null; }); renderRace(); saveRaces(); }
 function updateStartPos(id, val) { const r = races.find(x=>x.id===id); r.startPos = parseInt(val)||0; saveRaces(); }
 
@@ -491,6 +491,8 @@ function openDeviceActionMenu(i) {
 function startReplaceMode(i) {
     deviceInteraction.mode = 'replacing';
     deviceInteraction.targetIndex = i;
+    deviceInteraction.scannedMac = null;
+    updateReplaceModalUI("Scanning... (Press Button on Device)");
 }
 function startSwapMode(i) {
     if(deviceInteraction.mode === 'swapping') {
@@ -503,4 +505,76 @@ function startSwapMode(i) {
         deviceInteraction.targetIndex = i;
     }
     renderDeviceList();
+}
+
+// --- Missing Implementations ---
+
+function cancelReplace() {
+    deviceInteraction.mode = 'normal';
+    deviceInteraction.targetIndex = -1;
+    deviceInteraction.scannedMac = null;
+    const el = document.getElementById('modal-replace-overlay');
+    if(el) el.remove();
+    renderDeviceList();
+}
+
+function confirmReplace() {
+    if (deviceInteraction.mode === 'replacing' && deviceInteraction.scannedMac) {
+        replaceDevice(deviceInteraction.targetIndex, deviceInteraction.scannedMac);
+        alert(`Device #${deviceInteraction.targetIndex+1} replaced with ${deviceInteraction.scannedMac}`);
+        cancelReplace();
+    } else {
+        alert("No device scanned yet to replace with.");
+    }
+}
+
+function updateReplaceModalUI(mac) {
+    let el = document.getElementById('modal-replace-overlay');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'modal-replace-overlay';
+        el.className = 'modal-overlay open';
+        el.innerHTML = `
+            <div class="modal-content">
+                <h3>Replace Device</h3>
+                <p>Target: #${deviceInteraction.targetIndex + 1}</p>
+                <p>Detected MAC: <strong id="replace-mac-display" style="font-size:1.2em; color:var(--primary-color);">Scanning...</strong></p>
+                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+                    <button class="btn-sm btn-outline" onclick="cancelReplace()">Cancel</button>
+                    <button class="btn-sm btn-primary" onclick="confirmReplace()">Replace</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(el);
+    }
+    const display = document.getElementById('replace-mac-display');
+    if(display) display.innerText = mac;
+}
+
+function openDeviceActionMenu(i) {
+    const d = deviceList[i];
+    const dist = i * deviceSettings.interval;
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay open';
+    overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+    
+    overlay.innerHTML = `
+        <div class="modal-content" style="width:320px;">
+            <h3 style="margin-top:0;">Device #${i+1} (${dist}m)</h3>
+            <p style="color:#888; margin-bottom:20px;">MAC: ${d ? d.mac : 'None'} <br> Status: ${d ? d.status : 'Empty'}</p>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <button class="btn-sm btn-outline" onclick="triggerBlink(${i})">💡 Test Blink</button>
+                <button class="btn-sm btn-outline" onclick="triggerStartSwap(${i}); this.closest('.modal-overlay').remove();">⇄ Swap Position</button>
+                <button class="btn-sm btn-outline" onclick="triggerStartReplace(${i}); this.closest('.modal-overlay').remove();">🔄 Replace (Scan)</button>
+                 <button class="btn-sm btn-outline" onclick="triggerReplace(${i}); this.closest('.modal-overlay').remove();">✏️ Edit MAC Manually</button>
+                <button class="btn-sm btn-outline" onclick="triggerDummy(${i}); this.closest('.modal-overlay').remove();">👻 Set to Dummy</button>
+                <button class="btn-sm btn-danger" onclick="triggerRemove(${i}); this.closest('.modal-overlay').remove();">🗑 Remove</button>
+            </div>
+            <div style="margin-top:20px; text-align:right;">
+                <button class="btn-sm" onclick="this.closest('.modal-overlay').remove()">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
 }
