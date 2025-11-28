@@ -92,17 +92,17 @@ export function initUI() {
     // Initial Render
     const savedMode = localStorage.getItem('glow_current_mode') || 'race';
     try {
+        // Force at least one race if empty (Fail-safe)
+        if (!races || races.length === 0) {
+            console.warn("[Init] No races found (even after load). Creating default.");
+            races = []; 
+            addNewRow(); // This pushes to 'races' and saves.
+        }
+        
         switchMode(savedMode, true);
     } catch(e) {
         console.error("[Init] Switch Mode Failed, falling back to 'setup'", e);
         switchMode('setup', true);
-    }
-    
-    // If no races, add a default one so the screen isn't empty
-    if (races.length === 0) {
-        console.log("[Init] No races found. Adding default race.");
-        addNewRow(); 
-        switchMode('setup', true); // Force setup view
     }
 }
 
@@ -265,39 +265,39 @@ function renderRace() {
     races.forEach(r => {
         try {
             const tr = document.createElement('tr');
-        let rowClass = 'race-row';
-        if (r.id === expandedRaceId) rowClass += ' expanded';
-        if (r.status === 'running') rowClass += ' active-running';
-        if (r.status === 'review') rowClass += ' active-review';
-        if (r.status === 'finished') rowClass += ' finished';
-        tr.className = rowClass;
-        tr.onclick = (e) => toggleRow(r.id, e);
+            let rowClass = 'race-row';
+            if (r.id === expandedRaceId) rowClass += ' expanded';
+            if (r.status === 'running') rowClass += ' active-running';
+            if (r.status === 'review') rowClass += ' active-review';
+            if (r.status === 'finished') rowClass += ' finished';
+            tr.className = rowClass;
+            tr.onclick = (e) => toggleRow(r.id, e);
 
-        let content = '';
-        const isExpanded = (r.id === expandedRaceId);
-        let badge = '';
-        if(r.status === 'ready') badge = '<span class="status-badge status-ready">待機</span>';
-        if(r.status === 'running') badge = '<span class="status-badge status-running">実行中</span>';
-        if(r.status === 'review') badge = '<span class="status-badge status-review">記録確認</span>';
-        if(r.status === 'finished') badge = '<span class="status-badge status-finished">完了</span>';
+            let content = '';
+            const isExpanded = (r.id === expandedRaceId);
+            let badge = '';
+            if(r.status === 'ready') badge = '<span class="status-badge status-ready">待機</span>';
+            if(r.status === 'running') badge = '<span class="status-badge status-running">実行中</span>';
+            if(r.status === 'review') badge = '<span class="status-badge status-review">記録確認</span>';
+            if(r.status === 'finished') badge = '<span class="status-badge status-finished">完了</span>';
 
-        if (!isExpanded) {
-            let chips = "";
-            if(r.pacers && Array.isArray(r.pacers)) {
-                chips = r.pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${p.pace||72}s</span>`).join(' ');
-            }
-            content = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong style="font-size:16px;">${r.time} ${r.name}</strong> 
-                        <span style="color:#8E8E93; margin-left:10px;">${r.group}組 (${r.distance}m)</span>
-                        ${badge}
-                        <div style="margin-top:8px;">${chips}</div>
-                    </div>
-                    <div style="color:#C6C6C8; font-size:20px;">▼</div>
-                </div>`;
-        } else {
-            let pacerRows = "";
+            if (!isExpanded) {
+                let chips = "";
+                if(r.pacers && Array.isArray(r.pacers)) {
+                    chips = r.pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${p.pace||72}s</span>`).join(' ');
+                }
+                content = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong style="font-size:16px;">${r.time} ${r.name}</strong> 
+                            <span style="color:#8E8E93; margin-left:10px;">${r.group}組 (${r.distance}m)</span>
+                            ${badge}
+                            <div style="margin-top:8px;">${chips}</div>
+                        </div>
+                        <div style="color:#C6C6C8; font-size:20px;">▼</div>
+                    </div>`;
+            } else {
+                let pacerRows = "";
             if(r.pacers && Array.isArray(r.pacers)) {
                 pacerRows = r.pacers.map(p => {
                     // Edit Logic...
