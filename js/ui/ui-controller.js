@@ -252,12 +252,19 @@ function toggleRow(id, event) {
 }
 
 function renderRace() {
+    console.log("[renderRace] Start. Races count:", races.length);
     const tbody = document.getElementById('race-tbody');
-    if(!tbody) return;
+    if(!tbody) { console.error("[renderRace] No tbody found!"); return; }
     tbody.innerHTML = '';
     
+    if (!races || races.length === 0) {
+        tbody.innerHTML = '<tr><td style="text-align:center; padding:20px; color:#999;">レースデータがありません。<br>設定画面から追加してください。</td></tr>';
+        return;
+    }
+    
     races.forEach(r => {
-        const tr = document.createElement('tr');
+        try {
+            const tr = document.createElement('tr');
         let rowClass = 'race-row';
         if (r.id === expandedRaceId) rowClass += ' expanded';
         if (r.status === 'running') rowClass += ' active-running';
@@ -275,7 +282,10 @@ function renderRace() {
         if(r.status === 'finished') badge = '<span class="status-badge status-finished">完了</span>';
 
         if (!isExpanded) {
-            let chips = r.pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color}"></span>${p.pace}s</span>`).join(' ');
+            let chips = "";
+            if(r.pacers && Array.isArray(r.pacers)) {
+                chips = r.pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${p.pace||72}s</span>`).join(' ');
+            }
             content = `
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
@@ -287,9 +297,11 @@ function renderRace() {
                     <div style="color:#C6C6C8; font-size:20px;">▼</div>
                 </div>`;
         } else {
-            let pacerRows = r.pacers.map(p => {
-                // Edit Logic...
-                const isEditing = editingPaces[p.id] !== undefined;
+            let pacerRows = "";
+            if(r.pacers && Array.isArray(r.pacers)) {
+                pacerRows = r.pacers.map(p => {
+                    // Edit Logic...
+                    const isEditing = editingPaces[p.id] !== undefined;
                 const displayPace = isEditing ? editingPaces[p.id] : p.pace;
                 const valClass = isEditing ? "pace-input changed" : "pace-input";
                 const showAdjust = (r.status !== 'running' && r.status !== 'review' && r.status !== 'finished');
@@ -332,20 +344,27 @@ function renderRace() {
             }).join('');
 
             // Progress Bar...
-            const totalScale = r.distance + 50;
-            let headsHtml = r.pacers.map(p => {
-                let leftPct = Math.min(((p.currentDist + r.startPos) / (totalScale + r.startPos)) * 100, 100); // Fixed logic?
-                // Actually, pure distance pct:
-                leftPct = Math.min((p.currentDist / totalScale) * 100, 100);
-                return `<div class="pacer-head bg-${p.color}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${Math.floor(p.currentDist)}m</div></div>`;
-            }).join('');
+            const totalScale = (r.distance || 400) + 50;
+            let headsHtml = "";
+            if(r.pacers && Array.isArray(r.pacers)) {
+                headsHtml = r.pacers.map(p => {
+                    let cDist = p.currentDist || 0;
+                    // let leftPct = Math.min(((cDist + r.startPos) / (totalScale + r.startPos)) * 100, 100); 
+                    let leftPct = Math.min((cDist / totalScale) * 100, 100);
+                    return `<div class="pacer-head bg-${p.color||'red'}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${Math.floor(cDist)}m</div></div>`;
+                }).join('');
+            }
             
-            let marksHtml = r.markers.map(m => {
-                let leftPct = (m.dist / totalScale) * 100;
-                return `<div class="history-tick bg-${m.color}" style="left:${leftPct}%"><div class="history-tick-label text-${m.color}">${m.pace}</div></div>`;
-            }).join('');
+            let marksHtml = "";
+            if(r.markers && Array.isArray(r.markers)) {
+                marksHtml = r.markers.map(m => {
+                    let leftPct = (m.dist / totalScale) * 100;
+                    return `<div class="history-tick bg-${m.color||'gray'}" style="left:${leftPct}%"><div class="history-tick-label text-${m.color||'gray'}">${m.pace}</div></div>`;
+                }).join('');
+            }
             
-            let maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist));
+            let maxDist = 0;
+            if(r.pacers && r.pacers.length > 0) maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist||0));
             let fillPct = Math.min((maxDist / totalScale) * 100, 100);
 
             // Buttons
@@ -392,6 +411,9 @@ function renderRace() {
         }
         tr.innerHTML = `<td>${content}</td>`;
         tbody.appendChild(tr);
+        } catch(e) {
+            console.error("[renderRace] Error rendering row:", r, e);
+        }
     });
 }
 
