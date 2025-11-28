@@ -381,6 +381,37 @@
 <script src="ble_protocol.js"></script>
 <script src="app.js"></script>
 <script>
+    // --- GLOBAL STATE RECOVERY ---
+    let races = [];
+    let activeRaceId = null;
+    let expandedRaceId = null;
+    let editingPaces = {}; // { pacerId: tempValue }
+    let elapsedTime = 0;
+    let raceInterval = null;
+    
+    // Modal State
+    let modalTarget = {}; 
+    let modalSelectedColor = 'red';
+
+    function loadRaces() {
+        const saved = localStorage.getItem('glow_races');
+        if (saved) {
+            try {
+                races = JSON.parse(saved);
+                // Reset volatile states
+                races.forEach(r => {
+                    if(r.status === 'running') r.status = 'ready'; // Crash recovery
+                    r.markers = r.markers || [];
+                });
+            } catch(e) { console.error("Load Error:", e); }
+        }
+        if(!races) races = [];
+    }
+
+    function saveRaces() {
+        localStorage.setItem('glow_races', JSON.stringify(races));
+    }
+
     let currentMode = 'race'; // Default
 
     window.onload = function() { 
@@ -632,7 +663,9 @@
     function startRaceWrapper(id) {
         const r = races.find(x => x.id === id);
         // Send BLE Config (Color & Pace for all pacers)
+        // Fix: use sendPaceConfig if sendRaceConfig is not exposed
         if(window.sendRaceConfig) window.sendRaceConfig(r.distance, r.pacers);
+        else if(window.sendPaceConfig) window.sendPaceConfig(r.distance, r.pacers);
         
         // Send BLE Start Command (with Start Position)
         if(window.sendStartRace) window.sendStartRace(r.pacers, r.startPos);
