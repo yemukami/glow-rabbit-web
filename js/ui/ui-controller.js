@@ -97,6 +97,19 @@ export function initUI() {
 
     console.log("[Init] Globals bound. Switching mode...");
 
+    // Modal input listeners (Simple tab)
+    const targetInput = document.getElementById('modal-target-time');
+    if (targetInput) {
+        targetInput.addEventListener('input', () => {
+            updateCalcPace();
+        });
+        targetInput.addEventListener('blur', () => {
+            const sec = parseTimeStr(targetInput.value);
+            if (sec > 0) targetInput.value = formatTime(sec);
+            updateCalcPace();
+        });
+    }
+
     // Initial Render
     const savedMode = localStorage.getItem('glow_current_mode') || 'race';
     try {
@@ -638,6 +651,7 @@ function openModal(rid, pid) {
         selectModalColor('red'); 
         document.getElementById('modal-target-time').value = "";
         document.getElementById('modal-calc-pace').innerText = "--.-";
+        updateSegmentSummary();
         renderSegmentTable([]);
     } 
     document.getElementById('modal-settings').classList.add('open'); 
@@ -656,6 +670,7 @@ function switchModalTab(tab) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
     document.getElementById('tab-btn-'+tab).classList.add('active');
     document.getElementById('tab-content-'+tab).classList.add('active');
+    if (tab === 'segments') updateSegmentSummary();
 }
 
 function updateCalcPace() {
@@ -687,6 +702,7 @@ function renderSegmentTable(segments) {
         addSegmentRow(s.distance, s.pace);
     });
     if (segments.length === 0) addSegmentRow(400, 72); 
+    updateSegmentSummary();
 }
 
 function addSegmentRow(dist = "", pace = "") {
@@ -698,10 +714,16 @@ function addSegmentRow(dist = "", pace = "") {
         <td><button class="btn-sm btn-danger" onclick="removeSegmentRow(this)">×</button></td>
     `;
     tbody.appendChild(tr);
+    tr.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', updateSegmentSummary);
+        inp.addEventListener('change', updateSegmentSummary);
+    });
+    updateSegmentSummary();
 }
 
 function removeSegmentRow(btn) {
     btn.closest('tr').remove();
+    updateSegmentSummary();
 }
 
 function saveModalData() { 
@@ -771,6 +793,33 @@ function openVersionModal() { document.getElementById('modal-version').classList
 function closeVersionModal() { document.getElementById('modal-version').classList.remove('open'); }
 
 function formatTime(s) { if(s<0) return "00:00.0"; let m=Math.floor(s/60), sec=Math.floor(s%60), ms=Math.floor((s*10)%10); return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}.${ms}`; }
+
+function updateSegmentSummary() {
+    const summaryEl = document.getElementById('segment-total-time');
+    if (!summaryEl) return;
+    const r = races.find(x => x.id === modalState.target.raceId);
+    if (!r || !r.distance) {
+        summaryEl.innerText = "ゴール予想タイム: --:--.-";
+        return;
+    }
+    const segments = [];
+    document.querySelectorAll('#segment-tbody tr').forEach(tr => {
+        const d = parseFloat(tr.querySelector('.inp-dist').value);
+        const p = parseFloat(tr.querySelector('.inp-pace').value);
+        if (d > 0 && p > 0) segments.push({ distance: d, pace: p });
+    });
+    if (segments.length === 0) {
+        summaryEl.innerText = "ゴール予想タイム: --:--.-";
+        return;
+    }
+    segments.sort((a,b) => a.distance - b.distance);
+    if (segments[segments.length - 1].distance < r.distance) {
+        segments.push({ distance: r.distance, pace: segments[segments.length - 1].pace });
+    }
+    const plan = PaceCalculator.createPlanFromSegments(segments, 400);
+    const total = plan.length ? plan[plan.length - 1].endTime : 0;
+    summaryEl.innerText = `ゴール予想タイム: ${total > 0 ? formatTime(total) : '--:--.-'}`;
+}
 
 function renderDeviceList() {
     const container = document.getElementById('device-list-container');
