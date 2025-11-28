@@ -4,7 +4,6 @@ import { deviceSettings } from './device-manager.js';
 
 export let races = [];
 export let activeRaceId = null;
-let calibrationState = {};
 
 export function setActiveRaceId(id) {
     activeRaceId = id;
@@ -16,14 +15,20 @@ export function loadRaces() {
         try {
             races = JSON.parse(saved);
             if(!Array.isArray(races)) races = [];
-            races.forEach(r => {
+            // Data Sanitization
+            races = races.filter(r => r && typeof r === 'object').map(r => {
+                if(!r.id) r.id = Date.now() + Math.random();
                 if(!r.status) r.status = 'ready';
-                if(r.status === 'running') r.status = 'ready';
+                if(r.status === 'running') r.status = 'ready'; // Reset running state on reload
+                if(!Array.isArray(r.pacers)) r.pacers = [];
+                if(!Array.isArray(r.markers)) r.markers = [];
+                
                 r.pacers.forEach(p => {
                      if(typeof p.pace !== 'number') p.pace = 72.0;
-                     if(p.currentDist === undefined) p.currentDist = 0;
+                     if(typeof p.currentDist !== 'number') p.currentDist = 0;
                      if(p.finishTime === undefined) p.finishTime = null;
                 });
+                return r;
             });
         } catch(e) { console.error("Load Error:", e); races = []; }
     } else {
@@ -33,45 +38,6 @@ export function loadRaces() {
 
 export function saveRaces() {
     localStorage.setItem('glow_races', JSON.stringify(races));
-}
-
-export function initCalibration(race) {
-    calibrationState = {};
-    race.pacers.forEach(p => {
-        calibrationState[p.id] = {
-            nextCheckDist: 350, 
-            lapIndex: 0
-        };
-    });
-}
-
-export function checkAndCalibrate(race) {
-    race.pacers.forEach(p => {
-        const state = calibrationState[p.id];
-        if (!state) return;
-
-        if (p.currentDist >= state.nextCheckDist) {
-            const targetPace = p.pace; 
-            const nextLapIndex = state.lapIndex + 1;
-            const stdVal = Math.round(targetPace * 5);
-            const actualLap = (stdVal * 200) / 1000;
-            const error = actualLap - targetPace;
-            const accError = error * (state.lapIndex + 1);
-            
-            const nextLapGoal = targetPace - accError;
-            const newDelay = Math.round(nextLapGoal * 5);
-            
-            console.log(`[Calib #${p.id}] AccError: ${accError.toFixed(3)}s. NewDelay: ${newDelay}ms`);
-            
-            const runnerId = race.pacers.indexOf(p) + 1;
-            const adjustedPace = newDelay / 5.0;
-            
-            sendCommand(BluetoothCommunity.commandSetTimeDelay(400, adjustedPace, 400, deviceSettings.interval, [runnerId]));
-
-            state.nextCheckDist += 400;
-            state.lapIndex++;
-        }
-    });
 }
 
 function getColorRGB(colorName) {

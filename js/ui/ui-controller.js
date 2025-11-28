@@ -1,4 +1,4 @@
-import { races, saveRaces, loadRaces, activeRaceId, setActiveRaceId, initCalibration, checkAndCalibrate, sendRaceConfig, sendStartRace, sendStopRace } from '../core/race-manager.js';
+import { races, saveRaces, loadRaces, activeRaceId, setActiveRaceId, sendRaceConfig, sendStartRace, sendStopRace } from '../core/race-manager.js';
 import { deviceList, deviceSettings, deviceInteraction, isListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
@@ -334,14 +334,13 @@ function renderRace() {
                 <div class="pacer-control-row" onclick="event.stopPropagation()">
                     <div class="pacer-info"><span class="dot-large bg-${p.color}"></span></div>
                     <div class="pacer-adjust">
-                        ${btnMinus}
-                        <div><input type="number" class="${valClass}" id="pace-input-${p.id}" value="${displayPace}" step="0.1" ${inputReadonly} style="${inputStyle}" onfocus="startEditing(${p.id}, this.value)" oninput="updateEditValue(${p.id}, this.value)">${avgLabel}</div>
-                        ${btnPlus}
-                        <div class="${btnGroupClass}" id="btn-group-${p.id}"><button class="btn-cancel" onclick="cancelPace(${r.id}, ${p.id})">✖</button><button class="btn-commit" onclick="commitPace(${r.id}, ${p.id})">確定</button></div>
+                        <div style="font-size:24px; font-weight:bold; margin-left:10px;">${(p.pace||72).toFixed(1)}s</div>
+                        <div style="margin-left:10px;">${avgLabel}</div>
                     </div>
-                    <div class="pacer-est-time">${estStr}</div>
+                    <div class="pacer-est-time" id="pacer-est-${p.id}">${estStr}</div>
                 </div>`;
             }).join('');
+            }
 
             // Progress Bar...
             const totalScale = (r.distance || 400) + 50;
@@ -351,7 +350,7 @@ function renderRace() {
                     let cDist = p.currentDist || 0;
                     // let leftPct = Math.min(((cDist + r.startPos) / (totalScale + r.startPos)) * 100, 100); 
                     let leftPct = Math.min((cDist / totalScale) * 100, 100);
-                    return `<div class="pacer-head bg-${p.color||'red'}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${Math.floor(cDist)}m</div></div>`;
+                    return `<div class="pacer-head bg-${p.color||'red'}" id="pacer-head-${p.id}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${Math.floor(cDist)}m</div></div>`;
                 }).join('');
             }
             
@@ -398,10 +397,10 @@ function renderRace() {
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
                             ${infoHeader}
-                            <div>先頭: <strong>${Math.floor(maxDist)}</strong>m</div>
+                            <div id="lead-dist-display">先頭: <strong>${Math.floor(maxDist)}</strong>m</div>
                         </div>
                         <div class="progress-container">
-                            <div class="progress-fill" style="width:${fillPct}%"></div>
+                            <div class="progress-fill" id="progress-fill-${r.id}" style="width:${fillPct}%"></div>
                             ${headsHtml} ${marksHtml}
                         </div>
                         <div class="inline-controller">${pacerRows}</div>
@@ -423,7 +422,7 @@ function startRaceWrapper(id) {
     const r = races.find(x=>x.id===id);
     
     sendRaceConfig(r);
-    sendStartRace(r, r.startPos || 0, "00:00:00:00:00:00"); // MAC logic needs fix? sendStartRace uses devIndex.
+    sendStartRace(r, r.startPos || 0, "00:00:00:00:00:00"); 
     
     r.status = 'running';
     r.markers = [];
@@ -431,7 +430,7 @@ function startRaceWrapper(id) {
     elapsedTime = 0; 
     saveRaces();
     
-    initCalibration(r);
+    // No initCalibration here anymore
     renderRace();
     raceInterval = setInterval(() => updateState(r), 100);
 }
@@ -446,7 +445,7 @@ function updateState(race) {
     let allFinished = true;
     const limit = race.distance + 50;
     
-    checkAndCalibrate(race);
+    // Removed checkAndCalibrate(race);
 
     race.pacers.forEach(p => {
         if (p.currentDist < limit) {
@@ -455,23 +454,59 @@ function updateState(race) {
             allFinished = false;
             if (p.currentDist >= race.distance && p.finishTime === null) p.finishTime = elapsedTime;
         } else {
-                if (p.finishTime === null) p.finishTime = elapsedTime;
+            if (p.finishTime === null) p.finishTime = elapsedTime;
         }
     });
     
-    // DOM Update (Optimized?)
-    // For now just calling renderRace is too heavy.
-    // Update specific DOM elements.
+    // Targeted DOM Update
     const tEl = document.getElementById('timer-display');
     if(tEl) tEl.innerText = formatTime(elapsedTime);
-    // Update heads...
-    // To implement "updateDom" logic here would require selecting elements.
-    // Re-rendering race is safe but heavy.
-    renderRace(); // OK for now.
+
+    const totalScale = (race.distance || 400) + 50;
+    
+    race.pacers.forEach(p => {
+        // Update Head Position
+        const headEl = document.getElementById(`pacer-head-${p.id}`);
+        if (headEl) {
+             let cDist = p.currentDist || 0;
+             let leftPct = Math.min((cDist / totalScale) * 100, 100);
+             headEl.style.left = `${leftPct}%`;
+             const labelEl = headEl.querySelector('.pacer-head-label');
+             if(labelEl) labelEl.innerText = Math.floor(cDist) + 'm';
+        }
+        // Update Est Time / Goal Time
+        const estEl = document.getElementById(`pacer-est-${p.id}`);
+        if (estEl) {
+            let estStr = "";
+             if (p.finishTime !== null) {
+                estStr = `Goal (${formatTime(p.finishTime)})`;
+            } else {
+                const speed = 400 / p.pace; 
+                const remDist = race.distance - p.currentDist;
+                const remSec = remDist / speed;
+                estStr = formatTime(elapsedTime + remSec);
+            }
+            estEl.innerText = estStr;
+        }
+    });
+    
+    const fillEl = document.getElementById(`progress-fill-${race.id}`);
+    if (fillEl) {
+         let maxDist = 0;
+         if(race.pacers && race.pacers.length > 0) maxDist = Math.max(0, ...race.pacers.map(p=>p.currentDist||0));
+         let fillPct = Math.min((maxDist / totalScale) * 100, 100);
+         fillEl.style.width = `${fillPct}%`;
+    }
+    const leadEl = document.getElementById('lead-dist-display');
+    if(leadEl) {
+         let maxDist = 0;
+         if(race.pacers && race.pacers.length > 0) maxDist = Math.max(0, ...race.pacers.map(p=>p.currentDist||0));
+         leadEl.innerHTML = `先頭: <strong>${Math.floor(maxDist)}</strong>m`;
+    }
 
     if(allFinished) {
-            sendStopRace();
-            freezeRace(race.id);
+        sendStopRace();
+        freezeRace(race.id);
     }
 }
 
