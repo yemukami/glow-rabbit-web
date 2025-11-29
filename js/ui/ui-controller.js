@@ -624,7 +624,7 @@ function openModal(rid, pid) {
     modalState.target = {raceId:rid, pacerId:pid}; 
     const r=races.find(x=>x.id===rid); 
     
-    // Reset Tab
+    // Reset Tab (default to simple)
     switchModalTab('simple');
     
     if(pid){ 
@@ -645,6 +645,12 @@ function openModal(rid, pid) {
             }
             document.getElementById('modal-target-time').value = tVal;
             updateCalcPace();
+        }
+        // Preference: if segments exist, segments tab takes priority
+        if (p.type === 'segments' && p.segments && p.segments.length > 0) {
+            switchModalTab('segments');
+        } else {
+            switchModalTab('simple');
         }
     } else { 
         // New Pacer
@@ -737,6 +743,7 @@ function saveModalData() {
     };
 
     if (modalState.activeTab === 'simple') {
+        // In simple mode, any existing segments are cleared
         const tStr = document.getElementById('modal-target-time').value;
         const totalSec = parseTimeStr(tStr);
         if (totalSec <= 0) return alert("目標タイムを入力してください");
@@ -745,6 +752,7 @@ function saveModalData() {
         pacerData.targetTime = totalSec;
         pacerData.pace = (totalSec / r.distance) * 400; 
         pacerData.runPlan = PaceCalculator.createPlanFromTargetTime(r.distance, totalSec, 400);
+        pacerData.segments = [];
         
     } else {
         const rows = document.querySelectorAll('#segment-tbody tr');
@@ -765,6 +773,7 @@ function saveModalData() {
         pacerData.segments = segments;
         pacerData.pace = segments[0].pace; 
         pacerData.runPlan = PaceCalculator.createPlanFromSegments(segments, 400);
+        pacerData.targetTime = null;
     }
 
     if (modalState.target.pacerId) {
