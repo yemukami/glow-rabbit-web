@@ -85,8 +85,7 @@ async function processQueue() {
     } catch (error) {
         console.error("Write Error:", error);
         if(error.message.includes("Timeout")) console.warn("Command timeout");
-        resolve(); 
-        reject(error);
+        reject(error); 
     } finally {
         isWriting = false;
         setTimeout(processQueue, 50); 

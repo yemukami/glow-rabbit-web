@@ -5,6 +5,8 @@ global.document = {
             global.mockDOM[id] = { 
                 innerHTML: '', 
                 style: {}, 
+                value: '',
+                addEventListener: () => {},
                 classList: { 
                     add: (c) => { global.mockDOM[id].classes.add(c) },
                     remove: (c) => { global.mockDOM[id].classes.delete(c) },
@@ -137,8 +139,12 @@ async function runTests() {
     // Let's fix mock for innerHTML setter to clear children.
 }
 
-// Improve Mock for Test 3
-Object.defineProperty(global.mockDOM['race-tbody'] || {}, 'innerHTML', {
+// Improve Mock for Test 3 (ensure race-tbody exists first)
+if (!global.mockDOM) global.mockDOM = {};
+if (!global.mockDOM['race-tbody']) {
+    global.mockDOM['race-tbody'] = { children: [], _html: '' };
+}
+Object.defineProperty(global.mockDOM['race-tbody'], 'innerHTML', {
     set: function(v) { 
         this._html = v; 
         if(v === '') this.children = []; 

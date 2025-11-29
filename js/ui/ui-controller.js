@@ -15,6 +15,23 @@ let modalState = {
     activeTab: 'simple'
 };
 
+const UI_CONSTANTS = {
+    PROGRESS_BAR_PADDING_METERS: 50,
+    FINISH_MARGIN_METERS: 50,
+    PRESEND_MARGIN_METERS: 10
+};
+
+function escapeHTML(value) {
+    if (value === undefined || value === null) return '';
+    return String(value).replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[m]));
+}
+
 export function initUI() {
     console.log("[Init] Starting UI Initialization...");
     
@@ -116,7 +133,7 @@ export function initUI() {
         // Force at least one race if empty (Fail-safe)
         if (!races || races.length === 0) {
             console.warn("[Init] No races found (even after load). Creating default.");
-            races = []; 
+            races.length = 0; 
             addNewRow(); // This pushes to 'races' and saves.
         }
         
@@ -220,13 +237,19 @@ function renderSetup() {
     races.forEach(r => {
         let ph = r.pacers.map(p=>`<span class="pacer-chip" onclick="openModal(${r.id},${p.id})"><span class="dot bg-${p.color}"></span>${p.pace}s</span>`).join('');
         let tr = document.createElement('tr');
+        const timeVal = escapeHTML(r.time);
+        const nameVal = escapeHTML(r.name);
+        const groupVal = escapeHTML(r.group);
+        const distanceVal = escapeHTML(r.distance);
+        const startPosVal = escapeHTML(r.startPos);
+        const countVal = escapeHTML(r.count);
         tr.innerHTML = `
-            <td><input type="time" class="input-cell" value="${r.time}" onchange="updateData(${r.id}, 'time', this.value)"></td>
-            <td><input type="text" class="input-cell" value="${r.name}" onchange="updateData(${r.id}, 'name', this.value)"></td>
-            <td><input type="number" class="input-cell" value="${r.group}" onchange="updateData(${r.id}, 'group', this.value)"></td>
-            <td><input type="number" class="input-cell" value="${r.distance}" onchange="updateData(${r.id}, 'distance', this.value)"></td>
-            <td><input type="number" class="input-cell input-start" value="${r.startPos}" onchange="updateData(${r.id}, 'startPos', this.value)"></td>
-            <td><input type="number" class="input-cell" value="${r.count}" onchange="updateData(${r.id}, 'count', this.value)"></td>
+            <td><input type="time" class="input-cell" value="${timeVal}" onchange="updateData(${r.id}, 'time', this.value)"></td>
+            <td><input type="text" class="input-cell" value="${nameVal}" onchange="updateData(${r.id}, 'name', this.value)"></td>
+            <td><input type="number" class="input-cell" value="${groupVal}" onchange="updateData(${r.id}, 'group', this.value)"></td>
+            <td><input type="number" class="input-cell" value="${distanceVal}" onchange="updateData(${r.id}, 'distance', this.value)"></td>
+            <td><input type="number" class="input-cell input-start" value="${startPosVal}" onchange="updateData(${r.id}, 'startPos', this.value)"></td>
+            <td><input type="number" class="input-cell" value="${countVal}" onchange="updateData(${r.id}, 'count', this.value)"></td>
             <td>${ph} <button class="btn-sm btn-outline" onclick="openModal(${r.id},null)">＋</button></td>
             <td><button class="btn-sm btn-danger" style="border:none; background:#FFF0F0;" onclick="deleteRow(${r.id})">削除</button></td>
         `;
@@ -272,6 +295,154 @@ function toggleRow(id, event) {
     renderRace();
 }
 
+function buildRaceRowClass(race) {
+    let rowClass = 'race-row';
+    if (race.id === expandedRaceId) rowClass += ' expanded';
+    if (race.status === 'running') rowClass += ' active-running';
+    if (race.status === 'review') rowClass += ' active-review';
+    if (race.status === 'finished') rowClass += ' finished';
+    return rowClass;
+}
+
+function buildRaceBadge(status) {
+    if(status === 'ready') return '<span class="status-badge status-ready">待機</span>';
+    if(status === 'running') return '<span class="status-badge status-running">実行中</span>';
+    if(status === 'review') return '<span class="status-badge status-review">記録確認</span>';
+    if(status === 'finished') return '<span class="status-badge status-finished">完了</span>';
+    return '';
+}
+
+function buildPacerRows(r) {
+    if(!r.pacers || !Array.isArray(r.pacers)) return "";
+    return r.pacers.map(p => {
+        const isEditing = editingPaces[p.id] !== undefined;
+        const displayPace = isEditing ? editingPaces[p.id] : p.pace;
+        let estStr = "--:--";
+        let avgPace = 0;
+        if (p.finishTime !== null) {
+            estStr = `Goal (${formatTime(p.finishTime)})`;
+            avgPace = (p.finishTime / r.distance) * 400; 
+        } else if (r.status === 'ready') {
+            let speed = 400 / displayPace; 
+            let estSec = r.distance / speed;
+            estStr = `Est (${formatTime(estSec)})`;
+        } else {
+            const speed = 400 / displayPace; 
+            const remDist = r.distance - p.currentDist;
+            const remSec = remDist / speed;
+            estStr = formatTime(elapsedTime + remSec);
+            if(p.currentDist > 0) avgPace = (elapsedTime / p.currentDist) * 400;
+        }
+        let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${avgPace.toFixed(1)}</span>` : "";
+
+        return `
+        <div class="pacer-control-row" onclick="event.stopPropagation()">
+            <div class="pacer-info"><span class="dot-large bg-${p.color}"></span></div>
+            <div class="pacer-adjust">
+                <div style="font-size:24px; font-weight:bold; margin-left:10px;">${(displayPace || 72).toFixed(1)}s</div>
+                <div style="margin-left:10px;">${avgLabel}</div>
+            </div>
+            <div class="pacer-est-time" id="pacer-est-${p.id}">${estStr}</div>
+        </div>`;
+    }).join('');
+}
+
+function buildProgressHeads(r, totalScale) {
+    if(!r.pacers || !Array.isArray(r.pacers)) return "";
+    return r.pacers.map(p => {
+        let cDist = p.currentDist || 0;
+        let leftPct = Math.min((cDist / totalScale) * 100, 100);
+        return `<div class="pacer-head bg-${p.color||'red'}" id="pacer-head-${p.id}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${Math.floor(cDist)}m</div></div>`;
+    }).join('');
+}
+
+function buildMarkers(r, totalScale) {
+    if(!r.markers || !Array.isArray(r.markers)) return "";
+    return r.markers.map(m => {
+        let leftPct = (m.dist / totalScale) * 100;
+        return `<div class="history-tick bg-${m.color||'gray'}" style="left:${leftPct}%"><div class="history-tick-label text-${m.color||'gray'}">${escapeHTML(m.pace)}</div></div>`;
+    }).join('');
+}
+
+function buildCollapsedRaceContent(r, badge) {
+    const safeTime = escapeHTML(r.time);
+    const safeName = escapeHTML(r.name);
+    const safeGroup = escapeHTML(r.group);
+    const safeDistance = escapeHTML(r.distance);
+    let chips = "";
+    if(r.pacers && Array.isArray(r.pacers)) {
+        chips = r.pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${(p.pace||72).toFixed(1)}s</span>`).join(' ');
+    }
+    return `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong style="font-size:16px;">${safeTime} ${safeName}</strong> 
+                <span style="color:#8E8E93; margin-left:10px;">${safeGroup}組 (${safeDistance}m)</span>
+                ${badge}
+                <div style="margin-top:8px;">${chips}</div>
+            </div>
+            <div style="color:#C6C6C8; font-size:20px;">▼</div>
+        </div>`;
+}
+
+function buildExpandedRaceContent(r, badge) {
+    const safeTime = escapeHTML(r.time);
+    const safeName = escapeHTML(r.name);
+    const safeGroup = escapeHTML(r.group);
+    const safeDistance = escapeHTML(r.distance);
+    const safeStartPos = escapeHTML(r.startPos);
+
+    const pacerRows = buildPacerRows(r);
+
+    const totalScale = (r.distance || 400) + UI_CONSTANTS.PROGRESS_BAR_PADDING_METERS;
+    const headsHtml = buildProgressHeads(r, totalScale);
+    const marksHtml = buildMarkers(r, totalScale);
+    
+    let maxDist = 0;
+    if(r.pacers && r.pacers.length > 0) maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist||0));
+    let fillPct = Math.min((maxDist / totalScale) * 100, 100);
+
+    let btnArea = "";
+    let infoHeader = "";
+    if (r.status === 'ready') {
+        btnArea = `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${r.id})">START</button></div>`;
+        infoHeader = `<div style="display:flex; gap:10px;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" onchange="updateStartPos(${r.id},this.value)"></div>`;
+    } else if (r.status === 'running') {
+        btnArea = `<button class="btn-big-stop" onclick="event.stopPropagation(); stopRaceWrapper(${r.id})">STOP</button>`;
+        infoHeader = `<div class="timer-big" id="timer-display">${formatTime(elapsedTime)}</div>`;
+    } else if (r.status === 'review') {
+        btnArea = `<button class="btn-big-close" onclick="event.stopPropagation(); finalizeRace(${r.id})">閉じる</button>`;
+        infoHeader = `<div class="timer-big">${formatTime(elapsedTime)}</div>`;
+    } else if (r.status === 'finished') {
+        btnArea = `<button class="btn-big-reset" onclick="event.stopPropagation(); resetRace(${r.id})">リセット</button>`;
+        infoHeader = `<div>記録済み</div>`;
+    }
+
+    return `
+        <div style="border-bottom:1px solid #F0F0F0; padding-bottom:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                <span style="font-size:20px; font-weight:bold;">${safeTime} ${safeName}</span>
+                <span style="color:#8E8E93; margin-left:10px;">${safeGroup}組 (${safeDistance}m)</span>
+                    ${badge}
+                </div>
+                <button style="border:none; background:none; color:#CCC; font-size:18px;">▲</button>
+        </div>
+        <div class="race-control-layout" onclick="event.stopPropagation()">
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
+                    ${infoHeader}
+                    <div id="lead-dist-display">先頭: <strong>${Math.floor(maxDist)}</strong>m</div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-fill" id="progress-fill-${r.id}" style="width:${fillPct}%"></div>
+                    ${headsHtml} ${marksHtml}
+                </div>
+                <div class="inline-controller">${pacerRows}</div>
+            </div>
+            <div>${btnArea}</div>
+        </div>`;
+}
+
 function renderRace() {
     console.log("[renderRace] Start. Races count:", races.length);
     const tbody = document.getElementById('race-tbody');
@@ -286,150 +457,13 @@ function renderRace() {
     races.forEach(r => {
         try {
             const tr = document.createElement('tr');
-            let rowClass = 'race-row';
-            if (r.id === expandedRaceId) rowClass += ' expanded';
-            if (r.status === 'running') rowClass += ' active-running';
-            if (r.status === 'review') rowClass += ' active-review';
-            if (r.status === 'finished') rowClass += ' finished';
-            tr.className = rowClass;
+            tr.className = buildRaceRowClass(r);
             tr.onclick = (e) => toggleRow(r.id, e);
 
-            let content = '';
             const isExpanded = (r.id === expandedRaceId);
-            let badge = '';
-            if(r.status === 'ready') badge = '<span class="status-badge status-ready">待機</span>';
-            if(r.status === 'running') badge = '<span class="status-badge status-running">実行中</span>';
-            if(r.status === 'review') badge = '<span class="status-badge status-review">記録確認</span>';
-            if(r.status === 'finished') badge = '<span class="status-badge status-finished">完了</span>';
-
-            if (!isExpanded) {
-                let chips = "";
-                if(r.pacers && Array.isArray(r.pacers)) {
-                    chips = r.pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${p.pace||72}s</span>`).join(' ');
-                }
-                content = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong style="font-size:16px;">${r.time} ${r.name}</strong> 
-                            <span style="color:#8E8E93; margin-left:10px;">${r.group}組 (${r.distance}m)</span>
-                            ${badge}
-                            <div style="margin-top:8px;">${chips}</div>
-                        </div>
-                        <div style="color:#C6C6C8; font-size:20px;">▼</div>
-                    </div>`;
-            } else {
-                let pacerRows = "";
-            if(r.pacers && Array.isArray(r.pacers)) {
-                pacerRows = r.pacers.map(p => {
-                    // Edit Logic...
-                    const isEditing = editingPaces[p.id] !== undefined;
-                const displayPace = isEditing ? editingPaces[p.id] : p.pace;
-                const valClass = isEditing ? "pace-input changed" : "pace-input";
-                const showAdjust = (r.status !== 'running' && r.status !== 'review' && r.status !== 'finished');
-                const inputReadonly = !showAdjust ? "readonly" : "";
-                const inputStyle = !showAdjust ? "border:none; background:transparent; color:var(--text-main);" : "";
-                const btnGroupClass = isEditing ? "btn-commit-group visible" : "btn-commit-group";
-                
-                const btnMinus = showAdjust ? `<button class="btn-adjust" onclick="adjustPace(${p.id}, 0.5)">+</button>` : "";
-                const btnPlus = showAdjust ? `<button class="btn-adjust" onclick="adjustPace(${p.id}, -0.5)">−</button>` : "";
-
-                let estStr = "--:--";
-                let avgPace = 0;
-                if (p.finishTime !== null) {
-                    estStr = `Goal (${formatTime(p.finishTime)})`;
-                    avgPace = (p.finishTime / r.distance) * 400; 
-                } else if (r.status === 'ready') {
-                    let speed = 400 / displayPace; 
-                    let estSec = r.distance / speed;
-                    estStr = `Est (${formatTime(estSec)})`;
-                } else {
-                    const speed = 400 / displayPace; 
-                    const remDist = r.distance - p.currentDist;
-                    const remSec = remDist / speed;
-                    estStr = formatTime(elapsedTime + remSec);
-                    if(p.currentDist > 0) avgPace = (elapsedTime / p.currentDist) * 400;
-                }
-                let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${avgPace.toFixed(1)}</span>` : "";
-
-                return `
-                <div class="pacer-control-row" onclick="event.stopPropagation()">
-                    <div class="pacer-info"><span class="dot-large bg-${p.color}"></span></div>
-                    <div class="pacer-adjust">
-                        <div style="font-size:24px; font-weight:bold; margin-left:10px;">${(p.pace||72).toFixed(1)}s</div>
-                        <div style="margin-left:10px;">${avgLabel}</div>
-                    </div>
-                    <div class="pacer-est-time" id="pacer-est-${p.id}">${estStr}</div>
-                </div>`;
-            }).join('');
-            }
-
-            // Progress Bar...
-            const totalScale = (r.distance || 400) + 50;
-            let headsHtml = "";
-            if(r.pacers && Array.isArray(r.pacers)) {
-                headsHtml = r.pacers.map(p => {
-                    let cDist = p.currentDist || 0;
-                    // let leftPct = Math.min(((cDist + r.startPos) / (totalScale + r.startPos)) * 100, 100); 
-                    let leftPct = Math.min((cDist / totalScale) * 100, 100);
-                    return `<div class="pacer-head bg-${p.color||'red'}" id="pacer-head-${p.id}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${Math.floor(cDist)}m</div></div>`;
-                }).join('');
-            }
-            
-            let marksHtml = "";
-            if(r.markers && Array.isArray(r.markers)) {
-                marksHtml = r.markers.map(m => {
-                    let leftPct = (m.dist / totalScale) * 100;
-                    return `<div class="history-tick bg-${m.color||'gray'}" style="left:${leftPct}%"><div class="history-tick-label text-${m.color||'gray'}">${m.pace}</div></div>`;
-                }).join('');
-            }
-            
-            let maxDist = 0;
-            if(r.pacers && r.pacers.length > 0) maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist||0));
-            let fillPct = Math.min((maxDist / totalScale) * 100, 100);
-
-            // Buttons
-            let btnArea = "";
-            let infoHeader = "";
-            if (r.status === 'ready') {
-                // ...
-                btnArea = `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${r.id})">START</button></div>`;
-                infoHeader = `<div style="display:flex; gap:10px;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${r.startPos}" style="width:50px;" onchange="updateStartPos(${r.id},this.value)"></div>`;
-            } else if (r.status === 'running') {
-                btnArea = `<button class="btn-big-stop" onclick="event.stopPropagation(); stopRaceWrapper(${r.id})">STOP</button>`;
-                infoHeader = `<div class="timer-big" id="timer-display">${formatTime(elapsedTime)}</div>`;
-            } else if (r.status === 'review') {
-                btnArea = `<button class="btn-big-close" onclick="event.stopPropagation(); finalizeRace(${r.id})">閉じる</button>`;
-                infoHeader = `<div class="timer-big">${formatTime(elapsedTime)}</div>`;
-            } else if (r.status === 'finished') {
-                btnArea = `<button class="btn-big-reset" onclick="event.stopPropagation(); resetRace(${r.id})">リセット</button>`;
-                infoHeader = `<div>記録済み</div>`;
-            }
-
-            content = `
-                <div style="border-bottom:1px solid #F0F0F0; padding-bottom:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
-                        <div>
-                        <span style="font-size:20px; font-weight:bold;">${r.time} ${r.name}</span>
-                        <span style="color:#8E8E93; margin-left:10px;">${r.group}組 (${r.distance}m)</span>
-                            ${badge}
-                        </div>
-                        <button style="border:none; background:none; color:#CCC; font-size:18px;">▲</button>
-                </div>
-                <div class="race-control-layout" onclick="event.stopPropagation()">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
-                            ${infoHeader}
-                            <div id="lead-dist-display">先頭: <strong>${Math.floor(maxDist)}</strong>m</div>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-fill" id="progress-fill-${r.id}" style="width:${fillPct}%"></div>
-                            ${headsHtml} ${marksHtml}
-                        </div>
-                        <div class="inline-controller">${pacerRows}</div>
-                    </div>
-                    <div>${btnArea}</div>
-                </div>`;
-        }
-        tr.innerHTML = `<td>${content}</td>`;
+            const badge = buildRaceBadge(r.status);
+            const content = isExpanded ? buildExpandedRaceContent(r, badge) : buildCollapsedRaceContent(r, badge);
+            tr.innerHTML = `<td>${content}</td>`;
         tbody.appendChild(tr);
         } catch(e) {
             console.error("[renderRace] Error rendering row:", r, e);
@@ -520,8 +554,7 @@ function stopRaceWrapper(id) {
 function updateState(race) {
     elapsedTime += 0.1;
     let allFinished = true;
-    const limit = race.distance + 50; // Run a bit past finish
-    const PREP_MARGIN = 10; // meters before boundary to send next pace
+    const limit = race.distance + UI_CONSTANTS.FINISH_MARGIN_METERS; // Run a bit past finish
     
     race.pacers.forEach((p, idx) => {
         const runnerId = idx + 1;
@@ -541,7 +574,7 @@ function updateState(race) {
             p.currentDist += (speed * 0.1);
 
             // Pre-send next segment pace slightly before boundary
-            if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - PREP_MARGIN)) {
+            if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
                 sendCommand(
                     BluetoothCommunity.commandSetTimeDelay(400, nextSeg.paceFor400m, 400, deviceSettings.interval, [runnerId])
                 );
@@ -567,7 +600,7 @@ function updateState(race) {
     const tEl = document.getElementById('timer-display');
     if(tEl) tEl.innerText = formatTime(elapsedTime);
 
-    const totalScale = (race.distance || 400) + 50;
+    const totalScale = (race.distance || 400) + UI_CONSTANTS.PROGRESS_BAR_PADDING_METERS;
     
     race.pacers.forEach(p => {
         // Update Head Position
