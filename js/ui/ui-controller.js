@@ -312,6 +312,38 @@ function buildRaceBadge(status) {
     return '';
 }
 
+function buildActionArea(raceId, status) {
+    if (status === 'ready') {
+        return `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${raceId})">START</button></div>`;
+    }
+    if (status === 'running') {
+        return `<button class="btn-big-stop" onclick="event.stopPropagation(); stopRaceWrapper(${raceId})">STOP</button>`;
+    }
+    if (status === 'review') {
+        return `<button class="btn-big-close" onclick="event.stopPropagation(); finalizeRace(${raceId})">閉じる</button>`;
+    }
+    if (status === 'finished') {
+        return `<button class="btn-big-reset" onclick="event.stopPropagation(); resetRace(${raceId})">リセット</button>`;
+    }
+    return '';
+}
+
+function buildInfoHeader(race, maxDist, safeStartPos) {
+    if (race.status === 'ready') {
+        return `<div style="display:flex; gap:10px;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" onchange="updateStartPos(${race.id},this.value)"></div>`;
+    }
+    if (race.status === 'running') {
+        return `<div class="timer-big" id="timer-display">${formatTime(elapsedTime)}</div>`;
+    }
+    if (race.status === 'review') {
+        return `<div class="timer-big">${formatTime(elapsedTime)}</div>`;
+    }
+    if (race.status === 'finished') {
+        return `<div>記録済み</div>`;
+    }
+    return `<div>先頭: <strong>${Math.floor(maxDist)}</strong>m</div>`;
+}
+
 function buildPacerRows(r) {
     if(!r.pacers || !Array.isArray(r.pacers)) return "";
     return r.pacers.map(p => {
@@ -402,21 +434,8 @@ function buildExpandedRaceContent(r, badge) {
     if(r.pacers && r.pacers.length > 0) maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist||0));
     let fillPct = Math.min((maxDist / totalScale) * 100, 100);
 
-    let btnArea = "";
-    let infoHeader = "";
-    if (r.status === 'ready') {
-        btnArea = `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${r.id})">START</button></div>`;
-        infoHeader = `<div style="display:flex; gap:10px;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" onchange="updateStartPos(${r.id},this.value)"></div>`;
-    } else if (r.status === 'running') {
-        btnArea = `<button class="btn-big-stop" onclick="event.stopPropagation(); stopRaceWrapper(${r.id})">STOP</button>`;
-        infoHeader = `<div class="timer-big" id="timer-display">${formatTime(elapsedTime)}</div>`;
-    } else if (r.status === 'review') {
-        btnArea = `<button class="btn-big-close" onclick="event.stopPropagation(); finalizeRace(${r.id})">閉じる</button>`;
-        infoHeader = `<div class="timer-big">${formatTime(elapsedTime)}</div>`;
-    } else if (r.status === 'finished') {
-        btnArea = `<button class="btn-big-reset" onclick="event.stopPropagation(); resetRace(${r.id})">リセット</button>`;
-        infoHeader = `<div>記録済み</div>`;
-    }
+    const btnArea = buildActionArea(r.id, r.status);
+    const infoHeader = buildInfoHeader(r, maxDist, safeStartPos);
 
     return `
         <div style="border-bottom:1px solid #F0F0F0; padding-bottom:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
