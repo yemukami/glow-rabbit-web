@@ -821,6 +821,13 @@ function updateSegmentSummary() {
     summaryEl.innerText = `ゴール予想タイム: ${total > 0 ? formatTime(total) : '--:--.-'}`;
 }
 
+// Fallback global bindings in case initUI fails early
+if (typeof window !== 'undefined') {
+    window.switchModalTab = window.switchModalTab || switchModalTab;
+    window.addSegmentRow = window.addSegmentRow || addSegmentRow;
+    window.removeSegmentRow = window.removeSegmentRow || removeSegmentRow;
+}
+
 function renderDeviceList() {
     const container = document.getElementById('device-list-container');
     if (!container) return;
