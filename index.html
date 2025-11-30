@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glow-Rabbit for Race v15 (Modular) - v2.1.0-beta.31</title>
+    <title>Glow-Rabbit for Race v15 (Modular) - v2.1.0-beta.38</title>
     <link rel="icon" href="image_c2633c.png" type="image/png">
     <link rel="stylesheet" href="css/style.css?v=2.0.1">
 </head>
@@ -12,7 +12,7 @@
 <header>
     <div class="header-left">
         <img src="image_c2633c.png" alt="Logo" class="logo-mark">
-        <div class="system-title">Glow-Rabbit for race<span class="version-inline">v2.1.0-beta.31</span></div>
+        <div class="system-title">Glow-Rabbit for race<span class="version-inline">v2.1.0-beta.38</span></div>
     </div>
     <div class="header-right">
         <div class="ble-status">● BLE未接続</div>
@@ -140,6 +140,12 @@
             <div class="modal-tab" id="tab-btn-segments" onclick="switchModalTab('segments')">区間設定</div>
         </div>
 
+        <div style="font-size:12px; color:#888; background:#FFF7E6; border:1px solid #FFE0A3; padding:8px 10px; border-radius:8px; margin-bottom:12px; line-height:1.5;">
+            ⚠️ 注意: ブラウザをリロードするとBLE接続が切れます（再接続が必要です）。<br>
+            ⚠️ START前に接続と同期を済ませてください。レースを展開した際に初期設定を送信します。<br>
+            ⚠️ デバイスの近くで操作してください（電波状態が悪いと遅延/切断します）。
+        </div>
+
         <!-- TAB 1: SIMPLE (Target Time) -->
         <div id="tab-content-simple" class="tab-content active">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px; margin:20px 0;">
@@ -181,8 +187,8 @@
     <div class="modal-content" style="text-align:center; width:300px;">
         <img src="image_c2633c.png" style="width:60px; margin-bottom:10px;">
         <h3>Glow-Rabbit Web</h3>
-        <p style="color:#888; font-family:monospace;">Version: 2.1.0-beta.31</p>
-        <p style="color:#CCC; font-size:12px;">Fix: Guard modal tab globals</p>
+        <p style="color:#888; font-family:monospace;">Version: 2.1.0-beta.38</p>
+        <p style="color:#CCC; font-size:12px;">Fix: Skip double config on start</p>
         <button class="btn-sm btn-primary" onclick="closeVersionModal()">閉じる</button>
     </div>
 </div>

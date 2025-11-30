@@ -3,6 +3,8 @@ import { deviceList, deviceSettings, deviceInteraction, markDeviceListDirty, loa
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from '../core/pace-calculator.js';
+import { roundToTenth, formatPace, formatPaceLabel, formatDistanceMeters } from '../utils/render-utils.js';
+import { advanceRaceTick, startRaceService, sendStopRunner, sendInitialConfigs, prepareRacePlans } from '../core/race-service.js';
 
 let expandedRaceId = null;
 let editingPaces = {};
@@ -21,6 +23,17 @@ const UI_CONSTANTS = {
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100
 };
+
+function resolvePaceValue(raw, fallback = 72) {
+    const n = parseFloat(raw);
+    if (!Number.isFinite(n) || n <= 0) return fallback;
+    return n;
+}
+
+function formatDisplayPaceLabel(rawPace) {
+    const pace = resolvePaceValue(rawPace);
+    return formatPaceLabel(pace);
+}
 
 function isButtonOrInput(target) {
     const tag = target.tagName;
@@ -238,18 +251,21 @@ function sanitizePositiveInt(raw, fallback = 0) {
     return n;
 }
 
-function roundToTenth(value) {
-    return Math.round(value * 10) / 10;
-}
-
 function buildSetupPacerChips(race) {
     if (!race.pacers || !Array.isArray(race.pacers)) return '';
-    return race.pacers.map(p=>`<span class="pacer-chip" onclick="openModal(${race.id},${p.id})"><span class="dot bg-${p.color}"></span>${p.pace}s</span>`).join(' ');
+    return race.pacers
+        .map(p => {
+            const paceLabel = formatDisplayPaceLabel(p.pace);
+            return `<span class="pacer-chip" onclick="openModal(${race.id},${p.id})"><span class="dot bg-${p.color}"></span>${paceLabel}</span>`;
+        })
+        .join(' ');
 }
 
 function buildCollapsedPacerChips(pacers) {
     if(!pacers || !Array.isArray(pacers)) return '';
-    return pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${(p.pace||72).toFixed(1)}s</span>`).join(' ');
+    return pacers
+        .map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${formatDisplayPaceLabel(p.pace)}</span>`)
+        .join(' ');
 }
 
 function parseTimeInput(raw, fallbackSeconds = null) {
@@ -376,7 +392,23 @@ function deleteRow(id) {
 
 function toggleRow(id, event) {
     if (event && isButtonOrInput(event.target)) return;
-    expandedRaceId = (expandedRaceId === id) ? null : id;
+    const willExpand = expandedRaceId !== id;
+    expandedRaceId = willExpand ? id : null;
+    if (willExpand) {
+        const r = races.find(race => race.id === id);
+        if (r && r.pacers && r.pacers.length > 0 && r.status === 'ready') {
+            try {
+                prepareRacePlans(r);
+                if (isConnected) {
+                    sendInitialConfigs(r, deviceSettings.interval);
+                } else {
+                    console.warn("[toggleRow] Not connected; skipped config send on expand");
+                }
+            } catch (e) {
+                console.error("[toggleRow] Failed to send configs on expand", e);
+            }
+        }
+    }
     renderRace();
 }
 
@@ -426,37 +458,39 @@ function buildInfoHeader(race, maxDist, safeStartPos) {
     if (race.status === 'finished') {
         return `<div>記録済み</div>`;
     }
-    return `<div>先頭: <strong>${Math.floor(maxDist)}</strong>m</div>`;
+    return `<div>先頭: <strong>${formatDistanceMeters(maxDist)}</strong></div>`;
 }
 
 function buildPacerRows(r) {
     if(!r.pacers || !Array.isArray(r.pacers)) return "";
     return r.pacers.map(p => {
         const isEditing = editingPaces[p.id] !== undefined;
-        const displayPace = isEditing ? editingPaces[p.id] : p.pace;
+        const paceValue = isEditing ? editingPaces[p.id] : p.pace;
+        const safePace = resolvePaceValue(paceValue);
+        const paceLabel = formatPaceLabel(safePace);
         let estStr = "--:--";
         let avgPace = 0;
         if (p.finishTime !== null) {
             estStr = `Goal (${formatTime(p.finishTime)})`;
             avgPace = (p.finishTime / r.distance) * 400; 
         } else if (r.status === 'ready') {
-            let speed = 400 / displayPace; 
+            let speed = 400 / safePace; 
             let estSec = r.distance / speed;
             estStr = `Est (${formatTime(estSec)})`;
         } else {
-            const speed = 400 / displayPace; 
+            const speed = 400 / safePace; 
             const remDist = r.distance - p.currentDist;
             const remSec = remDist / speed;
             estStr = formatTime(elapsedTime + remSec);
             if(p.currentDist > 0) avgPace = (elapsedTime / p.currentDist) * 400;
         }
-        let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${avgPace.toFixed(1)}</span>` : "";
+        let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${formatPace(avgPace)}</span>` : "";
 
         return `
         <div class="pacer-control-row" onclick="event.stopPropagation()">
             <div class="pacer-info"><span class="dot-large bg-${p.color}"></span></div>
             <div class="pacer-adjust">
-                <div style="font-size:24px; font-weight:bold; margin-left:10px;">${(displayPace || 72).toFixed(1)}s</div>
+                <div style="font-size:24px; font-weight:bold; margin-left:10px;">${paceLabel}</div>
                 <div style="margin-left:10px;">${avgLabel}</div>
             </div>
             <div class="pacer-est-time" id="pacer-est-${p.id}">${estStr}</div>
@@ -469,7 +503,7 @@ function buildProgressHeads(r, totalScale) {
     return r.pacers.map(p => {
         let cDist = p.currentDist || 0;
         let leftPct = Math.min((cDist / totalScale) * 100, 100);
-        return `<div class="pacer-head bg-${p.color||'red'}" id="pacer-head-${p.id}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${Math.floor(cDist)}m</div></div>`;
+        return `<div class="pacer-head bg-${p.color||'red'}" id="pacer-head-${p.id}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${formatDistanceMeters(cDist)}</div></div>`;
     }).join('');
 }
 
@@ -497,7 +531,7 @@ function updatePacerHeadsAndEstimates(race, totalScale) {
              let leftPct = Math.min((cDist / totalScale) * 100, 100);
              headEl.style.left = `${leftPct}%`;
              const labelEl = headEl.querySelector('.pacer-head-label');
-             if(labelEl) labelEl.innerText = Math.floor(cDist) + 'm';
+             if(labelEl) labelEl.innerText = formatDistanceMeters(cDist);
         }
         const estEl = document.getElementById(`pacer-est-${p.id}`);
         if (estEl) {
@@ -518,12 +552,25 @@ function findActiveSegment(runPlan, currentDist) {
     return runPlan.find((seg) => currentDist < seg.endDist) || runPlan[runPlan.length - 1];
 }
 
-function buildCollapsedRaceContent(r, badge) {
-    const safeTime = escapeHTML(r.time);
-    const safeName = escapeHTML(r.name);
-    const safeGroup = escapeHTML(r.group);
-    const safeDistance = escapeHTML(r.distance);
-    const chips = buildCollapsedPacerChips(r.pacers);
+function buildRaceViewModel(race) {
+    return {
+        race,
+        id: race.id,
+        status: race.status,
+        isExpanded: race.id === expandedRaceId,
+        safeTime: escapeHTML(race.time),
+        safeName: escapeHTML(race.name),
+        safeGroup: escapeHTML(race.group),
+        safeDistance: escapeHTML(race.distance),
+        safeStartPos: escapeHTML(race.startPos),
+        badge: buildRaceBadge(race.status),
+        progress: computeLeadAndFill(race)
+    };
+}
+
+function buildCollapsedRaceContent(vm) {
+    const { safeTime, safeName, safeGroup, safeDistance, badge, race } = vm;
+    const chips = buildCollapsedPacerChips(race.pacers);
     return `
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
@@ -536,20 +583,15 @@ function buildCollapsedRaceContent(r, badge) {
         </div>`;
 }
 
-function buildExpandedRaceContent(r, badge) {
-    const safeTime = escapeHTML(r.time);
-    const safeName = escapeHTML(r.name);
-    const safeGroup = escapeHTML(r.group);
-    const safeDistance = escapeHTML(r.distance);
-    const safeStartPos = escapeHTML(r.startPos);
+function buildExpandedRaceContent(vm) {
+    const { race, safeTime, safeName, safeGroup, safeDistance, safeStartPos, badge, progress } = vm;
 
-    const pacerRows = buildPacerRows(r);
-    const { totalScale, maxDist, fillPct } = computeLeadAndFill(r);
-    const headsHtml = buildProgressHeads(r, totalScale);
-    const marksHtml = buildMarkers(r, totalScale);
+    const pacerRows = buildPacerRows(race);
+    const headsHtml = buildProgressHeads(race, progress.totalScale);
+    const marksHtml = buildMarkers(race, progress.totalScale);
 
-    const btnArea = buildActionArea(r.id, r.status);
-    const infoHeader = buildInfoHeader(r, maxDist, safeStartPos);
+    const btnArea = buildActionArea(race.id, race.status);
+    const infoHeader = buildInfoHeader(race, progress.maxDist, safeStartPos);
 
     return `
         <div style="border-bottom:1px solid #F0F0F0; padding-bottom:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
@@ -564,10 +606,10 @@ function buildExpandedRaceContent(r, badge) {
             <div>
                 <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
                     ${infoHeader}
-                    <div id="lead-dist-display">先頭: <strong>${Math.floor(maxDist)}</strong>m</div>
+                    <div id="lead-dist-display">先頭: <strong>${formatDistanceMeters(progress.maxDist)}</strong></div>
                 </div>
                 <div class="progress-container">
-                    <div class="progress-fill" id="progress-fill-${r.id}" style="width:${fillPct}%"></div>
+                    <div class="progress-fill" id="progress-fill-${race.id}" style="width:${progress.fillPct}%"></div>
                     ${headsHtml} ${marksHtml}
                 </div>
                 <div class="inline-controller">${pacerRows}</div>
@@ -589,13 +631,12 @@ function renderRace() {
     
     races.forEach(r => {
         try {
+            const vm = buildRaceViewModel(r);
             const tr = document.createElement('tr');
             tr.className = buildRaceRowClass(r);
             tr.onclick = (e) => toggleRow(r.id, e);
 
-        const isExpanded = (r.id === expandedRaceId);
-        const badge = buildRaceBadge(r.status);
-        const content = isExpanded ? buildExpandedRaceContent(r, badge) : buildCollapsedRaceContent(r, badge);
+        const content = vm.isExpanded ? buildExpandedRaceContent(vm) : buildCollapsedRaceContent(vm);
         tr.innerHTML = `<td>${content}</td>`;
         tbody.appendChild(tr);
         } catch(e) {
@@ -605,98 +646,9 @@ function renderRace() {
 }
 
 async function startRaceWrapper(id) {
-    if(activeRaceId && activeRaceId !== id) return alert("Other race running");
-    setActiveRaceId(id);
     const r = races.find(x=>x.id===id);
-    if(!r) {
-        console.error("[startRaceWrapper] Race not found:", id);
-        return;
-    }
-    if (!r.pacers || r.pacers.length === 0) {
-        alert("ペーサーが設定されていません。設定タブで追加してください。");
-        return;
-    }
-    const startPos = sanitizeNumberInput(r.startPos, 0);
-    if (startPos < 0) {
-        console.warn("[startRaceWrapper] Invalid startPos, resetting to 0:", startPos);
-        r.startPos = 0;
-    }
-    // Reset runner state on Glow-C to avoid stale pointer
-    await sendStopRace();
-
-    // Re-generate plans if missing (backward compatibility or race distance changed)
-    r.pacers.forEach(p => {
-        if (!p.runPlan) {
-            // Fallback to simple pace
-            const targetTime = (r.distance / 400) * (p.pace || 72);
-            p.runPlan = PaceCalculator.createPlanFromTargetTime(r.distance, targetTime, 400);
-        }
-        p.currentSegmentIdx = 0; // Plan index
-        p.nextCommandPrepared = false; // send next segment ahead of time only once
-    });
-
-    // Send Initial Config (First Segment)
-    // Note: We assume all pacers start at 0m or use startPos offset. 
-    // If startPos > 0, we need to fast-forward the plan? 
-    // For now, we assume startPos is physical offset, but time starts at 0.
-    // commandSetTimeDelay sets the pace for the NEXT segment.
-    
-    for (let i = 0; i < r.pacers.length; i++) {
-        const p = r.pacers[i];
-        const firstSeg = p.runPlan[0];
-        const runnerId = i + 1; 
-        const colorRgb = getColorRGB(p.color);
-        console.log("[pace:init]", { runnerId, pace400: firstSeg?.paceFor400m || p.pace, interval: deviceSettings.interval });
-        
-        // Color
-        await sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
-        
-        // Initial Pace
-        if (firstSeg) {
-            await sendCommand(
-                BluetoothCommunity.commandSetTimeDelay(
-                    400,
-                    firstSeg.paceFor400m,
-                    400,
-                    deviceSettings.interval,
-                    [runnerId]
-                )
-            );
-        }
-    }
-
-    // sendStartRace(r, r.startPos || 0, "00:00:00:00:00:00"); 
-    // Use default MAC for now or auto-scan logic
-    // We need to start the runner.
-    let runnerIndices = [];
-    r.pacers.forEach((p, i) => runnerIndices.push(i + 1));
-    
-    // Start
-    // Note: Glow-C firmware currently starts from pointer=0; startDevIdx may be ignored.
-    // startPos in meters -> device index = floor(startPos / interval) + 1
-    const startDevIdx = Math.floor((r.startPos || 0) / deviceSettings.interval) + 1;
-
-    // Pre-light starting device to avoid perceived delay at 0m
-    const startDevice = deviceList[startDevIdx - 1];
-    if (startDevice && startDevice.mac) {
-        const p0 = r.pacers[0];
-        const startColorRgb = p0 ? getColorRGB(p0.color) : [0xFF, 0xFF, 0xFF];
-        await sendCommand(
-            BluetoothCommunity.commandMakeLightUp(startDevIdx, startDevice.mac, startColorRgb, 0x0A)
-        );
-    }
-    
-    await sendCommand(
-        BluetoothCommunity.commandStartRunner(runnerIndices, startDevIdx, "00:00:00:00:00:00"), 
-        true 
-    );
-    
-    r.status = 'running';
-    r.markers = [];
-    r.pacers.forEach(p => { p.currentDist=0; p.finishTime=null; });
-    elapsedTime = 0; 
-    saveRaces();
-    
+    const startResult = await startRaceService(r, id);
+    if (!startResult.ok) return;
     renderRace();
     raceInterval = setInterval(() => updateState(r), UI_CONSTANTS.UPDATE_INTERVAL_MS);
 }
@@ -713,61 +665,15 @@ function getColorRGB(colorName) {
 }
 
 function stopRaceWrapper(id) {
-    sendStopRace();
+    sendStopRunner();
     freezeRace(id);
 }
 
 function updateState(race) {
     if(!race || !race.pacers) return;
-    elapsedTime += 0.1;
-    let allFinished = true;
-    const limit = race.distance + UI_CONSTANTS.FINISH_MARGIN_METERS; // Run a bit past finish
-    
-    race.pacers.forEach((p, idx) => {
-        const runnerId = idx + 1;
-        
-        // 1. Update Distance based on current segment speed
-        // Find which segment we are in based on currentDist?
-        // Or simply use the active segment from plan.
-        
-        if (!p.runPlan) return;
-        let currentSeg = findActiveSegment(p.runPlan, p.currentDist);
-        const nextSeg = p.runPlan[p.currentSegmentIdx + 1];
-        
-        // If we are done with all segments
-        if (currentSeg) {
-            const speed = 400.0 / currentSeg.paceFor400m; // m/s
-            p.currentDist += (speed * 0.1);
+    const tickResult = advanceRaceTick(race, elapsedTime, deviceSettings.interval);
+    elapsedTime = tickResult.elapsedTime;
 
-            // Pre-send next segment pace slightly before boundary
-            if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
-                sendCommand(
-                    BluetoothCommunity.commandSetTimeDelay(
-                        400,
-                        nextSeg.paceFor400m,
-                        400,
-                        deviceSettings.interval,
-                        [runnerId]
-                    )
-                );
-                p.nextCommandPrepared = true;
-            }
-
-            // Boundary crossed
-            if (p.currentDist >= currentSeg.endDist) {
-                p.currentSegmentIdx++;
-                p.nextCommandPrepared = false;
-            }
-        }
-
-        if (p.currentDist < limit) {
-            allFinished = false;
-            if (p.currentDist >= race.distance && p.finishTime === null) p.finishTime = elapsedTime;
-        } else {
-            if (p.finishTime === null) p.finishTime = elapsedTime;
-        }
-    });
-    
     // Targeted DOM Update
     const tEl = document.getElementById('timer-display');
     if(tEl) tEl.innerText = formatTime(elapsedTime);
@@ -781,12 +687,11 @@ function updateState(race) {
     }
     const leadEl = document.getElementById('lead-dist-display');
     if(leadEl) {
-         leadEl.innerHTML = `先頭: <strong>${Math.floor(leadDist)}</strong>m`;
+         leadEl.innerHTML = `先頭: <strong>${formatDistanceMeters(leadDist)}</strong>`;
     }
 
-    if(allFinished) {
-        sendStopRace();
-        freezeRace(race.id);
+    if(tickResult.allFinished) {
+        stopRaceService(race.id);
     }
 }
 
@@ -861,7 +766,7 @@ function updateCalcPace() {
     const r = races.find(x => x.id === modalState.target.raceId);
     if (sec > 0 && r && r.distance > 0) {
         const pace = (sec / r.distance) * 400;
-        document.getElementById('modal-calc-pace').innerText = pace.toFixed(1);
+        document.getElementById('modal-calc-pace').innerText = formatPace(pace);
     } else {
         document.getElementById('modal-calc-pace').innerText = "--.-";
     }
