@@ -125,7 +125,15 @@ window.startRaceWrapper = startRaceWrapper;
             renderDeviceList(); 
         } 
     };
-    window.syncAllDevices = syncWrapper;
+    window.syncAllDevices = async () => {
+        const r = races.find(rc => rc.id === expandedRaceId);
+        // send configs for current race if expanded
+        if (r && r.pacers && r.pacers.length > 0) {
+            prepareRacePlans(r);
+            await sendInitialConfigs(r, deviceSettings.interval);
+        }
+        if(await syncAllDevices()) alert('同期完了');
+    };
     window.downloadCSV = downloadCSV;
     window.importCSV = importCSV;
     
@@ -655,7 +663,7 @@ function renderRace() {
 
 async function startRaceWrapper(id) {
     const r = races.find(x=>x.id===id);
-    const startResult = await startRaceService(r, id);
+    const startResult = await startRaceService(r, id, r.startPos, () => activeRaceId && activeRaceId !== id, { dryRun: false }, { sendStop: false, resendConfig: false });
     if (startResult && startResult.records) {
         console.log("[startRaceWrapper] Start command records:", startResult.records.length, startResult.records);
     }

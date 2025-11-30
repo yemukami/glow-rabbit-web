@@ -1,10 +1,11 @@
 import { sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
-import { PaceCalculator } from './pace-calculator.js';
 import { deviceSettings, deviceList } from './device-manager.js';
 import { setActiveRaceId } from './race-manager.js';
 import { estimateStartLatencyMs } from '../ble/latency.js';
 import { BleCommandQueue } from '../ble/send-queue.js';
+import { prepareRacePlans, sendInitialConfigs } from './race-sync-service.js';
+export { prepareRacePlans, sendInitialConfigs } from './race-sync-service.js';
 
 const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
@@ -58,7 +59,7 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
     return { elapsedTime: elapsed, allFinished };
 }
 
-export async function startRaceService(race, id, startPosRaw, onBusy, queueOptions = {}) {
+export async function startRaceService(race, id, startPosRaw, onBusy, queueOptions = {}, options = { sendStop: true, resendConfig: true }) {
     if (race === undefined || race === null) return { ok: false, reason: 'not_found' };
     if (race.pacers?.length === 0) return { ok: false, reason: 'no_pacers' };
     if (onBusy && onBusy()) return { ok: false, reason: 'busy' };
@@ -66,14 +67,15 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     setActiveRaceId(id);
     const startPos = sanitizeNumberInput(startPosRaw, 0);
     if (startPos < 0) race.startPos = 0;
-    // Always re-send configs on START to avoid stale pacing from previous runs
-    race.initialConfigSent = false;
-
     const queue = new BleCommandQueue(queueOptions);
-    await sendStopRunner(queue);
+    if (options.sendStop) {
+        await sendStopRunner(queue);
+    }
 
     prepareRacePlans(race);
-    await sendInitialConfigs(race, deviceSettings.interval, queue);
+    if (options.resendConfig) {
+        await sendInitialConfigs(race, deviceSettings.interval, queue);
+    }
     await sendStartWithPrelight(race, deviceSettings.interval, queue);
 
     race.status = 'running';
@@ -82,42 +84,6 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     const estMs = estimateStartLatencyMs(race.pacers.length);
     console.log("[startRaceService] Estimated start lag(ms):", estMs, "commands approx:", queue.records.length);
     return { ok: true, estMs, records: queue.records };
-}
-
-export function prepareRacePlans(race) {
-    race.pacers.forEach(p => {
-        if (!p.runPlan) {
-            const targetTime = (race.distance / 400) * (p.pace || 72);
-            p.runPlan = PaceCalculator.createPlanFromTargetTime(race.distance, targetTime, 400);
-        }
-        p.currentSegmentIdx = 0;
-        p.nextCommandPrepared = false;
-    });
-}
-
-export async function sendInitialConfigs(race, intervalMeters, queue = new BleCommandQueue()) {
-    race.initialConfigSent = true;
-    for (let i = 0; i < race.pacers.length; i++) {
-        const p = race.pacers[i];
-        const firstSeg = p.runPlan[0];
-        const runnerId = i + 1; 
-        const colorRgb = getColorRGB(p.color);
-        console.log("[pace:init]", { runnerId, pace400: firstSeg?.paceFor400m || p.pace, interval: intervalMeters });
-        
-        await queue.enqueue(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
-        
-        if (firstSeg) {
-            await queue.enqueue(
-                BluetoothCommunity.commandSetTimeDelay(
-                    400,
-                    firstSeg.paceFor400m,
-                    400,
-                    intervalMeters,
-                    [runnerId]
-                )
-            );
-        }
-    }
 }
 
 export async function sendStartWithPrelight(race, intervalMeters, queue = new BleCommandQueue()) {
