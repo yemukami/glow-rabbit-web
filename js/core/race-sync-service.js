@@ -8,6 +8,7 @@ export async function syncRaceConfigs(race, queueOptions = {}) {
     prepareRacePlans(race);
     const queue = new BleCommandQueue(queueOptions);
     await sendInitialConfigs(race, deviceSettings.interval, queue);
+    console.log("[syncRaceConfigs] Sent initial configs", { commands: queue.records.length, pacers: race.pacers.length, interval: deviceSettings.interval });
     return { ok: true, records: queue.records };
 }
 

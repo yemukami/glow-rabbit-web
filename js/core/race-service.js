@@ -82,6 +82,7 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     race.markers = [];
     race.pacers.forEach(p => { p.currentDist=0; p.finishTime=null; });
     const estMs = estimateStartLatencyMs(race.pacers.length);
+    console.log("[startRaceService] sendStop:", options.sendStop, "resendConfig:", options.resendConfig, "commands:", queue.records.length);
     console.log("[startRaceService] Estimated start lag(ms):", estMs, "commands approx:", queue.records.length);
     return { ok: true, estMs, records: queue.records };
 }
