@@ -17,6 +17,9 @@ export let deviceInteraction = {
 
 export let isListDirty = false;
 export let isSyncing = false;
+export function markDeviceListDirty(val = true) {
+    isListDirty = val;
+}
 
 export function loadDeviceList() {
     const savedList = localStorage.getItem('glow_device_list');
