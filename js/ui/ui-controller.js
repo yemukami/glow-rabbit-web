@@ -621,7 +621,9 @@ async function startRaceWrapper(id) {
         console.warn("[startRaceWrapper] Invalid startPos, resetting to 0:", startPos);
         r.startPos = 0;
     }
-    
+    // Reset runner state on Glow-C to avoid stale pointer
+    await sendStopRace();
+
     // Re-generate plans if missing (backward compatibility or race distance changed)
     r.pacers.forEach(p => {
         if (!p.runPlan) {
@@ -670,8 +672,7 @@ async function startRaceWrapper(id) {
     r.pacers.forEach((p, i) => runnerIndices.push(i + 1));
     
     // Start
-    // The firmware expects 'startDevIndex' to be where the runner appears.
-    // Usually 1 if startPos=0. 
+    // Note: Glow-C firmware currently starts from pointer=0; startDevIdx may be ignored.
     // startPos in meters -> device index = floor(startPos / interval) + 1
     const startDevIdx = Math.floor((r.startPos || 0) / deviceSettings.interval) + 1;
 
