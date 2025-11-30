@@ -479,10 +479,10 @@ function renderRace() {
             tr.className = buildRaceRowClass(r);
             tr.onclick = (e) => toggleRow(r.id, e);
 
-            const isExpanded = (r.id === expandedRaceId);
-            const badge = buildRaceBadge(r.status);
-            const content = isExpanded ? buildExpandedRaceContent(r, badge) : buildCollapsedRaceContent(r, badge);
-            tr.innerHTML = `<td>${content}</td>`;
+        const isExpanded = (r.id === expandedRaceId);
+        const badge = buildRaceBadge(r.status);
+        const content = isExpanded ? buildExpandedRaceContent(r, badge) : buildCollapsedRaceContent(r, badge);
+        tr.innerHTML = `<td>${content}</td>`;
         tbody.appendChild(tr);
         } catch(e) {
             console.error("[renderRace] Error rendering row:", r, e);
@@ -494,6 +494,10 @@ function startRaceWrapper(id) {
     if(activeRaceId && activeRaceId !== id) return alert("Other race running");
     setActiveRaceId(id);
     const r = races.find(x=>x.id===id);
+    if(!r) {
+        console.error("[startRaceWrapper] Race not found:", id);
+        return;
+    }
     
     // Re-generate plans if missing (backward compatibility or race distance changed)
     r.pacers.forEach(p => {
@@ -571,6 +575,7 @@ function stopRaceWrapper(id) {
 }
 
 function updateState(race) {
+    if(!race || !race.pacers) return;
     elapsedTime += 0.1;
     let allFinished = true;
     const limit = race.distance + UI_CONSTANTS.FINISH_MARGIN_METERS; // Run a bit past finish
