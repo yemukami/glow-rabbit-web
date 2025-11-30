@@ -200,6 +200,22 @@ function sanitizeNumberInput(raw, fallback = 0) {
     if (Number.isNaN(n)) return fallback;
     return n;
 }
+
+function parseTimeInput(raw, fallbackSeconds = null) {
+    if (!raw) return fallbackSeconds;
+    const parts = String(raw).split(':').map(p => p.trim());
+    if (parts.length === 1) {
+        const sec = sanitizeNumberInput(parts[0], NaN);
+        return Number.isNaN(sec) ? fallbackSeconds : sec;
+    }
+    if (parts.length === 2) {
+        const min = sanitizeNumberInput(parts[0], NaN);
+        const sec = sanitizeNumberInput(parts[1], NaN);
+        if (Number.isNaN(min) || Number.isNaN(sec)) return fallbackSeconds;
+        return min * 60 + sec;
+    }
+    return fallbackSeconds;
+}
 async function switchMode(mode, skipGuard = false) {
     if (!document.getElementById('screen-'+mode)) return;
 
@@ -274,7 +290,12 @@ function updateData(id, f, v) {
             renderSetup();
         } else {
             const isNumeric = (f==='count'||f==='group'||f==='startPos');
-            r[f] = isNumeric ? sanitizeNumberInput(v, 0) : v; 
+            if (f === 'time') {
+                const parsed = parseTimeInput(v, r.time);
+                r[f] = parsed === null ? r.time : formatTime(parsed);
+            } else {
+                r[f] = isNumeric ? sanitizeNumberInput(v, 0) : v; 
+            }
             saveRaces();
         }
     } 
