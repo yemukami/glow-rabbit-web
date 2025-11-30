@@ -49,6 +49,15 @@ function normalizePositiveInt(value, fallback) {
     return n;
 }
 
+function normalizeMac(mac) {
+    if (!mac || typeof mac !== 'string') return null;
+    const cleaned = mac.replace(/[^0-9a-fA-F]/g, '');
+    if (cleaned.length !== 12) return null;
+    const pairs = cleaned.match(/.{2}/g);
+    if (!pairs) return null;
+    return pairs.map(p => p.toUpperCase()).join(':');
+}
+
 function resizeDeviceList(maxDevices) {
     if (deviceList.length > maxDevices) {
         console.warn("[device-manager] Truncating device list to", maxDevices);
@@ -61,12 +70,15 @@ function resizeDeviceList(maxDevices) {
 }
 
 export function addDeviceToList(mac) {
+    const normalized = normalizeMac(mac);
+    if (!normalized) return { added: false, invalid: true };
+
     const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
-    const existingIndex = deviceList.findIndex(d => d.mac === mac);
+    const existingIndex = deviceList.findIndex(d => d.mac === normalized);
     if (existingIndex >= 0) return { added: false, index: existingIndex };
 
     if (deviceList.length < maxDevices) {
-        deviceList.push({ mac: mac, id: deviceList.length + 1, status: 'new' });
+        deviceList.push({ mac: normalized, id: deviceList.length + 1, status: 'new' });
         saveDeviceList();
         return { added: true, index: deviceList.length - 1 };
     } else {
@@ -122,10 +134,17 @@ export function swapDevices(idx1, idx2) {
 }
 
 export function replaceDevice(idx, mac) {
+    const normalized = normalizeMac(mac);
+    if (!normalized) return { ok: false, reason: 'invalid_mac' };
+
+    const dupIndex = deviceList.findIndex((d, i) => i !== idx && d.mac === normalized);
+    if (dupIndex >= 0) return { ok: false, reason: 'duplicate', index: dupIndex };
+
     expandListToIndex(idx);
-    deviceList[idx] = { mac: mac, id: idx + 1, status: 'replaced' };
+    deviceList[idx] = { mac: normalized, id: idx + 1, status: 'replaced' };
     isListDirty = true;
     saveDeviceList();
+    return { ok: true };
 }
 
 export function removeDevice(idx) {

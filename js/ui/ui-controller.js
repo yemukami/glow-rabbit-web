@@ -106,7 +106,18 @@ export function initUI() {
     window.triggerReplace = (i) => { 
         // Manual Replace Logic
         const newMac = prompt("MAC Address?");
-        if(newMac) { replaceDevice(i, newMac); renderDeviceList(); }
+        if(newMac) { 
+            const res = replaceDevice(i, newMac); 
+            if (!res || res.ok === false) {
+                if (res && res.reason === 'duplicate') {
+                    alert(`Duplicate MAC at position ${res.index + 1}. Replacement aborted.`);
+                } else {
+                    alert('Invalid MAC. Please enter 12 hex digits (e.g., AA:BB:CC:DD:EE:FF).');
+                }
+            } else {
+                renderDeviceList(); 
+            }
+        }
     };
 
     window.cancelReplace = cancelReplace;
