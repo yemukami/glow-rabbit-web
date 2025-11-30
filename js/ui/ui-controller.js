@@ -217,6 +217,12 @@ function sanitizeNumberInput(raw, fallback = 0) {
     return n;
 }
 
+function sanitizePositiveInt(raw, fallback = 0) {
+    const n = parseInt(raw, 10);
+    if (Number.isNaN(n) || n < 0) return fallback;
+    return n;
+}
+
 function parseTimeInput(raw, fallbackSeconds = null) {
     if (!raw) return fallbackSeconds;
     const parts = String(raw).split(':').map(p => p.trim());
@@ -283,10 +289,10 @@ function renderSetup() {
         tr.innerHTML = `
             <td><input type="time" class="input-cell" value="${timeVal}" onchange="updateData(${r.id}, 'time', this.value)"></td>
             <td><input type="text" class="input-cell" value="${nameVal}" onchange="updateData(${r.id}, 'name', this.value)"></td>
-            <td><input type="number" class="input-cell" value="${groupVal}" onchange="updateData(${r.id}, 'group', this.value)"></td>
-            <td><input type="number" class="input-cell" value="${distanceVal}" onchange="updateData(${r.id}, 'distance', this.value)"></td>
-            <td><input type="number" class="input-cell input-start" value="${startPosVal}" onchange="updateData(${r.id}, 'startPos', this.value)"></td>
-            <td><input type="number" class="input-cell" value="${countVal}" onchange="updateData(${r.id}, 'count', this.value)"></td>
+            <td><input type="number" class="input-cell" min="1" value="${groupVal}" onchange="updateData(${r.id}, 'group', this.value)"></td>
+            <td><input type="number" class="input-cell" min="0" value="${distanceVal}" onchange="updateData(${r.id}, 'distance', this.value)"></td>
+            <td><input type="number" class="input-cell input-start" min="0" value="${startPosVal}" onchange="updateData(${r.id}, 'startPos', this.value)"></td>
+            <td><input type="number" class="input-cell" min="0" value="${countVal}" onchange="updateData(${r.id}, 'count', this.value)"></td>
             <td>${ph} <button class="btn-sm btn-outline" onclick="openModal(${r.id},null)">＋</button></td>
             <td><button class="btn-sm btn-danger" style="border:none; background:#FFF0F0;" onclick="deleteRow(${r.id})">削除</button></td>
         `;
@@ -310,7 +316,7 @@ function updateData(id, f, v) {
                 const parsed = parseTimeInput(v, r.time);
                 r[f] = parsed === null ? r.time : formatTime(parsed);
             } else {
-                r[f] = isNumeric ? sanitizeNumberInput(v, 0) : v; 
+                r[f] = isNumeric ? sanitizePositiveInt(v, 0) : v; 
             }
             saveRaces();
         }
