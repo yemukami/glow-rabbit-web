@@ -73,8 +73,10 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     }
 
     prepareRacePlans(race);
-    if (options.resendConfig) {
+    const shouldSendConfig = options.resendConfig || !race.initialConfigSent;
+    if (shouldSendConfig) {
         await sendInitialConfigs(race, deviceSettings.interval, queue);
+        race.syncNeeded = false;
     }
     await sendStartWithPrelight(race, deviceSettings.interval, queue);
 
