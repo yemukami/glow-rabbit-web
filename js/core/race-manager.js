@@ -57,7 +57,15 @@ export async function sendRaceConfig(race) {
         const runnerId = i + 1; 
         const colorRgb = getColorRGB(p.color);
         await sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
-        await sendCommand(BluetoothCommunity.commandSetTimeDelay(400, p.pace, 400, deviceSettings.interval, [runnerId])); 
+        await sendCommand(
+            BluetoothCommunity.commandSetTimeDelay(
+                deviceSettings.totalDistance,
+                p.pace,
+                deviceSettings.totalDistance,
+                deviceSettings.interval,
+                [runnerId]
+            )
+        ); 
     }
 }
 

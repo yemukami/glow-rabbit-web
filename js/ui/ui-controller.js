@@ -586,7 +586,15 @@ function startRaceWrapper(id) {
         
         // Initial Pace
         if (firstSeg) {
-            sendCommand(BluetoothCommunity.commandSetTimeDelay(400, firstSeg.paceFor400m, 400, deviceSettings.interval, [runnerId]));
+            sendCommand(
+                BluetoothCommunity.commandSetTimeDelay(
+                    deviceSettings.totalDistance,
+                    firstSeg.paceFor400m,
+                    deviceSettings.totalDistance,
+                    deviceSettings.interval,
+                    [runnerId]
+                )
+            );
         }
     }
 
@@ -659,7 +667,13 @@ function updateState(race) {
             // Pre-send next segment pace slightly before boundary
             if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
                 sendCommand(
-                    BluetoothCommunity.commandSetTimeDelay(400, nextSeg.paceFor400m, 400, deviceSettings.interval, [runnerId])
+                    BluetoothCommunity.commandSetTimeDelay(
+                        deviceSettings.totalDistance,
+                        nextSeg.paceFor400m,
+                        deviceSettings.totalDistance,
+                        deviceSettings.interval,
+                        [runnerId]
+                    )
                 );
                 p.nextCommandPrepared = true;
             }
