@@ -43,6 +43,23 @@ export function saveDeviceList() {
     }));
 }
 
+function normalizePositiveInt(value, fallback) {
+    const n = parseInt(value, 10);
+    if (Number.isNaN(n) || n <= 0) return fallback;
+    return n;
+}
+
+function resizeDeviceList(maxDevices) {
+    if (deviceList.length > maxDevices) {
+        console.warn("[device-manager] Truncating device list to", maxDevices);
+        deviceList = deviceList.slice(0, maxDevices).map((d, idx) => ({ ...d, id: idx + 1 }));
+    } else if (deviceList.length < maxDevices) {
+        while (deviceList.length < maxDevices) {
+            deviceList.push({ mac: DUMMY_MAC, id: deviceList.length + 1, status: 'dummy' });
+        }
+    }
+}
+
 export function addDeviceToList(mac) {
     const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
     const existingIndex = deviceList.findIndex(d => d.mac === mac);
@@ -117,8 +134,15 @@ export function removeDevice(idx) {
 }
 
 export function updateSettings(dist, interval) {
-    if (dist) deviceSettings.totalDistance = parseInt(dist);
-    if (interval) deviceSettings.interval = parseInt(interval);
+    const newDistance = normalizePositiveInt(dist, deviceSettings.totalDistance);
+    const newInterval = normalizePositiveInt(interval, deviceSettings.interval);
+    deviceSettings.totalDistance = newDistance;
+    deviceSettings.interval = newInterval;
+
+    const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
+    resizeDeviceList(maxDevices);
+
+    isListDirty = true;
     saveDeviceList();
 }
 
