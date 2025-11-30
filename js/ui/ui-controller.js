@@ -396,6 +396,14 @@ function buildMarkers(r, totalScale) {
     }).join('');
 }
 
+function computeLeadAndFill(r) {
+    const totalScale = (r.distance || 400) + UI_CONSTANTS.PROGRESS_BAR_PADDING_METERS;
+    let maxDist = 0;
+    if(r.pacers && r.pacers.length > 0) maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist||0));
+    let fillPct = Math.min((maxDist / totalScale) * 100, 100);
+    return { totalScale, maxDist, fillPct };
+}
+
 function buildCollapsedRaceContent(r, badge) {
     const safeTime = escapeHTML(r.time);
     const safeName = escapeHTML(r.name);
@@ -425,14 +433,9 @@ function buildExpandedRaceContent(r, badge) {
     const safeStartPos = escapeHTML(r.startPos);
 
     const pacerRows = buildPacerRows(r);
-
-    const totalScale = (r.distance || 400) + UI_CONSTANTS.PROGRESS_BAR_PADDING_METERS;
+    const { totalScale, maxDist, fillPct } = computeLeadAndFill(r);
     const headsHtml = buildProgressHeads(r, totalScale);
     const marksHtml = buildMarkers(r, totalScale);
-    
-    let maxDist = 0;
-    if(r.pacers && r.pacers.length > 0) maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist||0));
-    let fillPct = Math.min((maxDist / totalScale) * 100, 100);
 
     const btnArea = buildActionArea(r.id, r.status);
     const infoHeader = buildInfoHeader(r, maxDist, safeStartPos);
@@ -624,7 +627,7 @@ function updateState(race) {
     const tEl = document.getElementById('timer-display');
     if(tEl) tEl.innerText = formatTime(elapsedTime);
 
-    const totalScale = (race.distance || 400) + UI_CONSTANTS.PROGRESS_BAR_PADDING_METERS;
+    const { totalScale, maxDist: leadDist, fillPct } = computeLeadAndFill(race);
     
     race.pacers.forEach(p => {
         // Update Head Position
@@ -653,16 +656,11 @@ function updateState(race) {
     
     const fillEl = document.getElementById(`progress-fill-${race.id}`);
     if (fillEl) {
-         let maxDist = 0;
-         if(race.pacers && race.pacers.length > 0) maxDist = Math.max(0, ...race.pacers.map(p=>p.currentDist||0));
-         let fillPct = Math.min((maxDist / totalScale) * 100, 100);
          fillEl.style.width = `${fillPct}%`;
     }
     const leadEl = document.getElementById('lead-dist-display');
     if(leadEl) {
-         let maxDist = 0;
-         if(race.pacers && race.pacers.length > 0) maxDist = Math.max(0, ...race.pacers.map(p=>p.currentDist||0));
-         leadEl.innerHTML = `先頭: <strong>${Math.floor(maxDist)}</strong>m`;
+         leadEl.innerHTML = `先頭: <strong>${Math.floor(leadDist)}</strong>m`;
     }
 
     if(allFinished) {

@@ -100,3 +100,7 @@
 ### 追加ログ（このターン-6）
 - 作業: 可読性と安全性向上のため、`renderRace` 呼び出しを `isExpanded` 判定に直し、`startRaceWrapper` にレース存在チェックログ、`updateState` にnullガードを追加。`node --check` と既存テスト（pace-calculator, ui-logic）を再実行し成功。
 - 思考: 循環や曖昧さを増やさず、人間が追いやすい保護的ガードを入れる段階。次は入力バリデーションと進行ループの描画更新分割に進めたい。
+
+### 追加ログ（このターン-7）
+- 作業: バージョン表記を `v2.1.0-beta.6` に更新。進行ループの距離/プログレス算出を `computeLeadAndFill` に集約し、`renderRace` と `updateState` の二重計算を削減。構文チェックと既存テスト（pace-calculator, ui-logic）を再実行し成功。
+- 思考: 同一計算の共通化で読みやすさと矛盾リスクを低減。引き続き入力バリデーションとUIロジックの分割に取り組む。
