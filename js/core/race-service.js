@@ -4,6 +4,7 @@ import { PaceCalculator } from './pace-calculator.js';
 import { deviceSettings, deviceList } from './device-manager.js';
 import { setActiveRaceId } from './race-manager.js';
 import { estimateStartLatencyMs } from '../ble/latency.js';
+import { BleCommandQueue } from '../ble/send-queue.js';
 
 const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
@@ -56,7 +57,7 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
     return { elapsedTime: elapsed, allFinished };
 }
 
-export async function startRaceService(race, id, startPosRaw, onBusy) {
+export async function startRaceService(race, id, startPosRaw, onBusy, queueOptions = {}) {
     if (race === undefined || race === null) return { ok: false, reason: 'not_found' };
     if (race.pacers?.length === 0) return { ok: false, reason: 'no_pacers' };
     if (onBusy && onBusy()) return { ok: false, reason: 'busy' };
@@ -68,17 +69,18 @@ export async function startRaceService(race, id, startPosRaw, onBusy) {
     await sendStopRunner();
 
     prepareRacePlans(race);
+    const queue = new BleCommandQueue(queueOptions);
     if (!race.initialConfigSent) {
-        await sendInitialConfigs(race, deviceSettings.interval);
+        await sendInitialConfigs(race, deviceSettings.interval, queue);
     }
-    await sendStartWithPrelight(race, deviceSettings.interval);
+    await sendStartWithPrelight(race, deviceSettings.interval, queue);
 
     race.status = 'running';
     race.markers = [];
     race.pacers.forEach(p => { p.currentDist=0; p.finishTime=null; });
     const estMs = estimateStartLatencyMs(race.pacers.length);
     console.log("[startRaceService] Estimated start lag(ms):", estMs, "commands approx:", 1 + (2 * race.pacers.length) + 2);
-    return { ok: true, estMs };
+    return { ok: true, estMs, records: queue.records };
 }
 
 export function prepareRacePlans(race) {
@@ -92,7 +94,7 @@ export function prepareRacePlans(race) {
     });
 }
 
-export async function sendInitialConfigs(race, intervalMeters) {
+export async function sendInitialConfigs(race, intervalMeters, queue = new BleCommandQueue()) {
     race.initialConfigSent = true;
     for (let i = 0; i < race.pacers.length; i++) {
         const p = race.pacers[i];
@@ -101,10 +103,10 @@ export async function sendInitialConfigs(race, intervalMeters) {
         const colorRgb = getColorRGB(p.color);
         console.log("[pace:init]", { runnerId, pace400: firstSeg?.paceFor400m || p.pace, interval: intervalMeters });
         
-        await sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
+        await queue.enqueue(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
         
         if (firstSeg) {
-            await sendCommand(
+            await queue.enqueue(
                 BluetoothCommunity.commandSetTimeDelay(
                     400,
                     firstSeg.paceFor400m,
@@ -117,7 +119,7 @@ export async function sendInitialConfigs(race, intervalMeters) {
     }
 }
 
-export async function sendStartWithPrelight(race, intervalMeters) {
+export async function sendStartWithPrelight(race, intervalMeters, queue = new BleCommandQueue()) {
     const runnerIndices = race.pacers.map((_, i) => i + 1);
     const startDevIdx = Math.floor((race.startPos || 0) / intervalMeters) + 1;
 
@@ -125,12 +127,12 @@ export async function sendStartWithPrelight(race, intervalMeters) {
     if (startDevice && startDevice.mac) {
         const p0 = race.pacers[0];
         const startColorRgb = p0 ? getColorRGB(p0.color) : [0xFF, 0xFF, 0xFF];
-        await sendCommand(
+        await queue.enqueue(
             BluetoothCommunity.commandMakeLightUp(startDevIdx, startDevice.mac, startColorRgb, 0x0A)
         );
     }
     
-    await sendCommand(
+    await queue.enqueue(
         BluetoothCommunity.commandStartRunner(runnerIndices, startDevIdx, "00:00:00:00:00:00"), 
         true 
     );
