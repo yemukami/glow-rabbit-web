@@ -313,7 +313,7 @@ function renderSetup() {
             <td><input type="text" class="input-cell" value="${nameVal}" onchange="updateData(${r.id}, 'name', this.value)"></td>
             <td><input type="number" class="input-cell" min="1" value="${groupVal}" onchange="updateData(${r.id}, 'group', this.value)"></td>
             <td><input type="number" class="input-cell" min="0" value="${distanceVal}" onchange="updateData(${r.id}, 'distance', this.value)"></td>
-            <td><input type="number" class="input-cell input-start" min="0" value="${startPosVal}" onchange="updateData(${r.id}, 'startPos', this.value)"></td>
+            <td><input type="number" class="input-cell input-start" min="0" value="${startPosVal}" onchange="updateData(${r.id}, 'startPos', this.value)" step="any"></td>
             <td><input type="number" class="input-cell" min="0" value="${countVal}" onchange="updateData(${r.id}, 'count', this.value)"></td>
             <td>${ph} <button class="btn-sm btn-outline" onclick="openModal(${r.id},null)">＋</button></td>
             <td><button class="btn-sm btn-danger" style="border:none; background:#FFF0F0;" onclick="deleteRow(${r.id})">削除</button></td>
