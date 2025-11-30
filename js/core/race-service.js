@@ -28,6 +28,7 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
             p.currentDist += (speed * 0.1);
 
             if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
+                console.log("[advanceRaceTick] Presend next segment", { runnerId, nextPace400: nextSeg.paceFor400m, atDist: p.currentDist.toFixed(1) });
                 sendCommand(
                     BluetoothCommunity.commandSetTimeDelay(
                         400,

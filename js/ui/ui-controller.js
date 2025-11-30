@@ -656,6 +656,9 @@ function renderRace() {
 async function startRaceWrapper(id) {
     const r = races.find(x=>x.id===id);
     const startResult = await startRaceService(r, id);
+    if (startResult && startResult.records) {
+        console.log("[startRaceWrapper] Start command records:", startResult.records.length, startResult.records);
+    }
     if (!startResult.ok) return;
     renderRace();
     raceInterval = setInterval(() => updateState(r), UI_CONSTANTS.UPDATE_INTERVAL_MS);
