@@ -179,7 +179,10 @@ function handleNotification(event) {
         let macBytes = data.slice(6, 12);
         if (macBytes.some(b => b !== 0)) {
             let macStr = macBytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(':');
-            
+            if (macStr.startsWith('CC:33') || macStr === '00:00:00:00:00:00') {
+                console.warn("[Notification] Ignored blocked MAC:", macStr);
+                return;
+            }
             if (deviceInteraction.mode === 'replacing') {
                 deviceInteraction.scannedMac = macStr;
                 updateReplaceModalUI(macStr);
