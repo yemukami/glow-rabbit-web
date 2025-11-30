@@ -22,6 +22,7 @@ export function loadRaces() {
                 if(r.status === 'running') r.status = 'ready'; // Reset running state on reload
                 if(!Array.isArray(r.pacers)) r.pacers = [];
                 if(!Array.isArray(r.markers)) r.markers = [];
+                if (typeof r.startPos !== 'number' || Number.isNaN(r.startPos) || r.startPos < 0) r.startPos = 0;
                 
                 r.pacers.forEach(p => {
                      if(typeof p.pace !== 'number') p.pace = 72.0;

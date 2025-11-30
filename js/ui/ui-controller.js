@@ -360,7 +360,7 @@ function updateData(id, f, v) {
 }
 
 function addNewRow() { 
-    races.push({id:Date.now(), time:"10:00", name:"New Race", group:1, distance:1000, startPos:200, count:10, status:"ready", pacers:[], markers:[]}); 
+    races.push({id:Date.now(), time:"10:00", name:"New Race", group:1, distance:1000, startPos:0, count:10, status:"ready", pacers:[], markers:[]}); 
     saveRaces(); renderSetup(); 
 }
 
