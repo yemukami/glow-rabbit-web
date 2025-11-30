@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glow-Rabbit for Race v15 (Modular) - v2.1.0-beta.41</title>
+    <title>Glow-Rabbit for Race v15 (Modular) - v2.1.0-beta.42</title>
     <link rel="icon" href="image_c2633c.png" type="image/png">
     <link rel="stylesheet" href="css/style.css?v=2.0.1">
 </head>
@@ -12,7 +12,7 @@
 <header>
     <div class="header-left">
         <img src="image_c2633c.png" alt="Logo" class="logo-mark">
-        <div class="system-title">Glow-Rabbit for race<span class="version-inline">v2.1.0-beta.41</span></div>
+        <div class="system-title">Glow-Rabbit for race<span class="version-inline">v2.1.0-beta.42</span></div>
     </div>
     <div class="header-right">
         <div class="ble-status">● BLE未接続</div>
@@ -126,12 +126,6 @@
     <div class="modal-content" style="width: 500px;">
         <h3 style="margin-top:0;">ペーサー設定</h3>
 
-        <div style="font-size:12px; color:#834700; background:#FFF7E6; border:1px solid #FFE0A3; padding:10px 12px; border-radius:10px; margin-bottom:12px; line-height:1.5;">
-            ⚠️ ブラウザをリロードするとBLE接続が切れます（再接続してください）<br>
-            ⚠️ START前に接続と同期を完了させてください（レース展開時に初期設定を送信します）<br>
-            ⚠️ デバイスの近くで操作してください（電波状態が悪いと遅延/切断します）
-        </div>
-
         <div class="color-selector">
             <div class="color-option bg-red" onclick="selectModalColor('red')"></div>
             <div class="color-option bg-blue" onclick="selectModalColor('blue')"></div>
@@ -146,10 +140,9 @@
             <div class="modal-tab" id="tab-btn-segments" onclick="switchModalTab('segments')">区間設定</div>
         </div>
 
-        <div style="font-size:12px; color:#888; background:#FFF7E6; border:1px solid #FFE0A3; padding:8px 10px; border-radius:8px; margin-bottom:12px; line-height:1.5;">
-            ⚠️ 注意: ブラウザをリロードするとBLE接続が切れます（再接続が必要です）。<br>
-            ⚠️ START前に接続と同期を済ませてください。レースを展開した際に初期設定を送信します。<br>
-            ⚠️ デバイスの近くで操作してください（電波状態が悪いと遅延/切断します）。
+        <div style="font-size:12px; color:#888; background:#F7F7F7; border:1px solid #E6E6E6; padding:8px 10px; border-radius:8px; margin-bottom:12px; line-height:1.5;">
+            ⚠️ START前に接続と同期を済ませてください（レース展開時に初期設定を送信します）<br>
+            ⚠️ デバイスの近くで操作してください（電波状態が悪いと遅延/切断します）
         </div>
 
         <!-- TAB 1: SIMPLE (Target Time) -->
@@ -190,11 +183,16 @@
 </div>
 
 <div id="modal-version" class="modal-overlay" onclick="if(event.target===this) closeVersionModal()">
-    <div class="modal-content" style="text-align:center; width:300px;">
+    <div class="modal-content" style="text-align:center; width:320px;">
         <img src="image_c2633c.png" style="width:60px; margin-bottom:10px;">
         <h3>Glow-Rabbit Web</h3>
-        <p style="color:#888; font-family:monospace;">Version: 2.1.0-beta.41</p>
-        <p style="color:#CCC; font-size:12px;">Fix: Start lag estimator</p>
+        <p style="color:#888; font-family:monospace;">Version: 2.1.0-beta.42</p>
+        <p style="color:#CCC; font-size:12px;">Fix: Version modal notices</p>
+        <div style="text-align:left; font-size:12px; color:#834700; background:#FFF7E6; border:1px solid #FFE0A3; padding:10px 12px; border-radius:10px; margin:12px 0; line-height:1.5;">
+            ⚠️ ブラウザをリロードするとBLE接続が切れます（再接続してください）<br>
+            ⚠️ START前に接続と同期を完了させてください（レース展開時に初期設定を送信します）<br>
+            ⚠️ デバイスの近くで操作してください（電波状態が悪いと遅延/切断します）
+        </div>
         <button class="btn-sm btn-primary" onclick="closeVersionModal()">閉じる</button>
     </div>
 </div>
