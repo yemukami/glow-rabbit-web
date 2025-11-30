@@ -3,6 +3,7 @@ import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from './pace-calculator.js';
 import { deviceSettings, deviceList } from './device-manager.js';
 import { setActiveRaceId } from './race-manager.js';
+import { estimateStartLatencyMs } from '../ble/latency.js';
 
 const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
@@ -75,7 +76,9 @@ export async function startRaceService(race, id, startPosRaw, onBusy) {
     race.status = 'running';
     race.markers = [];
     race.pacers.forEach(p => { p.currentDist=0; p.finishTime=null; });
-    return { ok: true };
+    const estMs = estimateStartLatencyMs(race.pacers.length);
+    console.log("[startRaceService] Estimated start lag(ms):", estMs, "commands approx:", 1 + (2 * race.pacers.length) + 2);
+    return { ok: true, estMs };
 }
 
 export function prepareRacePlans(race) {
