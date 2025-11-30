@@ -48,7 +48,7 @@ async function testStartRaceServiceDryRun() {
   prepareRacePlans(race);
   const deviceManager = await import('../core/device-manager.js');
   deviceManager.deviceList[0] = { mac: 'AA:BB:CC:DD:EE:FF' };
-  const res = await startRaceService(race, 1, 0, () => false, { dryRun: true });
+  const res = await startRaceService(race, 1, 0, () => false, { dryRun: true }, { sendStop: true, resendConfig: true });
   const records = res.records;
   const startCmd = records[records.length - 1];
   assert.strictEqual(startCmd.opts.highPriority, true, 'Start command should be high priority');

@@ -4,7 +4,8 @@ import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from '../core/pace-calculator.js';
 import { roundToTenth, formatPace, formatPaceLabel, formatDistanceMeters } from '../utils/render-utils.js';
-import { advanceRaceTick, startRaceService, sendStopRunner, sendInitialConfigs, prepareRacePlans } from '../core/race-service.js';
+import { advanceRaceTick, startRaceService, sendStopRunner } from '../core/race-service.js';
+import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
 
 let expandedRaceId = null;
 let editingPaces = {};
@@ -127,10 +128,9 @@ window.startRaceWrapper = startRaceWrapper;
     };
     window.syncAllDevices = async () => {
         const r = races.find(rc => rc.id === expandedRaceId);
-        // send configs for current race if expanded
         if (r && r.pacers && r.pacers.length > 0) {
-            prepareRacePlans(r);
-            await sendInitialConfigs(r, deviceSettings.interval);
+            const res = await syncRaceConfigs(r, { dryRun: false });
+            if (res.ok) { r.syncNeeded = false; saveRaces(); }
         }
         if(await syncAllDevices()) alert('同期完了');
     };
@@ -372,6 +372,7 @@ function updateData(id, f, v) {
                 const ok = confirm("距離変更に伴いペーサー設定を削除します。続行しますか？");
                 if (!ok) { renderSetup(); return; }
                 r.pacers = [];
+                r.syncNeeded = true;
             }
             r.distance = d;
             let mod = d % 400;
@@ -386,6 +387,7 @@ function updateData(id, f, v) {
             } else {
                 r[f] = isNumeric ? sanitizePositiveInt(v, 0) : v; 
             }
+            if (f === 'startPos') r.syncNeeded = true;
             saveRaces();
         }
     } 
@@ -408,23 +410,7 @@ function deleteRow(id) {
 
 function toggleRow(id, event) {
     if (event && isButtonOrInput(event.target)) return;
-    const willExpand = expandedRaceId !== id;
-    expandedRaceId = willExpand ? id : null;
-    if (willExpand) {
-        const r = races.find(race => race.id === id);
-        if (r && r.pacers && r.pacers.length > 0 && r.status === 'ready') {
-            try {
-                prepareRacePlans(r);
-                if (isConnected) {
-                    sendInitialConfigs(r, deviceSettings.interval);
-                } else {
-                    console.warn("[toggleRow] Not connected; skipped config send on expand");
-                }
-            } catch (e) {
-                console.error("[toggleRow] Failed to send configs on expand", e);
-            }
-        }
-    }
+    expandedRaceId = (expandedRaceId === id) ? null : id;
     renderRace();
 }
 
@@ -437,12 +423,14 @@ function buildRaceRowClass(race) {
     return rowClass;
 }
 
-function buildRaceBadge(status) {
-    if(status === 'ready') return '<span class="status-badge status-ready">待機</span>';
-    if(status === 'running') return '<span class="status-badge status-running">実行中</span>';
-    if(status === 'review') return '<span class="status-badge status-review">記録確認</span>';
-    if(status === 'finished') return '<span class="status-badge status-finished">完了</span>';
-    return '';
+function buildRaceBadge(status, syncNeeded=false) {
+    let badge = '';
+    if(status === 'ready') badge = '<span class="status-badge status-ready">待機</span>';
+    if(status === 'running') badge = '<span class="status-badge status-running">実行中</span>';
+    if(status === 'review') badge = '<span class="status-badge status-review">記録確認</span>';
+    if(status === 'finished') badge = '<span class="status-badge status-finished">完了</span>';
+    if (syncNeeded) badge += ' <span class="status-badge status-warning">要同期</span>';
+    return badge;
 }
 
 function buildActionArea(raceId, status) {
@@ -579,7 +567,7 @@ function buildRaceViewModel(race) {
         safeGroup: escapeHTML(race.group),
         safeDistance: escapeHTML(race.distance),
         safeStartPos: escapeHTML(race.startPos),
-        badge: buildRaceBadge(race.status),
+        badge: buildRaceBadge(race.status, race.syncNeeded),
         progress: computeLeadAndFill(race)
     };
 }
@@ -884,7 +872,7 @@ function saveModalData() {
     } else {
         r.pacers.push(pacerData);
     }
-    
+    r.syncNeeded = true;
     saveRaces(); 
     closeModal(); 
     renderSetup(); 

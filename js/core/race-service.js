@@ -59,7 +59,7 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
     return { elapsedTime: elapsed, allFinished };
 }
 
-export async function startRaceService(race, id, startPosRaw, onBusy, queueOptions = {}, options = { sendStop: true, resendConfig: true }) {
+export async function startRaceService(race, id, startPosRaw, onBusy, queueOptions = {}, options = { sendStop: false, resendConfig: false }) {
     if (race === undefined || race === null) return { ok: false, reason: 'not_found' };
     if (race.pacers?.length === 0) return { ok: false, reason: 'no_pacers' };
     if (onBusy && onBusy()) return { ok: false, reason: 'busy' };
