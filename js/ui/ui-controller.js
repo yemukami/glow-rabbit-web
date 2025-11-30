@@ -431,6 +431,30 @@ function computeLeadAndFill(r) {
     return { totalScale, maxDist, fillPct };
 }
 
+function updatePacerHeadsAndEstimates(race, totalScale) {
+    race.pacers.forEach(p => {
+        const headEl = document.getElementById(`pacer-head-${p.id}`);
+        if (headEl) {
+             let cDist = p.currentDist || 0;
+             let leftPct = Math.min((cDist / totalScale) * 100, 100);
+             headEl.style.left = `${leftPct}%`;
+             const labelEl = headEl.querySelector('.pacer-head-label');
+             if(labelEl) labelEl.innerText = Math.floor(cDist) + 'm';
+        }
+        const estEl = document.getElementById(`pacer-est-${p.id}`);
+        if (estEl) {
+            let estStr = "";
+             if (p.finishTime !== null) {
+                estStr = `Goal (${formatTime(p.finishTime)})`;
+            } else if (p.runPlan) {
+                const lastSeg = p.runPlan[p.runPlan.length - 1];
+                if(lastSeg) estStr = `Goal (${formatTime(lastSeg.endTime)})`;
+            }
+            estEl.innerText = estStr;
+        }
+    });
+}
+
 function buildCollapsedRaceContent(r, badge) {
     const safeTime = escapeHTML(r.time);
     const safeName = escapeHTML(r.name);
@@ -660,31 +684,7 @@ function updateState(race) {
     if(tEl) tEl.innerText = formatTime(elapsedTime);
 
     const { totalScale, maxDist: leadDist, fillPct } = computeLeadAndFill(race);
-    
-    race.pacers.forEach(p => {
-        // Update Head Position
-        const headEl = document.getElementById(`pacer-head-${p.id}`);
-        if (headEl) {
-             let cDist = p.currentDist || 0;
-             let leftPct = Math.min((cDist / totalScale) * 100, 100);
-             headEl.style.left = `${leftPct}%`;
-             const labelEl = headEl.querySelector('.pacer-head-label');
-             if(labelEl) labelEl.innerText = Math.floor(cDist) + 'm';
-        }
-        // Update Est Time / Goal Time
-        const estEl = document.getElementById(`pacer-est-${p.id}`);
-        if (estEl) {
-            let estStr = "";
-             if (p.finishTime !== null) {
-                estStr = `Goal (${formatTime(p.finishTime)})`;
-            } else if (p.runPlan) {
-                // Use runPlan total duration
-                const lastSeg = p.runPlan[p.runPlan.length - 1];
-                if(lastSeg) estStr = `Goal (${formatTime(lastSeg.endTime)})`;
-            }
-            estEl.innerText = estStr;
-        }
-    });
+    updatePacerHeadsAndEstimates(race, totalScale);
     
     const fillEl = document.getElementById(`progress-fill-${race.id}`);
     if (fillEl) {
