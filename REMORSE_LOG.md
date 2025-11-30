@@ -1,5 +1,11 @@
 # 懺悔ログ
 
+## 2025-12-xx (BLE接続表示の不整合)
+- 事象: BLE切断時にステータス/ボタンが未接続表示に戻らず、ユーザーに接続状態の誤認リスクがあった。
+- 原因: `connectBLE` のPromise失敗/成功時にステータス更新を保証しておらず、切断時のUI更新を逃していた。
+- 対応: 接続ハンドラをasync化し、成功/失敗どちらでも `updateConnectionStatus(false/true)` を確実に呼ぶよう修正。
+- 再発防止: コネクション状態を持つUIはPromise結果/例外経路の両方で更新すること。BLE周辺はテスト時にUIログを確認し、手動で切断→接続の表示をチェックする。
+
 ## 2025-11-30 (全削除時のランタイムエラー)
 - 事象: デバイス全削除→同期で `Assignment to constant variable` が発生（isListDirty を直接再代入）。
 - 原因: device-manager から import した `isListDirty` が const エクスポートであるのに、UI側で再代入を試みた。
