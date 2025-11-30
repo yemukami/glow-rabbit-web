@@ -674,6 +674,16 @@ async function startRaceWrapper(id) {
     // Usually 1 if startPos=0. 
     // startPos in meters -> device index = floor(startPos / interval) + 1
     const startDevIdx = Math.floor((r.startPos || 0) / deviceSettings.interval) + 1;
+
+    // Pre-light starting device to avoid perceived delay at 0m
+    const startDevice = deviceList[startDevIdx - 1];
+    if (startDevice && startDevice.mac) {
+        const p0 = r.pacers[0];
+        const startColorRgb = p0 ? getColorRGB(p0.color) : [0xFF, 0xFF, 0xFF];
+        await sendCommand(
+            BluetoothCommunity.commandMakeLightUp(startDevIdx, startDevice.mac, startColorRgb, 0x0A)
+        );
+    }
     
     await sendCommand(
         BluetoothCommunity.commandStartRunner(runnerIndices, startDevIdx, "00:00:00:00:00:00"), 
