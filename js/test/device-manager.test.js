@@ -32,6 +32,7 @@ function testLoadDeviceListSanitizes() {
   global.localStorage.setItem('glow_device_list', JSON.stringify([
     { mac: 'AA:BB:CC:DD:EE:FF', status: 'active' },
     { mac: 123, status: 'dummy' },
+    { mac: '00:00:00:00:00:00', status: 'dummy' },
   ]));
   loadDeviceList();
   assert.strictEqual(deviceList.length, 1, 'Invalid entries should be dropped');

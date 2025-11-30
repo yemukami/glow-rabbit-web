@@ -34,7 +34,7 @@ export function loadDeviceList() {
     if (savedList) {
         try {
             deviceList = JSON.parse(savedList)
-                .filter(d => d && typeof d.mac === 'string')
+                .filter(d => d && typeof d.mac === 'string' && d.mac !== DUMMY_MAC)
                 .map((d, idx) => ({ 
                     mac: d.mac, 
                     id: idx + 1, 
