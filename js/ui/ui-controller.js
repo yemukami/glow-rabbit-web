@@ -21,6 +21,11 @@ const UI_CONSTANTS = {
     PRESEND_MARGIN_METERS: 10
 };
 
+function isButtonOrInput(target) {
+    const tag = target.tagName;
+    return tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'OPTION';
+}
+
 function escapeHTML(value) {
     if (value === undefined || value === null) return '';
     return String(value).replace(/[&<>"']/g, m => ({
@@ -328,7 +333,7 @@ function deleteRow(id) {
 // --- RACE SCREEN ---
 
 function toggleRow(id, event) {
-    if (event.target.tagName === 'BUTTON' || event.target.tagName === 'INPUT') return;
+    if (event && isButtonOrInput(event.target)) return;
     expandedRaceId = (expandedRaceId === id) ? null : id;
     renderRace();
 }
