@@ -30,7 +30,13 @@ export function loadDeviceList() {
     
     if (savedList) {
         try {
-            deviceList = JSON.parse(savedList);
+            deviceList = JSON.parse(savedList)
+                .filter(d => d && typeof d.mac === 'string')
+                .map((d, idx) => ({ 
+                    mac: d.mac, 
+                    id: idx + 1, 
+                    status: d.status === 'dummy' ? 'dummy' : 'active'
+                }));
         } catch(e) { console.error(e); }
     }
 }

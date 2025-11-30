@@ -96,7 +96,14 @@ window.startRaceWrapper = startRaceWrapper;
     // Devices
     window.updateRaceSettings = (d, i) => { updateSettings(d, i); renderDeviceList(); };
     window.fillWithDummy = fillWithDummy;
-    window.clearDeviceList = () => { if(confirm('All Clear?')) { deviceList.length=0; renderDeviceList(); } };
+    window.clearDeviceList = () => { 
+        if(confirm('All Clear?')) { 
+            deviceList.length = 0; 
+            isListDirty = true;
+            saveDeviceList();
+            renderDeviceList(); 
+        } 
+    };
     window.syncAllDevices = syncWrapper;
     window.downloadCSV = downloadCSV;
     window.importCSV = importCSV;
@@ -323,15 +330,9 @@ function updateData(id, f, v) {
             const pacerCount = r.pacers ? r.pacers.length : 0;
             let d = sanitizeNumberInput(v, 0);
             if (pacerCount > 0 && d !== prevDist) {
-                const ok = confirm("距離を変更するとペーサーの区間/走行計画をリセットします。続行しますか？");
+                const ok = confirm("距離変更に伴いペーサー設定を削除します。続行しますか？");
                 if (!ok) { renderSetup(); return; }
-                r.pacers.forEach(p => {
-                    p.runPlan = null;
-                    p.segments = [];
-                    p.currentDist = 0;
-                    p.finishTime = null;
-                    p.type = 'target_time';
-                });
+                r.pacers = [];
             }
             r.distance = d;
             let mod = d % 400;
