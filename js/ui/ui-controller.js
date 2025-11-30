@@ -68,10 +68,18 @@ export function initUI() {
     
     // Bind Globals
     window.switchMode = switchMode;
-    window.connectBLE = () => connectBLE(
-        () => updateConnectionStatus(false), 
-        handleNotification
-    ).then(() => updateConnectionStatus(true));
+    window.connectBLE = async () => {
+        try {
+            const connected = await connectBLE(
+                () => updateConnectionStatus(false), 
+                handleNotification
+            );
+            updateConnectionStatus(!!connected);
+        } catch (e) {
+            console.error("[connectBLE] Failed:", e);
+            updateConnectionStatus(false);
+        }
+    };
     
     window.checkDirtyAndSync = checkDirtyAndSync;
     
