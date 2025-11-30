@@ -9,9 +9,10 @@ export class BleCommandQueue {
     }
 
     async enqueue(cmd, opts = {}) {
+        const record = { cmd, opts };
         if (this.dryRun) {
-            this.records.push({ cmd, opts });
-            if (this.onRecord) this.onRecord({ cmd, opts });
+            this.records.push(record);
+            if (this.onRecord) this.onRecord(record);
             return Promise.resolve();
         }
         return sendCommand(cmd, opts.highPriority || false);

@@ -66,10 +66,10 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     const startPos = sanitizeNumberInput(startPosRaw, 0);
     if (startPos < 0) race.startPos = 0;
 
-    await sendStopRunner();
+    const queue = new BleCommandQueue(queueOptions);
+    await sendStopRunner(queue);
 
     prepareRacePlans(race);
-    const queue = new BleCommandQueue(queueOptions);
     if (!race.initialConfigSent) {
         await sendInitialConfigs(race, deviceSettings.interval, queue);
     }
@@ -79,7 +79,7 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     race.markers = [];
     race.pacers.forEach(p => { p.currentDist=0; p.finishTime=null; });
     const estMs = estimateStartLatencyMs(race.pacers.length);
-    console.log("[startRaceService] Estimated start lag(ms):", estMs, "commands approx:", 1 + (2 * race.pacers.length) + 2);
+    console.log("[startRaceService] Estimated start lag(ms):", estMs, "commands approx:", queue.records.length);
     return { ok: true, estMs, records: queue.records };
 }
 
@@ -134,12 +134,12 @@ export async function sendStartWithPrelight(race, intervalMeters, queue = new Bl
     
     await queue.enqueue(
         BluetoothCommunity.commandStartRunner(runnerIndices, startDevIdx, "00:00:00:00:00:00"), 
-        true 
+        { highPriority: true }
     );
 }
 
-export async function sendStopRunner() {
-    await sendCommand(BluetoothCommunity.commandStopRunner(), true);
+export async function sendStopRunner(queue = new BleCommandQueue()) {
+    await queue.enqueue(BluetoothCommunity.commandStopRunner(), { highPriority: true });
 }
 
 export function findActiveSegment(runPlan, currentDist) {

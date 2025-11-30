@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { advanceRaceTick, prepareRacePlans, findActiveSegment } from '../core/race-service.js';
+import { advanceRaceTick, prepareRacePlans, findActiveSegment, startRaceService } from '../core/race-service.js';
 
 function mockRace(distance = 800, pace = 80) {
   return {
@@ -43,10 +43,23 @@ function testFindActiveSegment() {
   assert.strictEqual(seg.paceFor400m, 70, 'Should pick first segment');
 }
 
-function run() {
+async function testStartRaceServiceDryRun() {
+  const race = mockRace(400, 80);
+  prepareRacePlans(race);
+  const deviceManager = await import('../core/device-manager.js');
+  deviceManager.deviceList[0] = { mac: 'AA:BB:CC:DD:EE:FF' };
+  const res = await startRaceService(race, 1, 0, () => false, { dryRun: true });
+  const records = res.records;
+  const startCmd = records[records.length - 1];
+  assert.strictEqual(startCmd.opts.highPriority, true, 'Start command should be high priority');
+  assert.strictEqual(records.length, 5, 'Expected 5 commands for single pacer flow');
+}
+
+async function run() {
   testAdvanceRaceTickFinishes();
   testFindActiveSegment();
+  await testStartRaceServiceDryRun();
   console.log('race-service tests passed');
 }
 
-run();
+run().catch(e => { console.error(e); process.exit(1); });
