@@ -11,3 +11,4 @@
 - 原因: Glow-Cの startRunner(0x0007) はポインタ/開始位置をリセットせず、初回点灯までDelayがかかる仕様。UI側だけではポインタ位置を制御できない。
 - 対応: START前に `commandStopRunner` を送りリセットし、さらに startDevIdx のデバイスに `commandMakeLightUp` で先行点灯（v2.1.0-beta.30）。startPosはfwが無視する可能性をコメントで明示。
 - 再発防止/根本策: fw側で startDevIdx を尊重し RunnerPointer を初期化するのが筋。UI側の先行点灯は暫定。fw対応が必要なら別途PR/確認を行う。
+- メモ: 現行のワークアラウンドは一時対応であり、fwが修正された場合は本来の実装（fwがstartDevIdxを尊重、RunnerPointer初期化）に戻すことを検討する。
