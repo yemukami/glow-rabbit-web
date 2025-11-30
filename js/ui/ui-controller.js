@@ -195,6 +195,11 @@ function saveCompetitionTitle(val) {
     document.getElementById('race-screen-title').innerText = val;
 }
 
+function sanitizeNumberInput(raw, fallback = 0) {
+    const n = parseFloat(raw);
+    if (Number.isNaN(n)) return fallback;
+    return n;
+}
 async function switchMode(mode, skipGuard = false) {
     if (!document.getElementById('screen-'+mode)) return;
 
@@ -261,14 +266,15 @@ function updateData(id, f, v) {
     const r = races.find(x=>x.id===id); 
     if(r) {
         if(f==='distance') {
-            let d = parseInt(v)||0;
+            let d = sanitizeNumberInput(v, 0);
             r.distance = d;
             let mod = d % 400;
             r.startPos = (mod === 0) ? 0 : (400 - mod);
             saveRaces();
             renderSetup();
         } else {
-            r[f] = (f==='count'||f==='group'||f==='startPos')?parseInt(v)||0:v; 
+            const isNumeric = (f==='count'||f==='group'||f==='startPos');
+            r[f] = isNumeric ? sanitizeNumberInput(v, 0) : v; 
             saveRaces();
         }
     } 
@@ -500,6 +506,11 @@ function startRaceWrapper(id) {
     if(!r) {
         console.error("[startRaceWrapper] Race not found:", id);
         return;
+    }
+    const startPos = sanitizeNumberInput(r.startPos, 0);
+    if (startPos < 0) {
+        console.warn("[startRaceWrapper] Invalid startPos, resetting to 0:", startPos);
+        r.startPos = 0;
     }
     
     // Re-generate plans if missing (backward compatibility or race distance changed)
