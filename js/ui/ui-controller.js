@@ -72,7 +72,7 @@ export function initUI() {
     
     // Race
     window.toggleRow = toggleRow;
-    window.startRaceWrapper = startRaceWrapper;
+window.startRaceWrapper = startRaceWrapper;
     window.stopRaceWrapper = stopRaceWrapper;
     window.finalizeRace = finalizeRace;
     window.resetRace = resetRace;
@@ -555,7 +555,7 @@ function renderRace() {
     });
 }
 
-function startRaceWrapper(id) {
+async function startRaceWrapper(id) {
     if(activeRaceId && activeRaceId !== id) return alert("Other race running");
     setActiveRaceId(id);
     const r = races.find(x=>x.id===id);
@@ -594,11 +594,11 @@ function startRaceWrapper(id) {
         console.log("[pace:init]", { runnerId, pace400: firstSeg?.paceFor400m || p.pace, interval: deviceSettings.interval });
         
         // Color
-        sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
+        await sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
         
         // Initial Pace
         if (firstSeg) {
-            sendCommand(
+            await sendCommand(
                 BluetoothCommunity.commandSetTimeDelay(
                     400,
                     firstSeg.paceFor400m,
@@ -622,7 +622,7 @@ function startRaceWrapper(id) {
     // startPos in meters -> device index = floor(startPos / interval) + 1
     const startDevIdx = Math.floor((r.startPos || 0) / deviceSettings.interval) + 1;
     
-    sendCommand(
+    await sendCommand(
         BluetoothCommunity.commandStartRunner(runnerIndices, startDevIdx, "00:00:00:00:00:00"), 
         true 
     );
