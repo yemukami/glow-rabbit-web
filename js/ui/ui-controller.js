@@ -488,6 +488,11 @@ function updatePacerHeadsAndEstimates(race, totalScale) {
     });
 }
 
+function findActiveSegment(runPlan, currentDist) {
+    if (!runPlan || runPlan.length === 0) return null;
+    return runPlan.find((seg) => currentDist < seg.endDist) || runPlan[runPlan.length - 1];
+}
+
 function buildCollapsedRaceContent(r, badge) {
     const safeTime = escapeHTML(r.time);
     const safeName = escapeHTML(r.name);
@@ -690,8 +695,7 @@ function updateState(race) {
         // Or simply use the active segment from plan.
         
         if (!p.runPlan) return;
-        
-        let currentSeg = p.runPlan[p.currentSegmentIdx];
+        let currentSeg = findActiveSegment(p.runPlan, p.currentDist);
         const nextSeg = p.runPlan[p.currentSegmentIdx + 1];
         
         // If we are done with all segments
