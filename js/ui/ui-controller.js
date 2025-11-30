@@ -599,9 +599,9 @@ function startRaceWrapper(id) {
         if (firstSeg) {
             sendCommand(
                 BluetoothCommunity.commandSetTimeDelay(
-                    deviceSettings.totalDistance,
+                    400,
                     firstSeg.paceFor400m,
-                    deviceSettings.totalDistance,
+                    400,
                     deviceSettings.interval,
                     [runnerId]
                 )
@@ -679,9 +679,9 @@ function updateState(race) {
             if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
                 sendCommand(
                     BluetoothCommunity.commandSetTimeDelay(
-                        deviceSettings.totalDistance,
+                        400,
                         nextSeg.paceFor400m,
-                        deviceSettings.totalDistance,
+                        400,
                         deviceSettings.interval,
                         [runnerId]
                     )

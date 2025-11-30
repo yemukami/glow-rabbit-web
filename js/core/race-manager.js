@@ -59,13 +59,13 @@ export async function sendRaceConfig(race) {
         await sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
         await sendCommand(
             BluetoothCommunity.commandSetTimeDelay(
-                deviceSettings.totalDistance,
-                p.pace,
-                deviceSettings.totalDistance,
+                400,                   // reference distance (pace per 400m)
+                p.pace,                // seconds per 400m
+                400,                   // lengthOfYard per protocol expectation
                 deviceSettings.interval,
                 [runnerId]
             )
-        ); 
+        );
     }
 }
 
