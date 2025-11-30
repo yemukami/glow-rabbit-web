@@ -223,6 +223,16 @@ function sanitizePositiveInt(raw, fallback = 0) {
     return n;
 }
 
+function buildSetupPacerChips(race) {
+    if (!race.pacers || !Array.isArray(race.pacers)) return '';
+    return race.pacers.map(p=>`<span class="pacer-chip" onclick="openModal(${race.id},${p.id})"><span class="dot bg-${p.color}"></span>${p.pace}s</span>`).join(' ');
+}
+
+function buildCollapsedPacerChips(pacers) {
+    if(!pacers || !Array.isArray(pacers)) return '';
+    return pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${(p.pace||72).toFixed(1)}s</span>`).join(' ');
+}
+
 function parseTimeInput(raw, fallbackSeconds = null) {
     if (!raw) return fallbackSeconds;
     const parts = String(raw).split(':').map(p => p.trim());
@@ -278,7 +288,7 @@ function renderSetup() {
     if(!tb) return;
     tb.innerHTML = '';
     races.forEach(r => {
-        let ph = r.pacers.map(p=>`<span class="pacer-chip" onclick="openModal(${r.id},${p.id})"><span class="dot bg-${p.color}"></span>${p.pace}s</span>`).join('');
+        const ph = buildSetupPacerChips(r);
         let tr = document.createElement('tr');
         const timeVal = escapeHTML(r.time);
         const nameVal = escapeHTML(r.name);
@@ -482,10 +492,7 @@ function buildCollapsedRaceContent(r, badge) {
     const safeName = escapeHTML(r.name);
     const safeGroup = escapeHTML(r.group);
     const safeDistance = escapeHTML(r.distance);
-    let chips = "";
-    if(r.pacers && Array.isArray(r.pacers)) {
-        chips = r.pacers.map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${(p.pace||72).toFixed(1)}s</span>`).join(' ');
-    }
+    const chips = buildCollapsedPacerChips(r.pacers);
     return `
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
