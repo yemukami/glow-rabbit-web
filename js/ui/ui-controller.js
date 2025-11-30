@@ -18,7 +18,8 @@ let modalState = {
 const UI_CONSTANTS = {
     PROGRESS_BAR_PADDING_METERS: 50,
     FINISH_MARGIN_METERS: 50,
-    PRESEND_MARGIN_METERS: 10
+    PRESEND_MARGIN_METERS: 10,
+    UPDATE_INTERVAL_MS: 100
 };
 
 function isButtonOrInput(target) {
@@ -652,7 +653,7 @@ async function startRaceWrapper(id) {
     saveRaces();
     
     renderRace();
-    raceInterval = setInterval(() => updateState(r), 100);
+    raceInterval = setInterval(() => updateState(r), UI_CONSTANTS.UPDATE_INTERVAL_MS);
 }
 
 function getColorRGB(colorName) {
