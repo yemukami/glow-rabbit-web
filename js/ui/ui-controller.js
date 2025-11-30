@@ -78,6 +78,7 @@ export function initUI() {
             updateConnectionStatus(!!connected);
         } catch (e) {
             console.error("[connectBLE] Failed:", e);
+            alert("BLE接続に失敗しました。近くで再試行してください。\n" + e.message);
             updateConnectionStatus(false);
         }
     };
@@ -127,6 +128,10 @@ window.startRaceWrapper = startRaceWrapper;
         } 
     };
     window.syncAllDevices = async () => {
+        if (!isConnected) {
+            alert("BLE未接続です。接続してから同期してください。");
+            return;
+        }
         const r = races.find(rc => rc.id === expandedRaceId);
         if (r && r.pacers && r.pacers.length > 0) {
             const res = await syncRaceConfigs(r, { dryRun: false });
@@ -651,6 +656,10 @@ function renderRace() {
 }
 
 async function startRaceWrapper(id) {
+    if (!isConnected) {
+        alert("BLE未接続です。接続してからSTARTしてください。");
+        return;
+    }
     const r = races.find(x=>x.id===id);
     const startResult = await startRaceService(r, id, r.startPos, () => activeRaceId && activeRaceId !== id, { dryRun: false }, { sendStop: false, resendConfig: false });
     if (startResult && startResult.records) {
