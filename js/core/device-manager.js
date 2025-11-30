@@ -72,6 +72,7 @@ function resizeDeviceList(maxDevices) {
 export function addDeviceToList(mac) {
     const normalized = normalizeMac(mac);
     if (!normalized) return { added: false, invalid: true };
+    if (normalized === DUMMY_MAC) return { added: false, invalid: true };
 
     const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
     const existingIndex = deviceList.findIndex(d => d.mac === normalized);

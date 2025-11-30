@@ -224,6 +224,10 @@ function sanitizePositiveInt(raw, fallback = 0) {
     return n;
 }
 
+function roundToTenth(value) {
+    return Math.round(value * 10) / 10;
+}
+
 function buildSetupPacerChips(race) {
     if (!race.pacers || !Array.isArray(race.pacers)) return '';
     return race.pacers.map(p=>`<span class="pacer-chip" onclick="openModal(${race.id},${p.id})"><span class="dot bg-${p.color}"></span>${p.pace}s</span>`).join(' ');
@@ -315,7 +319,20 @@ function updateData(id, f, v) {
     const r = races.find(x=>x.id===id); 
     if(r) {
         if(f==='distance') {
+            const prevDist = r.distance;
+            const pacerCount = r.pacers ? r.pacers.length : 0;
             let d = sanitizeNumberInput(v, 0);
+            if (pacerCount > 0 && d !== prevDist) {
+                const ok = confirm("距離を変更するとペーサーの区間/走行計画をリセットします。続行しますか？");
+                if (!ok) { renderSetup(); return; }
+                r.pacers.forEach(p => {
+                    p.runPlan = null;
+                    p.segments = [];
+                    p.currentDist = 0;
+                    p.finishTime = null;
+                    p.type = 'target_time';
+                });
+            }
             r.distance = d;
             let mod = d % 400;
             r.startPos = (mod === 0) ? 0 : (400 - mod);
@@ -890,7 +907,7 @@ function saveModalData() {
         
         pacerData.type = 'target_time';
         pacerData.targetTime = totalSec;
-        pacerData.pace = (totalSec / r.distance) * 400; 
+        pacerData.pace = roundToTenth((totalSec / r.distance) * 400); 
         pacerData.runPlan = PaceCalculator.createPlanFromTargetTime(r.distance, totalSec, 400);
         pacerData.segments = [];
         
@@ -900,7 +917,7 @@ function saveModalData() {
         rows.forEach(tr => {
             const d = parseFloat(tr.querySelector('.inp-dist').value);
             const p = parseFloat(tr.querySelector('.inp-pace').value);
-            if (d > 0 && p > 0) segments.push({ distance: d, pace: p });
+            if (d > 0 && p > 0) segments.push({ distance: d, pace: roundToTenth(p) });
         });
         if (segments.length === 0) return alert("区間を入力してください");
         // ensure ascending cumulative distance
@@ -911,7 +928,7 @@ function saveModalData() {
         
         pacerData.type = 'segments';
         pacerData.segments = segments;
-        pacerData.pace = segments[0].pace; 
+        pacerData.pace = roundToTenth(segments[0].pace); 
         pacerData.runPlan = PaceCalculator.createPlanFromSegments(segments, 400);
         pacerData.targetTime = null;
     }
