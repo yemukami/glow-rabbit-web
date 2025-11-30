@@ -708,7 +708,7 @@ function updateState(race) {
 
 function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); r.status = 'review'; renderRace(); saveRaces(); }
 function finalizeRace(id) { const r = races.find(x=>x.id===id); r.status = 'finished'; setActiveRaceId(null); expandedRaceId = null; renderRace(); saveRaces(); }
-function resetRace(id) { const r = races.find(x=>x.id===id); r.status = 'ready'; r.pacers.forEach(p=>{ p.currentDist=0; p.finishTime=null; }); renderRace(); saveRaces(); }
+function resetRace(id) { const r = races.find(x=>x.id===id); r.status = 'ready'; r.initialConfigSent = false; r.pacers.forEach(p=>{ p.currentDist=0; p.finishTime=null; }); renderRace(); saveRaces(); }
 function updateStartPos(id, val) { const r = races.find(x=>x.id===id); r.startPos = parseInt(val)||0; saveRaces(); }
 
 // --- MODAL ---

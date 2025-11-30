@@ -66,14 +66,14 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     setActiveRaceId(id);
     const startPos = sanitizeNumberInput(startPosRaw, 0);
     if (startPos < 0) race.startPos = 0;
+    // Always re-send configs on START to avoid stale pacing from previous runs
+    race.initialConfigSent = false;
 
     const queue = new BleCommandQueue(queueOptions);
     await sendStopRunner(queue);
 
     prepareRacePlans(race);
-    if (!race.initialConfigSent) {
-        await sendInitialConfigs(race, deviceSettings.interval, queue);
-    }
+    await sendInitialConfigs(race, deviceSettings.interval, queue);
     await sendStartWithPrelight(race, deviceSettings.interval, queue);
 
     race.status = 'running';
