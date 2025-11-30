@@ -591,6 +591,7 @@ function startRaceWrapper(id) {
         const firstSeg = p.runPlan[0];
         const runnerId = i + 1; 
         const colorRgb = getColorRGB(p.color);
+        console.log("[pace:init]", { runnerId, pace400: firstSeg?.paceFor400m || p.pace, interval: deviceSettings.interval });
         
         // Color
         sendCommand(BluetoothCommunity.commandSetColor([runnerId], colorRgb));
