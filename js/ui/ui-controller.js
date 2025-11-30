@@ -582,6 +582,10 @@ async function startRaceWrapper(id) {
         console.error("[startRaceWrapper] Race not found:", id);
         return;
     }
+    if (!r.pacers || r.pacers.length === 0) {
+        alert("ペーサーが設定されていません。設定タブで追加してください。");
+        return;
+    }
     const startPos = sanitizeNumberInput(r.startPos, 0);
     if (startPos < 0) {
         console.warn("[startRaceWrapper] Invalid startPos, resetting to 0:", startPos);
