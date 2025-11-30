@@ -3,6 +3,9 @@ import { BluetoothCommunity } from '../ble/protocol.js';
 
 export let deviceList = []; 
 const DUMMY_MAC = "00:00:00:00:00:00";
+const BLOCKED_MACS = new Set([
+    "CC:33:00:00:00:00"
+]);
 
 export let deviceSettings = {
     interval: 2,
@@ -34,12 +37,15 @@ export function loadDeviceList() {
     if (savedList) {
         try {
             deviceList = JSON.parse(savedList)
-                .filter(d => d && typeof d.mac === 'string' && d.mac !== DUMMY_MAC)
+                .filter(d => d && typeof d.mac === 'string')
                 .map((d, idx) => ({ 
                     mac: d.mac, 
                     id: idx + 1, 
                     status: d.status === 'dummy' ? 'dummy' : 'active'
-                }));
+                }))
+                .filter(d => normalizeMac(d.mac)); // drop blocked/dummy MACs
+            // reassign ids after filtering
+            deviceList = deviceList.map((d, idx) => ({ ...d, id: idx + 1 }));
         } catch(e) { console.error(e); }
     }
 }
@@ -64,7 +70,10 @@ function normalizeMac(mac) {
     if (cleaned.length !== 12) return null;
     const pairs = cleaned.match(/.{2}/g);
     if (!pairs) return null;
-    return pairs.map(p => p.toUpperCase()).join(':');
+    const normalized = pairs.map(p => p.toUpperCase()).join(':');
+    if (normalized === DUMMY_MAC) return null;
+    if (BLOCKED_MACS.has(normalized)) return null;
+    return normalized;
 }
 
 function resizeDeviceList(maxDevices) {
@@ -81,7 +90,6 @@ function resizeDeviceList(maxDevices) {
 export function addDeviceToList(mac) {
     const normalized = normalizeMac(mac);
     if (!normalized) return { added: false, invalid: true };
-    if (normalized === DUMMY_MAC) return { added: false, invalid: true };
 
     const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
     const existingIndex = deviceList.findIndex(d => d.mac === normalized);
