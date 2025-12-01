@@ -1,5 +1,5 @@
 import { formatDistanceMeters, buildRaceBadge, formatPaceLabel } from '../utils/render-utils.js';
-import { resolvePaceValue } from '../utils/data-utils.js';
+import { resolvePaceValue, escapeHTML } from '../utils/data-utils.js';
 
 export function buildRaceRowClass(race, expandedRaceId) {
     let rowClass = 'race-row';
@@ -62,15 +62,4 @@ export function computeLeadAndFill(r) {
 function formatDisplayPaceLabel(rawPace) {
     const pace = resolvePaceValue(rawPace);
     return formatPaceLabel(pace);
-}
-
-function escapeHTML(value) {
-    if (value === undefined || value === null) return '';
-    return String(value).replace(/[&<>"']/g, m => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    }[m]));
 }

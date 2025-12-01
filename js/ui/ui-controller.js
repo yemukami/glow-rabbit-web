@@ -4,7 +4,7 @@ import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from '../core/pace-calculator.js';
 import { roundToTenth, formatPace, formatPaceLabel, formatDistanceMeters, buildRaceBadge, formatTime } from '../utils/render-utils.js';
-import { sanitizeNumberInput, sanitizePositiveInt, parseTimeInput, resolvePaceValue } from '../utils/data-utils.js';
+import { sanitizeNumberInput, sanitizePositiveInt, parseTimeInput, resolvePaceValue, escapeHTML } from '../utils/data-utils.js';
 import { getColorRGB } from '../utils/color-utils.js';
 import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded, stopRaceService } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
@@ -37,17 +37,6 @@ function formatDisplayPaceLabel(rawPace) {
 function isButtonOrInput(target) {
     const tag = target.tagName;
     return tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'OPTION';
-}
-
-function escapeHTML(value) {
-    if (value === undefined || value === null) return '';
-    return String(value).replace(/[&<>"']/g, m => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    }[m]));
 }
 
 export function initUI() {

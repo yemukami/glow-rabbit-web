@@ -308,3 +308,8 @@
 - 作業: stop送信の記録を確実に残すため `BleCommandQueue` を常に記録するよう変更し、`stopRaceService` が送信したコマンド記録を返すように統一。バージョンを `v2.1.0-beta.53` に更新。
 - テスト: `node --check js/ble/send-queue.js`, `js/ui/ui-controller.js`; `node js/test/race-service.test.js`（stop dry-run含む）、`node js/test/ui-logic.test.js`。
 - 感想: STOPの送信内容を確実に追跡できるようになった。今後は送信結果をUI通知に反映させる仕組みを検討したい。
+
+### 2025-12-xx 追加ログ（このターン-5）
+- 作業: escapeHTML を共通化し、UI/race-view-model で共有ユーティリティから利用するよう整理。バージョンを `v2.1.0-beta.54` に更新。
+- テスト: `node --check js/utils/data-utils.js`, `js/ui/ui-controller.js`, `js/ui/race-view-model.js`; `node js/test/race-view-model.test.js`。
+- 感想: エスケープ処理を一箇所に寄せて重複を削減。renderer/view-model の分離を進める下地が整った。

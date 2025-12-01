@@ -16,6 +16,17 @@ export function resolvePaceValue(raw, fallback = 72) {
     return n;
 }
 
+export function escapeHTML(value) {
+    if (value === undefined || value === null) return '';
+    return String(value).replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[m]));
+}
+
 export function parseTimeInput(raw, fallbackSeconds = null) {
     if (!raw) return fallbackSeconds;
     const parts = String(raw).split(':').map(p => p.trim());
