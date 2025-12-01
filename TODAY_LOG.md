@@ -640,3 +640,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-manager.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（Pass）。
 - 感想: レース参照をmanager経由にまとめたことで、存在しないID操作でクラッシュしにくくなった。startPosサニタイズも共通ガードに寄せ、今後のバリデーション整理が進めやすい状態にできた。
 - E2E確認手順メモ（手動）: 従来手順（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認）に加え、startPos を負数/空で入力しても0に丸められ要再送が表示されることと、start/stop/sync/モーダル操作で存在しないレースIDの場合にアラートして安全に停止することを確認する。
+
+### 2025-12-xx 追加ログ（このターン-46）
+- 作業: startRaceServiceのstartPosも非負サニタイズに統一し、race.startPosへ反映するよう修正。ui-controllerの未使用ガードimportを整理。バージョンを `v2.1.0-beta.103` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（Pass）。
+- 感想: startPosの扱いをサービス層でも統一でき、負値/NaN混入時のぶれを減らせた。UI側も未使用importを落として整理できた。
+- E2E確認手順メモ（手動）: 従来手順に加え、START時にstartPosが負値/NaNでも0として処理されること、エラーなく同期/START/STOPが進むことを確認する。

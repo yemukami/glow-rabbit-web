@@ -90,3 +90,6 @@
 
 - 要求: ルール、事前テスト方針、コード参照、ログ保存（懺悔ログ含む）を忘れずに優先順に進めてください。
   対応: ルール再読の上、レース参照を race-manager の getRaceById/getActiveRace 経由に統一し start/stop/sync/モーダルのガードを強化。startPos を非負サニタイズに変更。バージョンをv2.1.0-beta.102に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-manager.js`, `node --check js/core/race-service.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js` を実行（Pass）。SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定。
+
+- 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
+  対応: startRaceServiceのstartPosを非負サニタイズに統一し、race.startPosへ反映。ui-controllerの未使用サニタイズimportを整理。バージョンをv2.1.0-beta.103に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js` を実行（Pass）。SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定。

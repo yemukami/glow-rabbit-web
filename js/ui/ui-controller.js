@@ -4,7 +4,7 @@ import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from '../core/pace-calculator.js';
 import { roundToTenth, formatPace, formatPaceLabel, formatTime } from '../utils/render-utils.js';
-import { sanitizeNumberInput, sanitizePositiveInt, parseTimeInput, resolvePaceValue, escapeHTML } from '../utils/data-utils.js';
+import { parseTimeInput, resolvePaceValue, escapeHTML } from '../utils/data-utils.js';
 import { getColorRGB } from '../utils/color-utils.js';
 import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded, stopRaceService } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';

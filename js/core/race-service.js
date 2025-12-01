@@ -5,8 +5,8 @@ import { setActiveRaceId } from './race-manager.js';
 import { estimateStartLatencyMs } from '../ble/latency.js';
 import { BleCommandQueue } from '../ble/send-queue.js';
 import { prepareRacePlans, sendInitialConfigs } from './race-sync-service.js';
-import { sanitizeNumberInput } from '../utils/data-utils.js';
 import { getColorRGB } from '../utils/color-utils.js';
+import { ensureNonNegativeNumber } from '../utils/input-guards.js';
 export { prepareRacePlans, sendInitialConfigs } from './race-sync-service.js';
 
 const UI_CONSTANTS = {
@@ -71,8 +71,8 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     if (onBusy && onBusy()) return { ok: false, reason: 'busy' };
 
     setActiveRaceId(id);
-    const startPos = sanitizeNumberInput(startPosRaw, 0);
-    if (startPos < 0) race.startPos = 0;
+    const startPos = ensureNonNegativeNumber(startPosRaw, 0);
+    race.startPos = startPos;
     const queue = new BleCommandQueue(queueOptions);
     if (options.sendStop) {
         await sendStopRunner(queue);
