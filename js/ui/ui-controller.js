@@ -425,7 +425,7 @@ async function startRaceWrapper(id) {
     }
     if (!startResult.ok) return;
     renderRace();
-    raceInterval = setInterval(() => updateState(r), UI_CONSTANTS.UPDATE_INTERVAL_MS);
+    raceInterval = setInterval(() => { updateState(r); }, UI_CONSTANTS.UPDATE_INTERVAL_MS);
 }
 
 async function stopRaceWrapper(id) {
@@ -445,7 +445,7 @@ async function stopRaceWrapper(id) {
     freezeRace(id);
 }
 
-function updateState(race) {
+async function updateState(race) {
     if(!race || !race.pacers) return;
     const tickResult = advanceRaceTick(race, elapsedTime, deviceSettings.interval);
     elapsedTime = tickResult.elapsedTime;
@@ -467,6 +467,14 @@ function updateState(race) {
     }
 
     if(tickResult.allFinished) {
+        try {
+            const res = await stopRaceService(race, { dryRun: false });
+            if (res && res.records) {
+                console.log("[updateState] stopRunner sent after finish:", res.records.length, res.records);
+            }
+        } catch (e) {
+            console.error("[updateState] stopRaceService failed:", e);
+        }
         freezeRace(race.id);
     }
 }

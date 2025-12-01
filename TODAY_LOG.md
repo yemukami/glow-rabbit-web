@@ -313,3 +313,8 @@
 - 作業: escapeHTML を共通化し、UI/race-view-model で共有ユーティリティから利用するよう整理。バージョンを `v2.1.0-beta.54` に更新。
 - テスト: `node --check js/utils/data-utils.js`, `js/ui/ui-controller.js`, `js/ui/race-view-model.js`; `node js/test/race-view-model.test.js`。
 - 感想: エスケープ処理を一箇所に寄せて重複を削減。renderer/view-model の分離を進める下地が整った。
+
+### 2025-12-xx 追加ログ（このターン-6）
+- 作業: オーバーラン後に必ず stopRunner を送るよう、`updateState` を async 化し、完走検知時に `stopRaceService` を await して送信記録をログ出しするよう変更。バージョンを `v2.1.0-beta.55` に更新。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
+- 感想: 走行完了後のstop抜けを防ぐためサービス経由でSTOP送信を確実化。今後、必要に応じて送信結果の可視化も検討できるよう記録ログを残した。
