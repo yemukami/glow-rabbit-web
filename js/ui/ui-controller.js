@@ -20,6 +20,7 @@ import { renderSetupTable } from './setup-renderer.js';
 import { renderConnectionStatus } from './connection-renderer.js';
 import { renderReplaceModal, updateReplaceMacText } from './replace-modal-renderer.js';
 import { createModalState, setActiveTab, setModalTarget, setSelectedColor } from './race-modal-state.js';
+import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -540,24 +541,9 @@ function switchModalTab(tab) {
 
 function updateCalcPace() {
     const val = document.getElementById('modal-target-time').value;
-    const sec = parseTimeStr(val);
     const r = races.find(x => x.id === modalState.target.raceId);
-    if (sec > 0 && r && r.distance > 0) {
-        const pace = (sec / r.distance) * 400;
-        document.getElementById('modal-calc-pace').innerText = formatPace(pace);
-    } else {
-        document.getElementById('modal-calc-pace').innerText = "--.-";
-    }
-}
-
-function parseTimeStr(str) {
-    if (!str) return 0;
-    const parts = str.split(':');
-    if (parts.length === 2) {
-        return (parseInt(parts[0]) * 60) + parseFloat(parts[1]);
-    } else {
-        return parseFloat(str);
-    }
+    const pace = r ? computePaceFromTarget(r.distance, val) : null;
+    document.getElementById('modal-calc-pace').innerText = pace && pace > 0 ? formatPace(pace) : "--.-";
 }
 
 function saveModalData() { 
