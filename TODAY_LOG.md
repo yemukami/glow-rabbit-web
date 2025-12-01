@@ -354,3 +354,9 @@
 - テスト: なし（ドキュメント/バージョン表記のみ）。
 - 感想: ミス再発防止と要求トレーサビリティの運用ルールを明文化。LLM判断で揺れないよう、冒頭での再読を強制するようにした。
 - E2E確認手順メモ（手動）: 1) Race画面を開き、任意のレース行を展開し syncNeeded バッジを確認。2) BLE未接続状態で START を押しアラート表示を確認（仕様どおり最小構成）。3) ダミーで pacer を1件追加し、START→STOP を実行してタイマー停止とバッジ再表示（要同期）を確認。
+
+### 2025-12-xx 追加ログ（このターン-13）
+- 作業: renderer全面移行の一環として、レーステーブル生成を `buildRaceTableHTML` に集約し、ui-controller の renderRace が renderer経由でHTMLを挿入する形に整理（表示責務のみ変更、SYNC/START仕様は不変）。REQUEST_ACTIONS_LOG に要求単位の対応を追記。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node js/test/race-renderer.test.js`, `node js/test/ui-logic.test.js`。
+- 感想: 表示生成がrenderer側にまとまり、残りのDOM操作も次の分離ステップに進めやすくなった。挙動変更はなくテストも安定していて安心。
+- E2E確認手順メモ（手動）: 上記-12と同様（Race行展開→未接続STARTアラート→pacer追加してSTART/STOP後にsyncNeededバッジ再表示を確認）。

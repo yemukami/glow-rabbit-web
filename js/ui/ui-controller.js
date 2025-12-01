@@ -9,7 +9,7 @@ import { getColorRGB } from '../utils/color-utils.js';
 import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded, stopRaceService } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
 import { buildSetupPacerChips } from './race-view-model.js';
-import { renderRaceTable, updateRunningDisplays } from './race-renderer.js';
+import { buildRaceTableHTML, updateRunningDisplays } from './race-renderer.js';
 
 let expandedRaceId = null;
 let editingPaces = {};
@@ -366,15 +366,7 @@ function renderRace() {
     console.log("[renderRace] Start. Races count:", races.length);
     const tbody = document.getElementById('race-tbody');
     if(!tbody) { console.error("[renderRace] No tbody found!"); return; }
-    tbody.innerHTML = '';
-    
-    if (!races || races.length === 0) {
-        tbody.innerHTML = '<tr><td style="text-align:center; padding:20px; color:#999;">レースデータがありません。<br>設定画面から追加してください。</td></tr>';
-        return;
-    }
-    
-    const rowsHtml = renderRaceTable(races, expandedRaceId, elapsedTime, editingPaces);
-    tbody.innerHTML = rowsHtml;
+    tbody.innerHTML = buildRaceTableHTML(races, expandedRaceId, elapsedTime, editingPaces);
 }
 
 async function startRaceWrapper(id) {

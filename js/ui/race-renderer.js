@@ -53,14 +53,14 @@ export function buildExpandedRaceContent(vm, elapsedTime, editingPaces = {}) {
 
 export function renderRaceTable(races, expandedRaceId, elapsedTime, editingPaces = {}) {
     if (!races || races.length === 0) return '';
-    return races.map(race => {
-        const vm = buildRaceViewModel(race, expandedRaceId);
-        const rowClass = buildRaceRowClass(race, expandedRaceId);
-        const content = vm.isExpanded
-            ? buildExpandedRaceContent(vm, elapsedTime, editingPaces)
-            : buildCollapsedRaceContent(vm);
-        return `<tr class="${rowClass}" onclick="toggleRow(${race.id}, event)"><td>${content}</td></tr>`;
-    }).join('');
+    return races.map(race => buildRaceRow(race, expandedRaceId, elapsedTime, editingPaces)).join('');
+}
+
+export function buildRaceTableHTML(races, expandedRaceId, elapsedTime, editingPaces = {}) {
+    if (!races || races.length === 0) {
+        return '<tr><td style="text-align:center; padding:20px; color:#999;">レースデータがありません。<br>設定画面から追加してください。</td></tr>';
+    }
+    return renderRaceTable(races, expandedRaceId, elapsedTime, editingPaces);
 }
 
 export function updateRunningDisplays(race, elapsedTime) {
@@ -173,6 +173,15 @@ function buildCollapsedPacerChips(pacers) {
     return pacers
         .map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${formatPaceLabel(p.pace || 72)}</span>`)
         .join(' ');
+}
+
+function buildRaceRow(race, expandedRaceId, elapsedTime, editingPaces = {}) {
+    const vm = buildRaceViewModel(race, expandedRaceId);
+    const rowClass = buildRaceRowClass(race, expandedRaceId);
+    const content = vm.isExpanded
+        ? buildExpandedRaceContent(vm, elapsedTime, editingPaces)
+        : buildCollapsedRaceContent(vm);
+    return `<tr class="${rowClass}" onclick="toggleRow(${race.id}, event)"><td>${content}</td></tr>`;
 }
 
 function updatePacerHeadsAndEstimates(race, totalScale) {

@@ -12,3 +12,8 @@
 - 抜け漏れ防止のため、要求を分割してすべて記録する。
 - START/同期/stopRunner/ペース送信まわりの変更を含む場合は、対応欄で「SYNC_START_SPEC順守（変更なし）」など明記。
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
+
+- 要求: ミス再発防止ファイルと要求ログを用意し、冒頭注意に含めること。
+  対応: REMORSE_AND_PREVENTION.md と REQUEST_ACTIONS_LOG.md を追加し、NEXT_THREAD_CONTEXT の冒頭必読リストに記載（SYNC/START仕様変更なし）。
+- 要求: リファクタ優先順1から着手し、renderer全面移行を進めること。
+  対応: race-renderer にテーブルHTML生成を集約（buildRaceTableHTML）、ui-controller の renderRace をrenderer経由に一本化（SYNC_START_SPEC順守・挙動変更なし、テスト実行予定）。
