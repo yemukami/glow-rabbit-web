@@ -22,6 +22,7 @@ import { renderReplaceModal, updateReplaceMacText } from './replace-modal-render
 import { createModalState, resetModalState, setActiveTab, setModalTarget, setSelectedColor } from './race-modal-state.js';
 import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
 import { closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
+import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRows } from './segment-utils.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -568,24 +569,9 @@ function saveModalData() {
         
     } else {
         const rows = document.querySelectorAll('#segment-tbody tr');
-        const segments = [];
-        rows.forEach(tr => {
-            const d = parseFloat(tr.querySelector('.inp-dist').value);
-            const p = parseFloat(tr.querySelector('.inp-pace').value);
-            if (d > 0 && p > 0) segments.push({ distance: d, pace: roundToTenth(p) });
-        });
-    if (segments.length === 0) return alert("区間を入力してください");
-        // ensure ascending cumulative distance
-        segments.sort((a,b) => a.distance - b.distance);
-        if (segments[segments.length - 1].distance < r.distance) {
-            segments.push({ distance: r.distance, pace: segments[segments.length - 1].pace });
-        }
-        
-        pacerData.type = 'segments';
-        pacerData.segments = segments;
-        pacerData.pace = roundToTenth(segments[0].pace); 
-        pacerData.runPlan = PaceCalculator.createPlanFromSegments(segments, 400);
-        pacerData.targetTime = null;
+        const segResult = buildSegmentsForSave(r, rows);
+        if (!segResult) return alert("区間を入力してください");
+        pacerData = { ...pacerData, ...segResult };
     }
 
     if (modalState.target.pacerId) {
@@ -617,32 +603,9 @@ function updateSegmentSummaryFromDom() {
     const summaryEl = document.getElementById('segment-total-time');
     if (!summaryEl) return;
     const r = races.find(x => x.id === modalState.target.raceId);
-    if (!r || !r.distance) {
-        summaryEl.innerText = "ゴール予想タイム: --:--.-";
-        return;
-    }
-    const segments = readSegmentsFromDom();
-    if (segments.length === 0) {
-        summaryEl.innerText = "ゴール予想タイム: --:--.-";
-        return;
-    }
-    segments.sort((a,b) => a.distance - b.distance);
-    if (segments[segments.length - 1].distance < r.distance) {
-        segments.push({ distance: r.distance, pace: segments[segments.length - 1].pace });
-    }
-    const plan = PaceCalculator.createPlanFromSegments(segments, 400);
-    const total = plan.length ? plan[plan.length - 1].endTime : 0;
-    summaryEl.innerText = `ゴール予想タイム: ${total > 0 ? formatTime(total) : '--:--.-'}`;
-}
-
-function readSegmentsFromDom() {
-    const segments = [];
-    document.querySelectorAll('#segment-tbody tr').forEach(tr => {
-        const d = parseFloat(tr.querySelector('.inp-dist').value);
-        const p = parseFloat(tr.querySelector('.inp-pace').value);
-        if (d > 0 && p > 0) segments.push({ distance: d, pace: p });
-    });
-    return segments;
+    const rows = document.querySelectorAll('#segment-tbody tr');
+    const summary = computeSegmentSummaryText(r, rows);
+    summaryEl.innerText = summary.text;
 }
 
 // Fallback global bindings in case initUI fails early
