@@ -360,3 +360,9 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node js/test/race-renderer.test.js`, `node js/test/ui-logic.test.js`。
 - 感想: 表示生成がrenderer側にまとまり、残りのDOM操作も次の分離ステップに進めやすくなった。挙動変更はなくテストも安定していて安心。
 - E2E確認手順メモ（手動）: 上記-12と同様（Race行展開→未接続STARTアラート→pacer追加してSTART/STOP後にsyncNeededバッジ再表示を確認）。
+
+### 2025-12-xx 追加ログ（このターン-14）
+- 作業: syncNeeded/initialConfigSent の管理をサービス層に寄せるため、`setRaceSynced`/`resetSyncFlags` を追加し、START/STOP/リセットで同関数を使用。syncサービスでも送信後にフラグを明示更新。race-serviceテストにフラグヘルパー確認を追加（挙動変更なし、仕様維持）。
+- テスト: `node --check js/core/race-service.js`, `node js/test/race-service.test.js`。
+- 感想: フラグ更新の経路を固定でき、UIから直接フラグを触らずに済む形に近づいた。SYNC/START仕様を守りつつ安全側に寄せられているので安心。
+- E2E確認手順メモ（手動）: Race行展開→SYNCボタン押下でsyncNeeded消失を確認→START/STOP後にsyncNeeded再表示を確認（未接続の場合はアラート＋バッジ継続）。

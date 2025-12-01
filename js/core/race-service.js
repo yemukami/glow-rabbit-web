@@ -78,7 +78,7 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     const shouldSendConfig = options.resendConfig || !race.initialConfigSent;
     if (shouldSendConfig) {
         await sendInitialConfigs(race, deviceSettings.interval, queue);
-        race.syncNeeded = false;
+        setRaceSynced(race);
     }
     await sendStartWithPrelight(race, deviceSettings.interval, queue);
 
@@ -120,8 +120,7 @@ export async function stopRaceService(race, queueOptions = {}) {
     await sendStopRunner(queue);
     if (race) {
         transitionToReview(race);
-        race.initialConfigSent = false;
-        race.syncNeeded = true;
+        resetSyncFlags(race);
     }
     return { ok: true, records };
 }
@@ -129,11 +128,6 @@ export async function stopRaceService(race, queueOptions = {}) {
 export function findActiveSegment(runPlan, currentDist) {
     if (!runPlan || runPlan.length === 0) return null;
     return runPlan.find((seg) => currentDist < seg.endDist) || runPlan[runPlan.length - 1];
-}
-
-export function markSyncNeeded(race) {
-    if (!race) return;
-    race.syncNeeded = true;
 }
 
 export function transitionToReview(race) {
@@ -149,7 +143,23 @@ export function finalizeRaceState(race) {
 export function resetRaceState(race) {
     if (!race) return;
     race.status = 'ready';
-    race.initialConfigSent = false;
     race.pacers?.forEach(p => { p.currentDist = 0; p.finishTime = null; });
+    resetSyncFlags(race);
+}
+
+export function markSyncNeeded(race) {
+    if (!race) return;
     race.syncNeeded = true;
+}
+
+export function resetSyncFlags(race) {
+    if (!race) return;
+    race.initialConfigSent = false;
+    race.syncNeeded = true;
+}
+
+export function setRaceSynced(race) {
+    if (!race) return;
+    race.initialConfigSent = true;
+    race.syncNeeded = false;
 }

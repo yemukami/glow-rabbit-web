@@ -9,6 +9,7 @@ export async function syncRaceConfigs(race, queueOptions = {}) {
     prepareRacePlans(race);
     const queue = new BleCommandQueue(queueOptions);
     await sendInitialConfigs(race, deviceSettings.interval, queue);
+    race.initialConfigSent = true;
     race.syncNeeded = false;
     console.log("[syncRaceConfigs] Sent initial configs", { commands: queue.records.length, pacers: race.pacers.length, interval: deviceSettings.interval });
     return { ok: true, records: queue.records };
@@ -26,7 +27,6 @@ export function prepareRacePlans(race) {
 }
 
 export async function sendInitialConfigs(race, intervalMeters, queue = new BleCommandQueue()) {
-    race.initialConfigSent = true;
     for (let i = 0; i < race.pacers.length; i++) {
         const p = race.pacers[i];
         const firstSeg = p.runPlan[0];

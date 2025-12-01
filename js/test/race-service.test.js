@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { advanceRaceTick, prepareRacePlans, findActiveSegment, startRaceService, stopRaceService } from '../core/race-service.js';
+import { advanceRaceTick, prepareRacePlans, findActiveSegment, startRaceService, stopRaceService, resetSyncFlags, setRaceSynced } from '../core/race-service.js';
 
 function mockRace(distance = 800, pace = 80) {
   return {
@@ -60,6 +60,18 @@ async function testStopRaceServiceDryRun() {
   const res = await stopRaceService(race, { dryRun: true });
   assert.ok(res.records.length === 1, 'Stop should enqueue one command');
   assert.strictEqual(res.records[0].opts.highPriority, true, 'Stop command should be high priority');
+  assert.strictEqual(race.syncNeeded, true, 'Stop should mark syncNeeded');
+  assert.strictEqual(race.initialConfigSent, false, 'Stop should clear initialConfigSent');
+}
+
+function testSyncFlagHelpers() {
+  const race = mockRace(400, 80);
+  setRaceSynced(race);
+  assert.strictEqual(race.syncNeeded, false, 'setRaceSynced should clear syncNeeded');
+  assert.strictEqual(race.initialConfigSent, true, 'setRaceSynced should set initialConfigSent');
+  resetSyncFlags(race);
+  assert.strictEqual(race.syncNeeded, true, 'resetSyncFlags should set syncNeeded');
+  assert.strictEqual(race.initialConfigSent, false, 'resetSyncFlags should clear initialConfigSent');
 }
 
 async function run() {
@@ -67,6 +79,7 @@ async function run() {
   testFindActiveSegment();
   await testStartRaceServiceDryRun();
   await testStopRaceServiceDryRun();
+  testSyncFlagHelpers();
   console.log('race-service tests passed');
 }
 
