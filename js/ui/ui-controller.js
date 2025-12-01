@@ -10,11 +10,7 @@ import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, 
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
 import { buildSetupPacerChips } from './race-view-model.js';
 import { buildRaceTableHTML, updateRunningDisplays } from './race-renderer.js';
-
-let expandedRaceId = null;
-let editingPaces = {};
-let raceInterval = null;
-let elapsedTime = 0;
+import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = {
     target: {},
@@ -144,13 +140,14 @@ export function initUI() {
             alert("BLE未接続です。接続してから同期してください。");
             return;
         }
-            const r = races.find(rc => rc.id === expandedRaceId);
-            if (r && r.pacers && r.pacers.length > 0) {
-                const res = await syncRaceConfigs(r, { dryRun: false });
-                if (res.ok) { saveRaces(); }
-            }
-            if(await syncAllDevices()) alert('同期完了');
-        };
+        const expandedRaceId = getExpandedRaceId();
+        const r = races.find(rc => rc.id === expandedRaceId);
+        if (r && r.pacers && r.pacers.length > 0) {
+            const res = await syncRaceConfigs(r, { dryRun: false });
+            if (res.ok) { saveRaces(); }
+        }
+        if(await syncAllDevices()) alert('同期完了');
+    };
     window.downloadCSV = downloadCSV;
     window.importCSV = importCSV;
     
@@ -383,7 +380,7 @@ function deleteRow(id) {
 
 function toggleRow(id, event) {
     if (event && isButtonOrInput(event.target)) return;
-    expandedRaceId = (expandedRaceId === id) ? null : id;
+    toggleExpandedRace(id);
     renderRace();
 }
 
@@ -391,7 +388,9 @@ function renderRace() {
     console.log("[renderRace] Start. Races count:", races.length);
     const tbody = document.getElementById('race-tbody');
     if(!tbody) { console.error("[renderRace] No tbody found!"); return; }
-    tbody.innerHTML = buildRaceTableHTML(races, expandedRaceId, elapsedTime, editingPaces);
+    const expandedRaceId = getExpandedRaceId();
+    const editingPaces = getEditingPaces();
+    tbody.innerHTML = buildRaceTableHTML(races, expandedRaceId, getElapsedTime(), editingPaces);
 }
 
 async function startRaceWrapper(id) {
@@ -405,8 +404,10 @@ async function startRaceWrapper(id) {
     if (startResult && startResult.records) {
         console.log("[startRaceWrapper] Start command records:", startResult.records.length, startResult.records);
     }
+    resetElapsedTime();
+    clearRaceInterval();
     renderRace();
-    raceInterval = setInterval(() => { updateState(r); }, UI_CONSTANTS.UPDATE_INTERVAL_MS);
+    setRaceInterval(setInterval(() => { updateState(r); }, UI_CONSTANTS.UPDATE_INTERVAL_MS));
 }
 
 async function stopRaceWrapper(id) {
@@ -445,10 +446,10 @@ async function syncRaceWrapper(id) {
 
 async function updateState(race) {
     if(!race || !race.pacers) return;
-    const tickResult = advanceRaceTick(race, elapsedTime, deviceSettings.interval);
-    elapsedTime = tickResult.elapsedTime;
+    const tickResult = advanceRaceTick(race, getElapsedTime(), deviceSettings.interval);
+    setElapsedTime(tickResult.elapsedTime);
 
-    updateRunningDisplays(race, elapsedTime);
+    updateRunningDisplays(race, getElapsedTime());
 
     if(tickResult.allFinished) {
         try {
@@ -463,8 +464,17 @@ async function updateState(race) {
     }
 }
 
-function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); transitionToReview(r); setActiveRaceId(null); renderRace(); saveRaces(); }
-function finalizeRace(id) { const r = races.find(x=>x.id===id); finalizeRaceState(r); setActiveRaceId(null); expandedRaceId = null; renderRace(); saveRaces(); }
+function freezeRace(id) {
+    clearRaceInterval();
+    resetElapsedTime();
+    const r = races.find(x=>x.id===id);
+    transitionToReview(r);
+    setActiveRaceId(null);
+    renderRace();
+    saveRaces();
+}
+
+function finalizeRace(id) { const r = races.find(x=>x.id===id); finalizeRaceState(r); setActiveRaceId(null); setExpandedRaceId(null); renderRace(); saveRaces(); }
 function resetRace(id) { const r = races.find(x=>x.id===id); resetRaceState(r); renderRace(); saveRaces(); }
 function updateStartPos(id, val) { 
     const r = races.find(x=>x.id===id); 
@@ -646,10 +656,10 @@ function saveModalData() {
 
 function deletePacerFromModal() { if(modalState.target.pacerId && confirm('削除?')) { const r=races.find(x=>x.id===modalState.target.raceId); r.pacers=r.pacers.filter(x=>x.id!==modalState.target.pacerId); saveRaces(); } closeModal(); renderSetup(); }
 
-function startEditing(pid, v) { editingPaces[pid]=parseFloat(v); renderRace(); }
-function updateEditValue(pid, v) { editingPaces[pid]=parseFloat(v); /* don't re-render on every key, just store */ }
+function startEditing(pid, v) { setEditingPace(pid, parseFloat(v)); renderRace(); }
+function updateEditValue(pid, v) { setEditingPace(pid, parseFloat(v)); /* don't re-render on every key, just store */ }
 function adjustPace(pid, d) { /* logic */ } // Simplification for now
-function cancelPace(rid, pid) { delete editingPaces[pid]; renderRace(); }
+function cancelPace(rid, pid) { clearEditingPace(pid); renderRace(); }
 function commitPace(rid, pid) { /* logic */ renderRace(); saveRaces(); }
 
 function openVersionModal() { document.getElementById('modal-version').classList.add('open'); }

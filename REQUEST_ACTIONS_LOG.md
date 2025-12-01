@@ -43,3 +43,5 @@
   対応: STATUS_AND_TASKSとNEXT_THREAD_CONTEXTに `.codex/docs/agent_guide_web.md` ほか必読リストを追記（挙動変更なし）。
 - 要求: リファクタ防止の実装ルールを .codex に追加すること。
   対応: `.codex/docs/implementation_rules.md` を追加し、必読リストに組み込み（挙動変更なし）。
+- 要求: ルール/仕様ファイルを再確認し、次の優先度作業に着手すること。懺悔・作業ログを作成し、バージョン管理・プッシュまで行うこと。
+  対応: 必読ドキュメントを再確認した上でレースUI状態（展開行/経過時間/編集ペース/タイマー）を `race-ui-state` に集約し、renderer移行の足場を整備。v2.1.0-beta.73に更新し、STATUS/NEXT/TODAYログへ反映、`node --check`とui-logic/race-serviceテストを実行（SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定）。コミット/プッシュを実施。
