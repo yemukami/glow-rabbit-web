@@ -528,3 +528,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: setup側のinlineハンドラを排除し、renderer全面移行の足場をさらに整備。小さな修正でもテストを回して安心を確保。
 - E2E確認手順メモ（手動）: Setupでペーサーチップをクリックしてモーダルが開くことを確認（エラーなし）。従来のレース設定再送→START/STOP→距離+50m停止・バッジ表示が変わらないことも確認。
+
+### 2025-12-xx 追加ログ（このターン-42）
+- 作業: ルール/仕様再読の上、テスト計画を `TEST_PLAN.md` に明文化し、既存の自動チェック（node --check/ui-logic）を実施。バージョンを `v2.1.0-beta.82` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
+- 感想: テスト方針を先に固定してから作業するフローを明示。挙動は変えていないが、以降の変更での漏れ防止に役立つ。
+- E2E確認手順メモ（手動）: TEST_PLAN.mdに記載の手順（未接続アラート→レース設定再送→START/STOP→距離+50m停止、バッジ/ツールチップ確認、デバイス/Setup動作確認）を参照して実施する。

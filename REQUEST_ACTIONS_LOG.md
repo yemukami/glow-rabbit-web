@@ -67,3 +67,5 @@
   対応: Setupテーブル操作をデリゲーション化してinline handlerを削減。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行。バージョンをv2.1.0-beta.80に更新予定（STATUS/NEXT/TODAY同期含む）。
   追記: デバイス一覧・置換モーダルの操作をデリゲーション化し、inline handlerを除去。バージョンをv2.1.0-beta.81に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行。E2E手順にデバイス操作確認を追加。
   追記2: Setupのペーサーチップをデリゲーション対応に変更しonclick除去。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行。次版でバージョンを同期予定。
+- 要求: テスト仕様書mdを作成し、実施テストと結果を記載すること。
+  対応: `TEST_PLAN.md` を作成し、node --check/ui-logicテストと手動E2E手順を明記。テスト実行結果（auto）はPass、E2Eは未実施(環境依存)と記載。バージョンをv2.1.0-beta.82に更新し、STATUS/NEXT/TODAYに反映。
