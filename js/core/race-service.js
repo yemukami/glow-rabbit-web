@@ -25,12 +25,11 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
         let currentSeg = findActiveSegment(p.runPlan, p.currentDist);
         const nextSeg = p.runPlan[p.currentSegmentIdx + 1];
 
-        const alreadyFinished = p.finishTime !== null;
         const speed = currentSeg ? 400.0 / currentSeg.paceFor400m : 0;
-        if (!alreadyFinished && speed > 0) {
-            p.currentDist += (speed * 0.1);
+        if (speed > 0) {
+            p.currentDist += (speed * 0.1); // overrun許容のためfinish後も距離は進める
 
-            if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
+            if (p.finishTime === null && nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
                 console.log("[advanceRaceTick] Presend next segment", { runnerId, nextPace400: nextSeg.paceFor400m, atDist: p.currentDist.toFixed(1) });
                 sendCommand(
                     BluetoothCommunity.commandSetTimeDelay(
@@ -44,16 +43,18 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
                 p.nextCommandPrepared = true;
             }
 
-            if (p.currentDist >= currentSeg.endDist) {
+            if (p.finishTime === null && p.currentDist >= currentSeg.endDist) {
                 p.currentSegmentIdx++;
                 p.nextCommandPrepared = false;
             }
         }
 
-        if (!alreadyFinished && p.currentDist >= race.distance) {
+        if (p.finishTime === null && p.currentDist >= race.distance) {
             p.finishTime = elapsed;
         }
-        if (p.finishTime !== null) finishedCount++;
+        if (p.finishTime !== null && p.currentDist >= (race.distance + UI_CONSTANTS.FINISH_MARGIN_METERS)) {
+            finishedCount++;
+        }
     });
 
     const allFinished = finishedCount === race.pacers.length && race.pacers.length > 0;

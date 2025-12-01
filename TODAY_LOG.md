@@ -338,3 +338,8 @@
 - 作業: STOPを未接続でも押せるようにし、未接続時はdry-runで記録だけ行いつつUIを停止するよう変更（接続時は従来通り送信）。バージョンを `v2.1.0-beta.61` に更新。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
 - 感想: 実機未接続でもSTOP操作でUIを止められるようにし、接続時はこれまで通りstopRunnerを送る。接続が切れても緊急停止しやすい状態にした。
+
+### 2025-12-xx 追加ログ（このターン-10）
+- 作業: オーバーランは維持しつつ、ゴール後は追加のプレ送信/セグメント進行を止めるよう `advanceRaceTick` を修正（finishTimeが付いた後は移動のみ継続、FINISH_MARGINまでは走らせて完了判定）。stop後は再同期必須フラグ維持。バージョンを `v2.1.0-beta.62` に更新。
+- テスト: `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`。
+- 感想: 実機の「ゴール後少し光る」オーバーランは残しつつ、ゴール後の色混在を減らすため追加コマンドを抑制。実機で色が正しく切り替わるか再確認したい。
