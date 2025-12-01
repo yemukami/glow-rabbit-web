@@ -15,10 +15,10 @@ export function buildCollapsedRaceContent(vm) {
         </div>`;
 }
 
-export function buildExpandedRaceContent(vm, elapsedTime) {
+export function buildExpandedRaceContent(vm, elapsedTime, editingPaces = {}) {
     const { race, safeTime, safeName, safeGroup, safeDistance, safeStartPos, badge, progress } = vm;
 
-    const pacerRows = buildPacerRows(race, elapsedTime);
+    const pacerRows = buildPacerRows(race, elapsedTime, editingPaces);
     const headsHtml = buildProgressHeads(race, progress.totalScale);
     const marksHtml = buildMarkers(race, progress.totalScale);
 
@@ -85,21 +85,22 @@ function buildInfoHeader(race, maxDist, safeStartPos, elapsedTime) {
     return `<div>先頭: <strong>${formatDistanceMeters(maxDist)}</strong></div>`;
 }
 
-function buildPacerRows(r, elapsedTime) {
+function buildPacerRows(r, elapsedTime, editingPaces) {
     if(!r.pacers || !Array.isArray(r.pacers)) return "";
     return r.pacers.map(p => {
+        const paceValue = editingPaces && editingPaces[p.id] !== undefined ? editingPaces[p.id] : p.pace;
         let estStr = "--:--";
         let avgPace = 0;
-        const safePace = formatPaceLabel(p.pace);
+        const safePace = formatPaceLabel(paceValue);
         if (p.finishTime !== null) {
             estStr = `Goal (${formatTime(p.finishTime)})`;
             avgPace = (p.finishTime / r.distance) * 400; 
         } else if (r.status === 'ready') {
-            let speed = 400 / (p.pace || 72); 
+            let speed = 400 / (paceValue || 72); 
             let estSec = r.distance / speed;
             estStr = `Est (${formatTime(estSec)})`;
         } else {
-            const speed = 400 / (p.pace || 72); 
+            const speed = 400 / (paceValue || 72); 
             const remDist = r.distance - (p.currentDist || 0);
             const remSec = remDist / speed;
             estStr = formatTime((elapsedTime || 0) + remSec);

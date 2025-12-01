@@ -415,7 +415,7 @@ function renderRace() {
             tr.className = buildRaceRowClass(r, expandedRaceId);
             tr.onclick = (e) => toggleRow(r.id, e);
 
-        const content = vm.isExpanded ? buildExpandedRaceContent(vm, elapsedTime) : buildCollapsedRaceContent(vm);
+        const content = vm.isExpanded ? buildExpandedRaceContent(vm, elapsedTime, editingPaces) : buildCollapsedRaceContent(vm);
         tr.innerHTML = `<td>${content}</td>`;
         tbody.appendChild(tr);
         } catch(e) {
