@@ -8,13 +8,16 @@ import { sanitizeNumberInput, sanitizePositiveInt, parseTimeInput, resolvePaceVa
 import { getColorRGB } from '../utils/color-utils.js';
 import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded, stopRaceService } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
-import { buildSetupPacerChips } from './race-view-model.js';
-import { buildRaceTableHTML, updateRunningDisplays } from './race-renderer.js';
+import { renderRaceTableDom, updateRunningDisplays } from './race-renderer.js';
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
 import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
 import { renderSegmentTable } from './race-modal-renderer.js';
 import { buildDeviceGridHtml, buildDeviceOverlayHtml } from './device-renderer.js';
+import { attachSetupTableHandlers } from './setup-table-events.js';
+import { attachDeviceGridHandlers } from './device-grid-events.js';
+import { renderSetupTable } from './setup-renderer.js';
+import { renderConnectionStatus } from './connection-renderer.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = {
     target: {},
@@ -222,7 +225,13 @@ export function initUI() {
         onReset: resetRace,
         onUpdateStartPos: updateStartPos
     });
-    attachSetupTableHandlers();
+    const setupTbody = document.getElementById('setup-tbody');
+    attachSetupTableHandlers(setupTbody, {
+        onOpenModal: openModal,
+        onOpenPacerModal: openModal,
+        onDeleteRace: deleteRow,
+        onUpdateField: updateData
+    });
 }
 
 function handleNotification(event) {
@@ -256,15 +265,7 @@ function handleNotification(event) {
 }
 
 function updateConnectionStatus(connected) {
-    const el = document.querySelector('.ble-status');
-    const btn = document.querySelector('.btn-connect');
-    if(connected) { 
-        if(el) { el.innerHTML = '● 接続完了'; el.style.color = 'var(--success-color)'; }
-        if(btn) { btn.innerHTML = '🔌 切断'; btn.style.background = '#EEE'; btn.style.color='#555'; }
-    } else { 
-        if(el) { el.innerHTML = '● 未接続'; el.style.color = '#999'; }
-        if(btn) { btn.innerHTML = '📡 接続'; btn.style.background='#EEF2F5'; btn.style.color='var(--info-color)'; }
-    }
+    renderConnectionStatus(connected);
 }
 
 async function syncWrapper() {
@@ -321,56 +322,7 @@ async function switchMode(mode, skipGuard = false) {
 function renderSetup() {
     const tb = document.getElementById('setup-tbody'); 
     if(!tb) return;
-    tb.innerHTML = '';
-    races.forEach(r => {
-        const ph = buildSetupPacerChips(r);
-        let tr = document.createElement('tr');
-        const timeVal = escapeHTML(r.time);
-        const nameVal = escapeHTML(r.name);
-        const groupVal = escapeHTML(r.group);
-        const distanceVal = escapeHTML(r.distance);
-        const startPosVal = escapeHTML(r.startPos);
-        const countVal = escapeHTML(r.count);
-        tr.innerHTML = `
-            <td><input type="time" class="input-cell" value="${timeVal}" data-action="update-field" data-field="time" data-race-id="${r.id}"></td>
-            <td><input type="text" class="input-cell" value="${nameVal}" data-action="update-field" data-field="name" data-race-id="${r.id}"></td>
-            <td><input type="number" class="input-cell" min="1" value="${groupVal}" data-action="update-field" data-field="group" data-race-id="${r.id}"></td>
-            <td><input type="number" class="input-cell" min="0" value="${distanceVal}" data-action="update-field" data-field="distance" data-race-id="${r.id}"></td>
-            <td><input type="number" class="input-cell input-start" min="0" value="${startPosVal}" data-action="update-field" data-field="startPos" data-race-id="${r.id}" step="any"></td>
-            <td><input type="number" class="input-cell" min="0" value="${countVal}" data-action="update-field" data-field="count" data-race-id="${r.id}"></td>
-            <td>${ph} <button class="btn-sm btn-outline" data-action="open-modal" data-race-id="${r.id}">＋</button></td>
-            <td><button class="btn-sm btn-danger" style="border:none; background:#FFF0F0;" data-action="delete-race" data-race-id="${r.id}">削除</button></td>
-        `;
-        tb.appendChild(tr);
-    });
-}
-
-function attachSetupTableHandlers() {
-    const tb = document.getElementById('setup-tbody');
-    if (!tb || tb.__handlersAttached) return;
-    tb.__handlersAttached = true;
-
-    tb.addEventListener('click', (event) => {
-        const actionEl = event.target.closest('[data-action]');
-        if (!actionEl) return;
-        const action = actionEl.dataset.action;
-        const raceId = parseInt(actionEl.dataset.raceId, 10);
-        if (action === 'open-modal' && !Number.isNaN(raceId)) openModal(raceId, null);
-        else if (action === 'delete-race' && !Number.isNaN(raceId)) deleteRow(raceId);
-        else if (action === 'open-pacer-modal') {
-            const pacerId = parseInt(actionEl.dataset.pacerId, 10);
-            if (!Number.isNaN(raceId) && !Number.isNaN(pacerId)) openModal(raceId, pacerId);
-        }
-    });
-
-    tb.addEventListener('change', (event) => {
-        const fieldEl = event.target.closest('[data-action="update-field"]');
-        if (!fieldEl) return;
-        const raceId = parseInt(fieldEl.dataset.raceId, 10);
-        const field = fieldEl.dataset.field;
-        if (Number.isNaN(raceId) || !field) return;
-        updateData(raceId, field, fieldEl.value);
-    });
+    renderSetupTable(tb, races);
 }
 
 function updateData(id, f, v) { 
@@ -432,7 +384,7 @@ function renderRace() {
     if(!tbody) { console.error("[renderRace] No tbody found!"); return; }
     const expandedRaceId = getExpandedRaceId();
     const editingPaces = getEditingPaces();
-    tbody.innerHTML = buildRaceTableHTML(races, expandedRaceId, getElapsedTime(), editingPaces);
+    renderRaceTableDom(tbody, races, expandedRaceId, getElapsedTime(), editingPaces);
 }
 
 async function startRaceWrapper(id) {
@@ -728,7 +680,12 @@ function renderDeviceList() {
     }
 
     container.innerHTML = buildDeviceGridHtml(deviceList, deviceSettings, deviceInteraction);
-    attachDeviceListHandlers();
+    const grid = document.getElementById('device-grid');
+    attachDeviceGridHandlers(grid, {
+        getMode: () => deviceInteraction.mode,
+        onSwapMode: (idx) => startSwapMode(idx),
+        onOpenDevice: (idx) => openDeviceActionMenu(idx)
+    });
 }
 
 // CSV functions...
@@ -840,19 +797,4 @@ function openDeviceActionMenu(i) {
     document.body.appendChild(overlay);
 }
 
-function attachDeviceListHandlers() {
-    const grid = document.getElementById('device-grid');
-    if (!grid || grid.__handlersAttached) return;
-    grid.__handlersAttached = true;
-    grid.addEventListener('click', (e) => {
-        const cell = e.target.closest('[data-action="open-device"]');
-        if (!cell) return;
-        const idx = parseInt(cell.dataset.deviceIdx, 10);
-        if (Number.isNaN(idx)) return;
-        if (deviceInteraction.mode === 'swapping') {
-            startSwapMode(idx);
-        } else {
-            openDeviceActionMenu(idx);
-        }
-    });
-}
+// Device grid handlers moved to device-grid-events for clarity.

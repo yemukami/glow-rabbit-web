@@ -63,6 +63,11 @@ export function buildRaceTableHTML(races, expandedRaceId, elapsedTime, editingPa
     return renderRaceTable(races, expandedRaceId, elapsedTime, editingPaces);
 }
 
+export function renderRaceTableDom(tbody, races, expandedRaceId, elapsedTime, editingPaces = {}) {
+    if (!tbody) return;
+    tbody.innerHTML = buildRaceTableHTML(races, expandedRaceId, elapsedTime, editingPaces);
+}
+
 export function updateRunningDisplays(race, elapsedTime) {
     if (!race) return;
     const { totalScale, maxDist, fillPct } = computeLeadAndFill(race);

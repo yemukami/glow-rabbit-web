@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.84)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.87)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -14,7 +14,7 @@
   4) 複数ペーサー走行で、速いペーサーが距離+50mで止まり、全員到達後にSTOP 1回が送られることを確認。
 
 ## 現行バージョン
-- `v2.1.0-beta.84`
+- `v2.1.0-beta.87`
 - STOP/オーバーラン: プロトコル上 stopRunner は全体停止のみ。UIは距離+50mまで表示進行、全員到達時にSTOP 1回送信。ペーサー個別STOPはFW拡張が必要。
 
 ## これまでの主要作業
@@ -26,6 +26,7 @@
 - レースUI状態（展開行/経過時間/編集ペース）を `race-ui-state` に集約し、renderer移行の足場を整備。テーブル操作をデータ属性＋デリゲーションに置換し、行展開/アクションをUI層で一元処理。startPos変更時に再描画してsyncNeeded表示を即時反映。
 - フラグはレース単位: SYNCは対象レースのみinitialConfigSent=true/syncNeeded=false、STARTはそのレースの未送信時のみ初期設定を再送しセット、STOPはそのレースだけinitialConfigSent=false/syncNeeded=trueに戻る。他レースには波及しない。
 - レーステーブルのイベントデリゲーションを専用モジュールに分離し、renderer全面移行に向けUIロジックを薄くした。
+- Setup/レーステーブル描画をrenderer関数に集約し、ui-controllerのDOM操作を削減（挙動不変）。デバイスグリッドのイベントデリゲーションも外部モジュール化。
 - SYNCボタンを「レース設定再送」表記＋ツールチップに変更し、要同期バッジを「要レース設定再送」表記＋説明に更新。
 - セグメントモーダルのレンダリングを `race-modal-renderer` に分離し、UIコントローラの重複定義を解消。Setupテーブルの操作をデリゲーション化しinline handlerを削減。
 - デバイス一覧のセル/オーバーレイ操作をデリゲーション化し、inline handlerを削減。置換モーダルのボタンもdata-action化。
@@ -41,4 +42,4 @@
 6. テスト追加: renderer/view-modelケース、ui-controllerのガード/エラー表示周り。
 
 ## 次スレ開始時に伝えること（コピペ用）
-「現行 v2.1.0-beta.73。必読: REMORSE_AND_PREVENTION.md / REQUEST_ACTIONS_LOG.md / SYNC_START_SPEC.md / REMORSE_LOG.md。同期/START分離: 同期で色/ペース送信、STARTは先行点灯＋startRunnerのみ（未送信時は自動送信）。未接続で同期/STARTはアラート、STOPは未接続でもdry-runでUI停止（接続時は送信）。STOP後は再同期必須。syncNeededバッジあり。STOPは全体1回のみ（プロトコル制約）、表示は距離+50mまで進め、全員到達でSTOP。進捗: renderer分割/ID衝突回避、SYNCボタン整形、フラグ一元化、送信サマリログ。残タスク: renderer全面移行/状態遷移一元化/入力・ログ整理/STARTラグ可視化/ペーサー個別STOP検討/テスト追加。E2E手順を必ず実施（未接続アラート→SYNC→START/STOP→複数ペーサーの距離+50m停止確認）。」
+「現行 v2.1.0-beta.85。必読: REMORSE_AND_PREVENTION.md / REQUEST_ACTIONS_LOG.md / SYNC_START_SPEC.md / REMORSE_LOG.md。同期/START分離: 同期で色/ペース送信、STARTは先行点灯＋startRunnerのみ（未送信時は自動送信）。未接続で同期/STARTはアラート、STOPは未接続でもdry-run（接続時は送信）。STOP後は再同期必須。syncNeededバッジあり。STOPは全体1回のみで表示は距離+50mまで進め、全員到達でSTOP。進捗: Setup/レーステーブル描画をrendererに寄せてui-controllerを軽量化、デリゲーション分離・ID衝突回避・フラグ一元化・要レース設定再送バッジ/ボタン統一を維持。残タスク: renderer全面移行/状態遷移一元化/入力・ログ整理/STARTラグ可視化/ペーサー個別STOP検討/テスト追加。E2E手順（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止確認、バッジ/ツールチップ確認）を必ず実施。」

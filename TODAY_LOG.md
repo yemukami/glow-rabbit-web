@@ -1,3 +1,26 @@
+# 要求対応メモ（最新リクエスト）
+- 要求: renderer全面移行の残タスクを進めること。
+- 目的: ui-controllerに残るDOM操作をrendererに寄せて責務分離し、挙動の安全性とテスト容易性を高める。
+- 対応方針: Setup/レース描画の文字列生成とDOM反映をrenderer関数へ集約し、UIコントローラ側はデータ管理とイベント発火に限定（挙動変更なし）。
+- テスト計画: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node --check js/ui/setup-renderer.js`, `node js/test/ui-logic.test.js`, `node js/test/race-renderer.test.js`, `node js/test/setup-renderer.test.js`, `node js/test/race-service.test.js`。
+- 結果: Setup/レーステーブル描画をrendererに寄せるリファクタを完了し、`setup-renderer`を追加。レースrendererにDOM適用ヘルパーを追加し、ui-controller側のDOM操作を削減。バージョンをv2.1.0-beta.85に更新。上記テストはすべてPass、手動E2Eは未実施（要接続環境）。
+- 備考: renderer移行後もSYNC/START責務は不変。挙動差分が出ないことを優先して小刻みに進める。
+
+### 2025-12-xx 追加ログ（renderer移行の残タスク）
+- 作業: Setupテーブルとレーステーブルの描画をrenderer関数に集約し、`setup-renderer.js` を新設。race-rendererにDOM反映ヘルパーを追加し、ui-controllerからの直接DOM操作を削減（挙動不変）。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node --check js/ui/setup-renderer.js`, `node js/test/ui-logic.test.js`, `node js/test/race-renderer.test.js`, `node js/test/race-service.test.js`, `node js/test/setup-renderer.test.js`（全てPass）。手動E2Eは未実施（BLE接続環境が必要）。
+- 感想: renderer移行を一歩進められた。イベントデリゲーションやフラグ運用は維持しつつUIコントローラを軽くできて安心。次は残りのDOM更新や状態遷移の整理を進めたい。
+
+### 2025-12-xx 追加ログ（renderer移行の残タスク-2）
+- 作業: デバイスグリッドのイベントデリゲーションを `device-grid-events` に切り出し、ui-controllerのDOM操作をさらに削減（挙動不変）。`device-grid-events.test.js` を追加し、クリック時の分岐（通常/スワップモード）を検証。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/device-grid-events.js`, `node js/test/device-grid-events.test.js`, `node js/test/ui-logic.test.js`, `node js/test/race-renderer.test.js`, `node js/test/race-service.test.js`（全てPass）。手動E2Eは未実施（接続環境が必要）。
+- 感想: デバイス周りもデリゲーションを外出しでき、renderer全面移行の足場が整った。引き続きモーダル/状態遷移周りを薄くする予定。
+
+### 2025-12-xx 追加ログ（renderer移行の残タスク-3）
+- 作業: BLE接続表示の更新をrenderer（`connection-renderer`）に委譲し、ui-controllerのDOM操作を整理。バージョンを `v2.1.0-beta.87` に更新。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/connection-renderer.js`, `node js/test/device-grid-events.test.js`, `node js/test/ui-logic.test.js`（全てPass）。手動E2Eは未実施（接続環境が必要）。
+- 感想: 細かなDOM更新を順次renderer側に寄せ、controllerの責務を軽くできている。残りのモーダル/状態遷移も同方針で進める。
+
 # 作業ログ: Glow-Rabbit Web App - 2025年11月28日
 
 ## 本日の作業概要

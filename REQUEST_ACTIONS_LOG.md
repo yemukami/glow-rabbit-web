@@ -70,3 +70,7 @@
 - 要求: テスト仕様書mdを作成し、実施テストと結果を記載すること。
   対応: `TEST_PLAN.md` を作成し、node --check/ui-logicテストと手動E2E手順を明記。テスト実行結果（auto）はPass、E2Eは未実施(環境依存)と記載。バージョンをv2.1.0-beta.82に更新し、STATUS/NEXT/TODAYに反映。
   追記: デバイスオーバーレイHTMLをrenderer側に分離し、テンプレートをUIコントローラから排除。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行。バージョンをv2.1.0-beta.83に更新予定（次の文脈で反映）。
+- 要求: renderer全面移行の残タスクを進めること。
+  対応: Setup/レーステーブル描画をrenderer関数に集約し、ui-controllerはデータ更新とイベント発火に限定（挙動不変）。`js/ui/setup-renderer.js` を追加し、race-rendererにDOM適用ヘルパーを追加。バージョンをv2.1.0-beta.85に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js` / `node --check js/ui/race-renderer.js` / `node --check js/ui/setup-renderer.js` と `node js/test/ui-logic.test.js` / `node js/test/race-renderer.test.js` / `node js/test/race-service.test.js` / `node js/test/setup-renderer.test.js` を実行。
+- 追記: デバイスグリッドのイベントデリゲーションを外部モジュール化（`device-grid-events`）し、ui-controllerのDOM操作をさらに削減。`device-grid-events.test.js`を追加。バージョンをv2.1.0-beta.86に更新し、STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js` / `node --check js/ui/device-grid-events.js` と `node js/test/device-grid-events.test.js` / `node js/test/ui-logic.test.js` / `node js/test/race-renderer.test.js` / `node js/test/race-service.test.js` を実行。
+- 追記: BLE接続表示更新をrenderer（`connection-renderer`）に委譲し、ui-controllerのDOM操作を整理。バージョンをv2.1.0-beta.87に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node --check js/ui/connection-renderer.js`, `node js/test/device-grid-events.test.js`, `node js/test/ui-logic.test.js` を実行（他のテストも前段と同様にPass）。手動E2Eは未実施。
