@@ -10,7 +10,7 @@ function buildMockRace(status = 'ready') {
         distance: 400,
         startPos: 0,
         status,
-        syncNeeded: true,
+        syncNeeded: status === 'ready',
         pacers: [
             { id: 10, pace: 80, color: 'red', currentDist: 100, runPlan: [{ endTime: 120 }] }
         ],
@@ -24,6 +24,13 @@ function testRenderRaceTable() {
     assert.ok(html.includes('toggleRow(1'), 'row should include toggle handler');
     assert.ok(html.includes('要同期'), 'syncNeeded badge should be present');
     assert.ok(html.includes('START'), 'expanded race should render START button');
+}
+
+function testRenderRaceTableSynced() {
+    const race = buildMockRace('ready');
+    race.syncNeeded = false;
+    const html = renderRaceTable([race], race.id, 0, {});
+    assert.ok(!html.includes('要同期'), 'syncNeeded badge should be hidden when not needed');
 }
 
 function testUpdateRunningDisplays() {
@@ -58,6 +65,7 @@ function testUpdateRunningDisplays() {
 
 async function run() {
     testRenderRaceTable();
+    testRenderRaceTableSynced();
     testUpdateRunningDisplays();
     console.log('race-renderer tests passed');
 }

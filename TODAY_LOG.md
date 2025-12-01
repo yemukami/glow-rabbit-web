@@ -396,3 +396,9 @@
 - テスト: `node --check js/ui/ui-controller.js`。
 - 感想: エラー理由を明示してトラブルシュートしやすくしたが、START/同期/stopRunnerの仕様・挙動はそのまま。
 - E2E確認手順メモ（手動）: 1) pacer未設定でSTARTを押し、警告が出ることを確認。2) 既存のSYNC→START→STOPフローで挙動が変わっていないことを確認。
+
+### 2025-12-xx 追加ログ（このターン-20）
+- 作業: rendererテストを拡充し、syncNeededバッジのON/OFFを検証するケースを追加（挙動変更なし）。バージョン据え置き。
+- テスト: `node js/test/race-renderer.test.js`。
+- 感想: 同期表示の有無をテストで担保でき、今後のrendererリファクタでも安心。
+- E2E確認手順メモ（手動）: 1) syncNeeded=true状態でRace行展開→バッジ表示を確認。2) SYNC実行後にバッジが消えることを確認（既存手順と同じ）。

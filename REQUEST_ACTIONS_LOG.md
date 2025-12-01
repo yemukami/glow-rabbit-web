@@ -29,3 +29,5 @@
   対応: requireConnectionヘルパーでSTART/同期の未接続アラートを共通化（挙動変更なし、SYNC_START_SPEC順守）。
 - 要求: START失敗理由を可視化すること。
   対応: showStartErrorで no pacer/busy/not found などの理由をアラート表示（挙動変更なし、SYNC_START_SPEC順守）。
+- 要求: rendererテストを拡充すること。
+  対応: syncNeededバッジ表示/非表示を検証するテストを追加（挙動変更なし、SYNC_START_SPEC順守）。
