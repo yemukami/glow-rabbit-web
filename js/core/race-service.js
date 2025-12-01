@@ -10,7 +10,7 @@ import { getColorRGB } from '../utils/color-utils.js';
 export { prepareRacePlans, sendInitialConfigs } from './race-sync-service.js';
 
 const UI_CONSTANTS = {
-    FINISH_MARGIN_METERS: 0,
+    FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10
 };
 
@@ -21,19 +21,17 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
     race.pacers.forEach((p, idx) => {
         const runnerId = idx + 1;
         if (!p.runPlan) return;
-        if (p.finishTime !== null) {
-            finishedCount++;
-            return;
-        }
-
+        const maxAllowed = race.distance + UI_CONSTANTS.FINISH_MARGIN_METERS;
         let currentSeg = findActiveSegment(p.runPlan, p.currentDist);
         const nextSeg = p.runPlan[p.currentSegmentIdx + 1];
 
         const speed = currentSeg ? 400.0 / currentSeg.paceFor400m : 0;
-        if (speed > 0) {
-            p.currentDist += (speed * 0.1); // overrun許容のためfinish後も距離は進める
+        if (speed > 0 && p.currentDist < maxAllowed) {
+            p.currentDist = Math.min(maxAllowed, p.currentDist + (speed * 0.1)); // overrun許容（距離+marginまで）
+        }
 
-            if (p.finishTime === null && nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
+        if (p.finishTime === null) {
+            if (nextSeg && !p.nextCommandPrepared && p.currentDist >= (nextSeg.startDist - UI_CONSTANTS.PRESEND_MARGIN_METERS)) {
                 console.log("[advanceRaceTick] Presend next segment", { runnerId, nextPace400: nextSeg.paceFor400m, atDist: p.currentDist.toFixed(1) });
                 sendCommand(
                     BluetoothCommunity.commandSetTimeDelay(
@@ -47,15 +45,18 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
                 p.nextCommandPrepared = true;
             }
 
-            if (p.finishTime === null && p.currentDist >= currentSeg.endDist) {
+            if (p.currentDist >= currentSeg.endDist) {
                 p.currentSegmentIdx++;
                 p.nextCommandPrepared = false;
             }
+
+            if (p.currentDist >= race.distance) {
+                p.finishTime = elapsed;
+                p.currentDist = Math.min(p.currentDist, maxAllowed);
+            }
         }
 
-        if (p.finishTime === null && p.currentDist >= race.distance) {
-            p.finishTime = elapsed;
-            p.currentDist = race.distance;
+        if (p.finishTime !== null && p.currentDist >= maxAllowed) {
             finishedCount++;
         }
     });
