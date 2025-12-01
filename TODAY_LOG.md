@@ -390,3 +390,9 @@
 - テスト: `node --check js/ui/ui-controller.js`（既存テストは挙動不変のため再実行なし）。
 - 感想: ガード文言を統一し、今後の変更時に見落としにくくした。機能は変えていないので安心。
 - E2E確認手順メモ（手動）: 1) 未接続でSYNC/STARTを押し、統一アラート表示を確認。2) 接続後SYNC→syncNeeded消失、pacer追加後START→STOPでsyncNeeded再表示を確認（仕様どおり）。
+
+### 2025-12-xx 追加ログ（このターン-19）
+- 作業: START失敗時の理由をユーザーに明示する `showStartError` を追加（no pacer/busy/not found/その他）。挙動は既存ガードの可視化のみ。バージョンを `v2.1.0-beta.69` に更新。
+- テスト: `node --check js/ui/ui-controller.js`。
+- 感想: エラー理由を明示してトラブルシュートしやすくしたが、START/同期/stopRunnerの仕様・挙動はそのまま。
+- E2E確認手順メモ（手動）: 1) pacer未設定でSTARTを押し、警告が出ることを確認。2) 既存のSYNC→START→STOPフローで挙動が変わっていないことを確認。

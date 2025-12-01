@@ -47,6 +47,22 @@ function requireConnection(actionLabel) {
     return true;
 }
 
+function showStartError(reason) {
+    if (reason === 'no_pacers') {
+        alert("ペーサーが設定されていません。設定後にSTARTしてください。");
+        return;
+    }
+    if (reason === 'busy') {
+        alert("他のレースが実行中です。停止してからSTARTしてください。");
+        return;
+    }
+    if (reason === 'not_found') {
+        alert("対象のレースが見つかりません。再読み込みを試してください。");
+        return;
+    }
+    alert("STARTに失敗しました。コンソールログを確認してください。");
+}
+
 export function initUI() {
     console.log("[Init] Starting UI Initialization...");
     
@@ -382,10 +398,13 @@ async function startRaceWrapper(id) {
     if (!requireConnection("START実行")) return;
     const r = races.find(x=>x.id===id);
     const startResult = await startRaceService(r, id, r.startPos, () => activeRaceId && activeRaceId !== id, { dryRun: false }, { sendStop: false, resendConfig: false });
+    if (!startResult || !startResult.ok) {
+        showStartError(startResult?.reason);
+        return;
+    }
     if (startResult && startResult.records) {
         console.log("[startRaceWrapper] Start command records:", startResult.records.length, startResult.records);
     }
-    if (!startResult.ok) return;
     renderRace();
     raceInterval = setInterval(() => { updateState(r); }, UI_CONSTANTS.UPDATE_INTERVAL_MS);
 }
