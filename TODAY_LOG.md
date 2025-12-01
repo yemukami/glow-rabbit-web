@@ -66,6 +66,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
 - 感想: 状態クリアの責務がサービス側に寄り、UIの重複処理が減った。次は入力ガード/ログ整理に進める段階。
 
+### 2025-12-xx 追加ログ（状態遷移整理の一歩目-6）
+- 作業: 新規レース生成をrace-managerに集約し、UIから状態生成を切り離しつつバージョンを `v2.1.0-beta.97` に更新。
+- テスト: `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
+- 感想: 状態生成/管理をmanager側に寄せられ、状態遷移一元化にまた一歩近づいた。入力バリデーション/ログ整理に移る準備が整ってきた。
+
 # 作業ログ: Glow-Rabbit Web App - 2025年11月28日
 
 ## 本日の作業概要

@@ -1,4 +1,4 @@
-import { races, saveRaces, loadRaces, activeRaceId } from '../core/race-manager.js';
+import { races, saveRaces, loadRaces, activeRaceId, addNewRace } from '../core/race-manager.js';
 import { deviceList, deviceSettings, deviceInteraction, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
@@ -356,10 +356,7 @@ function updateData(id, f, v) {
     } 
 }
 
-function addNewRow() { 
-    races.push({id:Date.now(), time:"10:00", name:"New Race", group:1, distance:1000, startPos:0, count:10, status:"ready", pacers:[], markers:[]}); 
-    saveRaces(); renderSetup(); 
-}
+function addNewRow() { addNewRace(); saveRaces(); renderSetup(); }
 
 function deleteRow(id) { 
     if(confirm("削除?")){
