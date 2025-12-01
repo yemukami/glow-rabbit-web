@@ -6,6 +6,7 @@
 - 禁則: START/同期/stopRunner/ペース送信に触れる前に上記を再読。不明点や「可能性」ベースの変更は必ず人間に確認。
 - git: 作業完了ごとにバージョン更新・テスト実行・コミット/プッシュを徹底。
 - TDD/E2E: `.codex/docs/TESTS.md` 記載のテスト/チェックを実行。コード変更時は `node --check` と該当のユニットテストを走らせ、E2E手動確認も必須。  
+- ログ運用: 作業・思考・反省は `TODAY_LOG.md`、懺悔は `REMORSE_LOG.md`、要求ごとの対応は `REQUEST_ACTIONS_LOG.md` に都度追記すること。
 - E2E手動確認（基本セット）:  
   1) 未接続で SYNC/START を押しアラート確認。  
   2) 接続後 SYNC→syncNeededバッジ消失を確認。  
