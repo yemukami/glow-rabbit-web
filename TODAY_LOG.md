@@ -646,3 +646,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（Pass）。
 - 感想: startPosの扱いをサービス層でも統一でき、負値/NaN混入時のぶれを減らせた。UI側も未使用importを落として整理できた。
 - E2E確認手順メモ（手動）: 従来手順に加え、START時にstartPosが負値/NaNでも0として処理されること、エラーなく同期/START/STOPが進むことを確認する。
+
+### 2025-12-xx 追加ログ（このターン-47）
+- 作業: startPosの非負サニタイズをテストでカバー（負値入力で0に丸めることを検証）し、バージョンを `v2.1.0-beta.104` に更新。STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（Pass）。
+- 感想: サービス層ガードの動作をテストで固定でき、今後のリファクタでも安心して触れるようになった。
+- E2E確認手順メモ（手動）: 従来手順＋startPos負値でSTARTしても0扱いになることを確認する。

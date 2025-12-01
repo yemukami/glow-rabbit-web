@@ -55,6 +55,14 @@ async function testStartRaceServiceDryRun() {
   assert.strictEqual(records.length, 5, 'Expected 5 commands for single pacer flow');
 }
 
+async function testStartRaceServiceClampsStartPos() {
+  const race = mockRace(400, 80);
+  const deviceManager = await import('../core/device-manager.js');
+  deviceManager.deviceList[0] = { mac: 'AA:BB:CC:DD:EE:FF' };
+  await startRaceService(race, 1, -25, () => false, { dryRun: true }, { sendStop: false, resendConfig: true });
+  assert.strictEqual(race.startPos, 0, 'startPos should clamp to zero when negative');
+}
+
 async function testStopRaceServiceDryRun() {
   const race = mockRace(400, 80);
   const res = await stopRaceService(race, { dryRun: true });
@@ -97,6 +105,7 @@ async function run() {
   testAdvanceRaceTickFinishes();
   testFindActiveSegment();
   await testStartRaceServiceDryRun();
+  await testStartRaceServiceClampsStartPos();
   await testStopRaceServiceDryRun();
   await testStopClearsActiveRaceId();
   await testFinalizeAndResetClearActiveRaceId();
