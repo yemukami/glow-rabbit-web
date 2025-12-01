@@ -100,7 +100,7 @@ export function initUI() {
     // Race
     window.toggleRow = toggleRow;
 window.startRaceWrapper = startRaceWrapper;
-    window.stopRaceWrapper = stopRaceWrapper;
+window.stopRaceWrapper = stopRaceWrapper;
     window.finalizeRace = finalizeRace;
     window.resetRace = resetRace;
     window.updateStartPos = updateStartPos;
@@ -439,8 +439,16 @@ async function startRaceWrapper(id) {
     raceInterval = setInterval(() => updateState(r), UI_CONSTANTS.UPDATE_INTERVAL_MS);
 }
 
-function stopRaceWrapper(id) {
-    sendStopRunner();
+async function stopRaceWrapper(id) {
+    if (!isConnected) {
+        alert("BLE未接続です。接続してからSTOPしてください。");
+        return;
+    }
+    try {
+        await sendStopRunner();
+    } catch (e) {
+        console.error("[stopRaceWrapper] Failed to send stopRunner:", e);
+    }
     freezeRace(id);
 }
 
