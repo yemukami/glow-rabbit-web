@@ -4,6 +4,13 @@
 - Inline handler排除とデリゲーション化（Setup/Device UI）によるリファクタの安全確認
 - 既存のレース設定/START/STOPフローへの影響がないことを確認
 
+## Planned Checks (状態遷移一元化/renderer残タスク)
+- `node --check js/ui/ui-controller.js`
+- `node --check js/core/race-service.js`
+- `node js/test/ui-logic.test.js`
+- `node js/test/race-service.test.js`
+- 手動E2E（接続環境で実施）: 未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認
+
 ## Test Cases
 1) Syntax checks  
    - `node --check js/ui/ui-controller.js`
