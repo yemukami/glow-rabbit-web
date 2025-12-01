@@ -21,6 +21,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/connection-renderer.js`, `node js/test/device-grid-events.test.js`, `node js/test/ui-logic.test.js`（全てPass）。手動E2Eは未実施（接続環境が必要）。
 - 感想: 細かなDOM更新を順次renderer側に寄せ、controllerの責務を軽くできている。残りのモーダル/状態遷移も同方針で進める。
 
+### 2025-12-xx 追加ログ（renderer移行の残タスク-4）
+- 作業: モーダル状態を専用モジュール（`race-modal-state`）に分離し、置換モーダル描画をrendererへ分離。ui-controllerの状態/DOM責務を軽量化。バージョンを `v2.1.0-beta.88` に更新。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-modal-state.js`, `node js/test/replace-modal-renderer.test.js`, `node js/test/race-modal-state.test.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
+- 感想: モーダル周りもステートと描画を切り出せて、renderer全面移行が見えてきた。次は残るDOM更新と状態遷移整理に進みたい。
+
 # 作業ログ: Glow-Rabbit Web App - 2025年11月28日
 
 ## 本日の作業概要
