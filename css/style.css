@@ -126,6 +126,8 @@ main { flex: 1; padding: 20px; overflow-y: auto; }
 .action-btn-col { display: flex; flex-direction: column; gap: 8px; height: 100%; justify-content: stretch; }
 .btn-reconnect { background: #EEF2F5; color: var(--info-color); border: 1px solid #DDE2E8; border-radius: 10px; padding: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; }
 .btn-reconnect:hover { background: #E5EAEE; }
+.btn-sync { background: white; color: var(--primary-color); border: 1px solid #F3B17A; border-radius: 10px; padding: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; box-shadow: 0 2px 6px rgba(243, 139, 0, 0.15); }
+.btn-sync:hover { background: #FFF4EA; }
 
 .btn-big-start { flex: 1; background: var(--primary-color); color: white; font-size: 16px; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(243, 139, 0, 0.3); transition: background 0.2s; min-height: 50px; }
 .btn-big-start:hover { background: var(--primary-hover); }
