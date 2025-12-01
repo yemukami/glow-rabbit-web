@@ -384,3 +384,9 @@
 - テスト: `node --check js/test/race-sync-service.test.js`, `node js/test/race-sync-service.test.js`, `node js/test/race-service.test.js`。
 - 感想: 同期フローのフラグ挙動をテストでカバーでき、後続のリファクタでも安心感が増した。仕様は動かしていない。
 - E2E確認手順メモ（手動）: 1) Race行を展開→SYNCボタンで「同期完了」表示とバッジ消失を確認。2) pacer追加後にSTART→STOPでsyncNeeded再表示を確認（未接続時は従来どおりアラート）。
+
+### 2025-12-xx 追加ログ（このターン-18）
+- 作業: BLE接続ガードのメッセージを共通化する `requireConnection` を追加し、START/同期の未接続時アラートを統一。挙動は変更せず、バージョンを `v2.1.0-beta.68` に更新。
+- テスト: `node --check js/ui/ui-controller.js`（既存テストは挙動不変のため再実行なし）。
+- 感想: ガード文言を統一し、今後の変更時に見落としにくくした。機能は変えていないので安心。
+- E2E確認手順メモ（手動）: 1) 未接続でSYNC/STARTを押し、統一アラート表示を確認。2) 接続後SYNC→syncNeeded消失、pacer追加後START→STOPでsyncNeeded再表示を確認（仕様どおり）。

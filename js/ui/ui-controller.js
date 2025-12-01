@@ -39,6 +39,14 @@ function isButtonOrInput(target) {
     return tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'OPTION';
 }
 
+function requireConnection(actionLabel) {
+    if (!isConnected) {
+        alert(`BLE未接続です。${actionLabel}前に接続してください。`);
+        return false;
+    }
+    return true;
+}
+
 export function initUI() {
     console.log("[Init] Starting UI Initialization...");
     
@@ -371,10 +379,7 @@ function renderRace() {
 }
 
 async function startRaceWrapper(id) {
-    if (!isConnected) {
-        alert("BLE未接続です。接続してからSTARTしてください。");
-        return;
-    }
+    if (!requireConnection("START実行")) return;
     const r = races.find(x=>x.id===id);
     const startResult = await startRaceService(r, id, r.startPos, () => activeRaceId && activeRaceId !== id, { dryRun: false }, { sendStop: false, resendConfig: false });
     if (startResult && startResult.records) {
@@ -403,10 +408,7 @@ async function stopRaceWrapper(id) {
 }
 
 async function syncRaceWrapper(id) {
-    if (!isConnected) {
-        alert("BLE未接続です。接続してから同期してください。");
-        return;
-    }
+    if (!requireConnection("同期")) return;
     const r = races.find(rc => rc.id === id);
     if (!r) return;
     if (!r.pacers || r.pacers.length === 0) {

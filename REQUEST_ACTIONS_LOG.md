@@ -25,3 +25,5 @@
   対応: start/stop/syncでコマンド本数と高優先度数をログ集計して出力（挙動変更なし、SYNC_START_SPEC順守）。
 - 要求: リファクタ優先順5（テスト拡充）に着手すること。
   対応: race-sync-serviceのdry-runテストを追加し、初期設定送信でinitialConfigSent/syncNeededが正しく更新されることを確認（仕様変更なし、SYNC_START_SPEC順守）。
+- 要求: 入力/ログ整理の一環として未接続ガードを統一すること。
+  対応: requireConnectionヘルパーでSTART/同期の未接続アラートを共通化（挙動変更なし、SYNC_START_SPEC順守）。
