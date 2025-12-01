@@ -10,7 +10,7 @@ import { getColorRGB } from '../utils/color-utils.js';
 export { prepareRacePlans, sendInitialConfigs } from './race-sync-service.js';
 
 const UI_CONSTANTS = {
-    FINISH_MARGIN_METERS: 50,
+    FINISH_MARGIN_METERS: 0,
     PRESEND_MARGIN_METERS: 10
 };
 
@@ -21,6 +21,10 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
     race.pacers.forEach((p, idx) => {
         const runnerId = idx + 1;
         if (!p.runPlan) return;
+        if (p.finishTime !== null) {
+            finishedCount++;
+            return;
+        }
 
         let currentSeg = findActiveSegment(p.runPlan, p.currentDist);
         const nextSeg = p.runPlan[p.currentSegmentIdx + 1];
@@ -51,8 +55,7 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
 
         if (p.finishTime === null && p.currentDist >= race.distance) {
             p.finishTime = elapsed;
-        }
-        if (p.finishTime !== null && p.currentDist >= (race.distance + UI_CONSTANTS.FINISH_MARGIN_METERS)) {
+            p.currentDist = race.distance;
             finishedCount++;
         }
     });
