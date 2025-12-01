@@ -288,3 +288,8 @@
 ### 追加ログ（このターン-53）
 - 作業: BLE未接続時に同期/STARTを実行しようとした際にアラートを出すガードを追加。接続失敗時もアラートで通知。バージョンを `v2.1.0-beta.48` に更新。構文チェックとui-logicテストを再実行し成功。
 - 思考: 未接続での操作が「無反応」に見えないよう、明示的な通知を入れた。同期/START分離の設計を崩さず、ユーザーの手間を減らす方向で仕上げていく。
+
+### 2025-12-xx 作業ログ（このターン）
+- 作業: 同期/START仕様のリマインドファイル SYNC_START_SPEC.md を追加し、旧BLE API を legacy/ 配下に退避（戻し方メモを添付）。syncNeeded/initialConfigSent をサービス側に寄せ、UIの直接操作を削減。race-view-model/render-utils/data-utils/color-utils を活用し、レース行描画を renderer 分割の第一歩として切り出し。完走時の未定義関数呼び出しを修正。
+- テスト: `node --check js/core/race-service.js`, `js/core/race-sync-service.js`, `js/ui/ui-controller.js`, `js/utils/render-utils.js`; `node js/test/race-service.test.js`; `node js/test/ui-logic.test.js`（いずれも成功）。
+- 感想: 同期/START責務を固定したまま可読性を上げる方向に進めた。renderer分割は未完了だが、view-modelとの分離が進み、次ターンでDOM生成を全面移行しやすい状態になった。

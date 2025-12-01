@@ -1,11 +1,15 @@
-import { races, saveRaces, loadRaces, activeRaceId, setActiveRaceId, sendRaceConfig, sendStartRace, sendStopRace } from '../core/race-manager.js';
+import { races, saveRaces, loadRaces, activeRaceId, setActiveRaceId } from '../core/race-manager.js';
 import { deviceList, deviceSettings, deviceInteraction, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from '../core/pace-calculator.js';
-import { roundToTenth, formatPace, formatPaceLabel, formatDistanceMeters } from '../utils/render-utils.js';
-import { advanceRaceTick, startRaceService, sendStopRunner } from '../core/race-service.js';
+import { roundToTenth, formatPace, formatPaceLabel, formatDistanceMeters, buildRaceBadge, formatTime } from '../utils/render-utils.js';
+import { sanitizeNumberInput, sanitizePositiveInt, parseTimeInput, resolvePaceValue } from '../utils/data-utils.js';
+import { getColorRGB } from '../utils/color-utils.js';
+import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
+import { buildRaceViewModel, buildRaceRowClass, buildCollapsedPacerChips, buildSetupPacerChips, computeLeadAndFill } from './race-view-model.js';
+import { buildCollapsedRaceContent, buildExpandedRaceContent } from './race-renderer.js';
 
 let expandedRaceId = null;
 let editingPaces = {};
@@ -24,12 +28,6 @@ const UI_CONSTANTS = {
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100
 };
-
-function resolvePaceValue(raw, fallback = 72) {
-    const n = parseFloat(raw);
-    if (!Number.isFinite(n) || n <= 0) return fallback;
-    return n;
-}
 
 function formatDisplayPaceLabel(rawPace) {
     const pace = resolvePaceValue(rawPace);
@@ -132,13 +130,13 @@ window.startRaceWrapper = startRaceWrapper;
             alert("BLE未接続です。接続してから同期してください。");
             return;
         }
-        const r = races.find(rc => rc.id === expandedRaceId);
-        if (r && r.pacers && r.pacers.length > 0) {
-            const res = await syncRaceConfigs(r, { dryRun: false });
-            if (res.ok) { r.syncNeeded = false; saveRaces(); }
-        }
-        if(await syncAllDevices()) alert('同期完了');
-    };
+            const r = races.find(rc => rc.id === expandedRaceId);
+            if (r && r.pacers && r.pacers.length > 0) {
+                const res = await syncRaceConfigs(r, { dryRun: false });
+                if (res.ok) { saveRaces(); }
+            }
+            if(await syncAllDevices()) alert('同期完了');
+        };
     window.downloadCSV = downloadCSV;
     window.importCSV = importCSV;
     
@@ -260,50 +258,6 @@ function saveCompetitionTitle(val) {
     document.getElementById('race-screen-title').innerText = val;
 }
 
-function sanitizeNumberInput(raw, fallback = 0) {
-    const n = parseFloat(raw);
-    if (Number.isNaN(n)) return fallback;
-    return n;
-}
-
-function sanitizePositiveInt(raw, fallback = 0) {
-    const n = parseInt(raw, 10);
-    if (Number.isNaN(n) || n < 0) return fallback;
-    return n;
-}
-
-function buildSetupPacerChips(race) {
-    if (!race.pacers || !Array.isArray(race.pacers)) return '';
-    return race.pacers
-        .map(p => {
-            const paceLabel = formatDisplayPaceLabel(p.pace);
-            return `<span class="pacer-chip" onclick="openModal(${race.id},${p.id})"><span class="dot bg-${p.color}"></span>${paceLabel}</span>`;
-        })
-        .join(' ');
-}
-
-function buildCollapsedPacerChips(pacers) {
-    if(!pacers || !Array.isArray(pacers)) return '';
-    return pacers
-        .map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${formatDisplayPaceLabel(p.pace)}</span>`)
-        .join(' ');
-}
-
-function parseTimeInput(raw, fallbackSeconds = null) {
-    if (!raw) return fallbackSeconds;
-    const parts = String(raw).split(':').map(p => p.trim());
-    if (parts.length === 1) {
-        const sec = sanitizeNumberInput(parts[0], NaN);
-        return Number.isNaN(sec) ? fallbackSeconds : sec;
-    }
-    if (parts.length === 2) {
-        const min = sanitizeNumberInput(parts[0], NaN);
-        const sec = sanitizeNumberInput(parts[1], NaN);
-        if (Number.isNaN(min) || Number.isNaN(sec)) return fallbackSeconds;
-        return min * 60 + sec;
-    }
-    return fallbackSeconds;
-}
 async function switchMode(mode, skipGuard = false) {
     if (!document.getElementById('screen-'+mode)) return;
 
@@ -377,7 +331,7 @@ function updateData(id, f, v) {
                 const ok = confirm("距離変更に伴いペーサー設定を削除します。続行しますか？");
                 if (!ok) { renderSetup(); return; }
                 r.pacers = [];
-                r.syncNeeded = true;
+                markSyncNeeded(r);
             }
             r.distance = d;
             let mod = d % 400;
@@ -392,7 +346,7 @@ function updateData(id, f, v) {
             } else {
                 r[f] = isNumeric ? sanitizePositiveInt(v, 0) : v; 
             }
-            if (f === 'startPos') r.syncNeeded = true;
+            if (f === 'startPos') markSyncNeeded(r);
             saveRaces();
         }
     } 
@@ -419,120 +373,6 @@ function toggleRow(id, event) {
     renderRace();
 }
 
-function buildRaceRowClass(race) {
-    let rowClass = 'race-row';
-    if (race.id === expandedRaceId) rowClass += ' expanded';
-    if (race.status === 'running') rowClass += ' active-running';
-    if (race.status === 'review') rowClass += ' active-review';
-    if (race.status === 'finished') rowClass += ' finished';
-    return rowClass;
-}
-
-function buildRaceBadge(status, syncNeeded=false) {
-    let badge = '';
-    if(status === 'ready') badge = '<span class="status-badge status-ready">待機</span>';
-    if(status === 'running') badge = '<span class="status-badge status-running">実行中</span>';
-    if(status === 'review') badge = '<span class="status-badge status-review">記録確認</span>';
-    if(status === 'finished') badge = '<span class="status-badge status-finished">完了</span>';
-    if (syncNeeded) badge += ' <span class="status-badge status-warning">要同期</span>';
-    return badge;
-}
-
-function buildActionArea(raceId, status) {
-    if (status === 'ready') {
-        return `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${raceId})">START</button></div>`;
-    }
-    if (status === 'running') {
-        return `<button class="btn-big-stop" onclick="event.stopPropagation(); stopRaceWrapper(${raceId})">STOP</button>`;
-    }
-    if (status === 'review') {
-        return `<button class="btn-big-close" onclick="event.stopPropagation(); finalizeRace(${raceId})">閉じる</button>`;
-    }
-    if (status === 'finished') {
-        return `<button class="btn-big-reset" onclick="event.stopPropagation(); resetRace(${raceId})">リセット</button>`;
-    }
-    return '';
-}
-
-function buildInfoHeader(race, maxDist, safeStartPos) {
-    if (race.status === 'ready') {
-        const syncTag = race.syncNeeded ? `<span class="status-badge status-warning">要同期</span>` : '';
-        return `<div style="display:flex; gap:10px; align-items:center;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" onchange="updateStartPos(${race.id},this.value)">${syncTag}</div>`;
-    }
-    if (race.status === 'running') {
-        return `<div class="timer-big" id="timer-display">${formatTime(elapsedTime)}</div>`;
-    }
-    if (race.status === 'review') {
-        return `<div class="timer-big">${formatTime(elapsedTime)}</div>`;
-    }
-    if (race.status === 'finished') {
-        return `<div>記録済み</div>`;
-    }
-    return `<div>先頭: <strong>${formatDistanceMeters(maxDist)}</strong></div>`;
-}
-
-function buildPacerRows(r) {
-    if(!r.pacers || !Array.isArray(r.pacers)) return "";
-    return r.pacers.map(p => {
-        const isEditing = editingPaces[p.id] !== undefined;
-        const paceValue = isEditing ? editingPaces[p.id] : p.pace;
-        const safePace = resolvePaceValue(paceValue);
-        const paceLabel = formatPaceLabel(safePace);
-        let estStr = "--:--";
-        let avgPace = 0;
-        if (p.finishTime !== null) {
-            estStr = `Goal (${formatTime(p.finishTime)})`;
-            avgPace = (p.finishTime / r.distance) * 400; 
-        } else if (r.status === 'ready') {
-            let speed = 400 / safePace; 
-            let estSec = r.distance / speed;
-            estStr = `Est (${formatTime(estSec)})`;
-        } else {
-            const speed = 400 / safePace; 
-            const remDist = r.distance - p.currentDist;
-            const remSec = remDist / speed;
-            estStr = formatTime(elapsedTime + remSec);
-            if(p.currentDist > 0) avgPace = (elapsedTime / p.currentDist) * 400;
-        }
-        let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${formatPace(avgPace)}</span>` : "";
-
-        return `
-        <div class="pacer-control-row" onclick="event.stopPropagation()">
-            <div class="pacer-info"><span class="dot-large bg-${p.color}"></span></div>
-            <div class="pacer-adjust">
-                <div style="font-size:24px; font-weight:bold; margin-left:10px;">${paceLabel}</div>
-                <div style="margin-left:10px;">${avgLabel}</div>
-            </div>
-            <div class="pacer-est-time" id="pacer-est-${p.id}">${estStr}</div>
-        </div>`;
-    }).join('');
-}
-
-function buildProgressHeads(r, totalScale) {
-    if(!r.pacers || !Array.isArray(r.pacers)) return "";
-    return r.pacers.map(p => {
-        let cDist = p.currentDist || 0;
-        let leftPct = Math.min((cDist / totalScale) * 100, 100);
-        return `<div class="pacer-head bg-${p.color||'red'}" id="pacer-head-${p.id}" style="left:${leftPct}%"><div class="pacer-head-label" style="color:${p.color==='yellow'?'black':'var(--primary-color)'}">${formatDistanceMeters(cDist)}</div></div>`;
-    }).join('');
-}
-
-function buildMarkers(r, totalScale) {
-    if(!r.markers || !Array.isArray(r.markers)) return "";
-    return r.markers.map(m => {
-        let leftPct = (m.dist / totalScale) * 100;
-        return `<div class="history-tick bg-${m.color||'gray'}" style="left:${leftPct}%"><div class="history-tick-label text-${m.color||'gray'}">${escapeHTML(m.pace)}</div></div>`;
-    }).join('');
-}
-
-function computeLeadAndFill(r) {
-    const totalScale = (r.distance || 400) + UI_CONSTANTS.PROGRESS_BAR_PADDING_METERS;
-    let maxDist = 0;
-    if(r.pacers && r.pacers.length > 0) maxDist = Math.max(0, ...r.pacers.map(p=>p.currentDist||0));
-    let fillPct = Math.min((maxDist / totalScale) * 100, 100);
-    return { totalScale, maxDist, fillPct };
-}
-
 function updatePacerHeadsAndEstimates(race, totalScale) {
     race.pacers.forEach(p => {
         const headEl = document.getElementById(`pacer-head-${p.id}`);
@@ -557,77 +397,6 @@ function updatePacerHeadsAndEstimates(race, totalScale) {
     });
 }
 
-function findActiveSegment(runPlan, currentDist) {
-    if (!runPlan || runPlan.length === 0) return null;
-    return runPlan.find((seg) => currentDist < seg.endDist) || runPlan[runPlan.length - 1];
-}
-
-function buildRaceViewModel(race) {
-    return {
-        race,
-        id: race.id,
-        status: race.status,
-        isExpanded: race.id === expandedRaceId,
-        safeTime: escapeHTML(race.time),
-        safeName: escapeHTML(race.name),
-        safeGroup: escapeHTML(race.group),
-        safeDistance: escapeHTML(race.distance),
-        safeStartPos: escapeHTML(race.startPos),
-        badge: buildRaceBadge(race.status, race.syncNeeded),
-        progress: computeLeadAndFill(race)
-    };
-}
-
-function buildCollapsedRaceContent(vm) {
-    const { safeTime, safeName, safeGroup, safeDistance, badge, race } = vm;
-    const chips = buildCollapsedPacerChips(race.pacers);
-    return `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <strong style="font-size:16px;">${safeTime} ${safeName}</strong> 
-                <span style="color:#8E8E93; margin-left:10px;">${safeGroup}組 (${safeDistance}m)</span>
-                ${badge}
-                <div style="margin-top:8px;">${chips}</div>
-            </div>
-            <div style="color:#C6C6C8; font-size:20px;">▼</div>
-        </div>`;
-}
-
-function buildExpandedRaceContent(vm) {
-    const { race, safeTime, safeName, safeGroup, safeDistance, safeStartPos, badge, progress } = vm;
-
-    const pacerRows = buildPacerRows(race);
-    const headsHtml = buildProgressHeads(race, progress.totalScale);
-    const marksHtml = buildMarkers(race, progress.totalScale);
-
-    const btnArea = buildActionArea(race.id, race.status);
-    const infoHeader = buildInfoHeader(race, progress.maxDist, safeStartPos);
-
-    return `
-        <div style="border-bottom:1px solid #F0F0F0; padding-bottom:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
-                <div>
-                <span style="font-size:20px; font-weight:bold;">${safeTime} ${safeName}</span>
-                <span style="color:#8E8E93; margin-left:10px;">${safeGroup}組 (${safeDistance}m)</span>
-                    ${badge}
-                </div>
-                <button style="border:none; background:none; color:#CCC; font-size:18px;">▲</button>
-        </div>
-        <div class="race-control-layout" onclick="event.stopPropagation()">
-            <div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
-                    ${infoHeader}
-                    <div id="lead-dist-display">先頭: <strong>${formatDistanceMeters(progress.maxDist)}</strong></div>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-fill" id="progress-fill-${race.id}" style="width:${progress.fillPct}%"></div>
-                    ${headsHtml} ${marksHtml}
-                </div>
-                <div class="inline-controller">${pacerRows}</div>
-            </div>
-            <div>${btnArea}</div>
-        </div>`;
-}
-
 function renderRace() {
     console.log("[renderRace] Start. Races count:", races.length);
     const tbody = document.getElementById('race-tbody');
@@ -641,12 +410,12 @@ function renderRace() {
     
     races.forEach(r => {
         try {
-            const vm = buildRaceViewModel(r);
+            const vm = buildRaceViewModel(r, expandedRaceId);
             const tr = document.createElement('tr');
-            tr.className = buildRaceRowClass(r);
+            tr.className = buildRaceRowClass(r, expandedRaceId);
             tr.onclick = (e) => toggleRow(r.id, e);
 
-        const content = vm.isExpanded ? buildExpandedRaceContent(vm) : buildCollapsedRaceContent(vm);
+        const content = vm.isExpanded ? buildExpandedRaceContent(vm, elapsedTime) : buildCollapsedRaceContent(vm);
         tr.innerHTML = `<td>${content}</td>`;
         tbody.appendChild(tr);
         } catch(e) {
@@ -668,17 +437,6 @@ async function startRaceWrapper(id) {
     if (!startResult.ok) return;
     renderRace();
     raceInterval = setInterval(() => updateState(r), UI_CONSTANTS.UPDATE_INTERVAL_MS);
-}
-
-function getColorRGB(colorName) {
-    switch(colorName) {
-        case 'red': return [0xFF, 0x00, 0x00];
-        case 'blue': return [0x00, 0x00, 0xFF];
-        case 'green': return [0x00, 0xFF, 0x00];
-        case 'yellow': return [0xFF, 0xFF, 0x00];
-        case 'purple': return [0xA0, 0x20, 0xF0];
-        default: return [0xFF, 0xFF, 0xFF];
-    }
 }
 
 function stopRaceWrapper(id) {
@@ -708,14 +466,19 @@ function updateState(race) {
     }
 
     if(tickResult.allFinished) {
-        stopRaceService(race.id);
+        freezeRace(race.id);
     }
 }
 
-function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); r.status = 'review'; renderRace(); saveRaces(); }
-function finalizeRace(id) { const r = races.find(x=>x.id===id); r.status = 'finished'; setActiveRaceId(null); expandedRaceId = null; renderRace(); saveRaces(); }
-function resetRace(id) { const r = races.find(x=>x.id===id); r.status = 'ready'; r.initialConfigSent = false; r.pacers.forEach(p=>{ p.currentDist=0; p.finishTime=null; }); renderRace(); saveRaces(); }
-function updateStartPos(id, val) { const r = races.find(x=>x.id===id); r.startPos = parseInt(val)||0; saveRaces(); }
+function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); transitionToReview(r); renderRace(); saveRaces(); }
+function finalizeRace(id) { const r = races.find(x=>x.id===id); finalizeRaceState(r); setActiveRaceId(null); expandedRaceId = null; renderRace(); saveRaces(); }
+function resetRace(id) { const r = races.find(x=>x.id===id); resetRaceState(r); renderRace(); saveRaces(); }
+function updateStartPos(id, val) { 
+    const r = races.find(x=>x.id===id); 
+    r.startPos = parseInt(val)||0; 
+    markSyncNeeded(r);
+    saveRaces(); 
+}
 
 // --- MODAL ---
 function openModal(rid, pid) { 
@@ -882,7 +645,7 @@ function saveModalData() {
     } else {
         r.pacers.push(pacerData);
     }
-    r.syncNeeded = true;
+    markSyncNeeded(r);
     saveRaces(); 
     closeModal(); 
     renderSetup(); 
@@ -898,8 +661,6 @@ function commitPace(rid, pid) { /* logic */ renderRace(); saveRaces(); }
 
 function openVersionModal() { document.getElementById('modal-version').classList.add('open'); }
 function closeVersionModal() { document.getElementById('modal-version').classList.remove('open'); }
-
-function formatTime(s) { if(s<0) return "00:00.0"; let m=Math.floor(s/60), sec=Math.floor(s%60), ms=Math.floor((s*10)%10); return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}.${ms}`; }
 
 function updateSegmentSummary() {
     const summaryEl = document.getElementById('segment-total-time');
