@@ -85,7 +85,7 @@ export function updateRunningDisplays(race, elapsedTime) {
 
 function buildActionArea(raceId, status) {
     if (status === 'ready') {
-        return `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${raceId})">START</button></div>`;
+        return `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-sync" onclick="event.stopPropagation(); syncRaceWrapper(${raceId})">SYNC</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${raceId})">START</button></div>`;
     }
     if (status === 'running') {
         return `<button class="btn-big-stop" onclick="event.stopPropagation(); stopRaceWrapper(${raceId})">STOP</button>`;

@@ -88,8 +88,9 @@ export function initUI() {
     
     // Race
     window.toggleRow = toggleRow;
-window.startRaceWrapper = startRaceWrapper;
-window.stopRaceWrapper = stopRaceWrapper;
+    window.startRaceWrapper = startRaceWrapper;
+    window.syncRaceWrapper = syncRaceWrapper;
+    window.stopRaceWrapper = stopRaceWrapper;
     window.finalizeRace = finalizeRace;
     window.resetRace = resetRace;
     window.updateStartPos = updateStartPos;
@@ -399,6 +400,26 @@ async function stopRaceWrapper(id) {
         console.error("[stopRaceWrapper] Failed to send stopRunner:", e);
     }
     freezeRace(id);
+}
+
+async function syncRaceWrapper(id) {
+    if (!isConnected) {
+        alert("BLE未接続です。接続してから同期してください。");
+        return;
+    }
+    const r = races.find(rc => rc.id === id);
+    if (!r) return;
+    if (!r.pacers || r.pacers.length === 0) {
+        alert("ペーサーが設定されていません。設定後に同期してください。");
+        return;
+    }
+    const res = await syncRaceConfigs(r, { dryRun: false });
+    if (res.ok) {
+        console.log("[syncRaceWrapper] Synced race", { raceId: r.id, commands: res.records?.length });
+        saveRaces();
+        renderRace();
+        alert("同期完了（色/ペース送信）");
+    }
 }
 
 async function updateState(race) {

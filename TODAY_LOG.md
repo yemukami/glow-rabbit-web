@@ -366,3 +366,9 @@
 - テスト: `node --check js/core/race-service.js`, `node js/test/race-service.test.js`。
 - 感想: フラグ更新の経路を固定でき、UIから直接フラグを触らずに済む形に近づいた。SYNC/START仕様を守りつつ安全側に寄せられているので安心。
 - E2E確認手順メモ（手動）: Race行展開→SYNCボタン押下でsyncNeeded消失を確認→START/STOP後にsyncNeeded再表示を確認（未接続の場合はアラート＋バッジ継続）。
+
+### 2025-12-xx 追加ログ（このターン-15）
+- 作業: レース行のアクションにSYNCボタンを追加し、同期導線を明示（未接続/ペーサー未設定時はアラート）。同期完了で保存・再描画＆ログ、START/STOP仕様は変更なし。バージョンを `v2.1.0-beta.65` に更新。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node js/test/race-renderer.test.js`, `node js/test/ui-logic.test.js`。
+- 感想: 同期の入口をSTARTと分けて明確化できた。挙動は変えず、ユーザーが迷わない導線だけ強化した形。
+- E2E確認手順メモ（手動）: Race行を展開→SYNCボタン押下で「同期完了」表示＆syncNeededバッジ消失を確認→未接続でSYNCを押すとアラートを確認→pacer追加後にSTART→STOPでsyncNeeded再表示を確認。

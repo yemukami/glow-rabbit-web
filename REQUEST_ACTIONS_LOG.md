@@ -19,3 +19,5 @@
   対応: race-renderer にテーブルHTML生成を集約（buildRaceTableHTML）、ui-controller の renderRace をrenderer経由に一本化（SYNC_START_SPEC順守・挙動変更なし、テスト実行予定）。
 - 要求: リファクタ優先順2（状態フラグ一元化）に着手すること。
   対応: setRaceSynced/resetSyncFlags を追加し、START/STOP/リセットでフラグ更新をサービス層に集約。sync送信後にinitialConfigSent/syncNeededを明示設定。テストにフラグヘルパー確認を追加（仕様変更なし、SYNC_START_SPEC順守）。
+- 要求: リファクタ優先順3（sync導線強化）に着手すること。
+  対応: レース行のアクションにSYNCボタンを追加し、未接続/ペーサー未設定はアラート、成功時は保存・再描画とログ出力（SYNC/START仕様変更なし、SYNC_START_SPEC順守）。
