@@ -1,4 +1,4 @@
-import { races, saveRaces, loadRaces, activeRaceId, addNewRace, getActiveRace } from '../core/race-manager.js';
+import { races, saveRaces, loadRaces, addNewRace, getActiveRace } from '../core/race-manager.js';
 import { deviceList, deviceSettings, deviceInteraction, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
@@ -384,7 +384,17 @@ function renderRace() {
 async function startRaceWrapper(id) {
     if (!requireConnection("START実行")) return;
     const r = races.find(x=>x.id===id);
-    const startResult = await startRaceService(r, id, r.startPos, () => activeRaceId && activeRaceId !== id, { dryRun: false }, { sendStop: false, resendConfig: false });
+    const startResult = await startRaceService(
+        r,
+        id,
+        r.startPos,
+        () => {
+            const active = getActiveRace();
+            return active && active.id !== id && active.status === 'running';
+        },
+        { dryRun: false },
+        { sendStop: false, resendConfig: false }
+    );
     if (!startResult || !startResult.ok) {
         showStartError(startResult?.reason);
         return;
