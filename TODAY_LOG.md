@@ -36,6 +36,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-modal-view.js`, `node js/test/race-modal-view.test.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
 - 感想: モーダル周りのUI操作がほぼview層にまとまり、状態/描画/バインドが分離できた。次は状態遷移一元化に取りかかりたい。
 
+### 2025-12-xx 追加ログ（renderer移行の残タスク-7）
+- 作業: bindTargetInputのimport漏れによる起動エラーを修正し、バージョンを `v2.1.0-beta.91` に更新。
+- テスト: `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
+- 感想: 細部のimport漏れを解消し、renderer分離後の安定性を担保。引き続き状態遷移整理に進む。
+
 # 作業ログ: Glow-Rabbit Web App - 2025年11月28日
 
 ## 本日の作業概要

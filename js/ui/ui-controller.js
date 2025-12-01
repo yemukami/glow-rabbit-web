@@ -21,7 +21,7 @@ import { renderConnectionStatus } from './connection-renderer.js';
 import { renderReplaceModal, updateReplaceMacText } from './replace-modal-renderer.js';
 import { createModalState, resetModalState, setActiveTab, setModalTarget, setSelectedColor } from './race-modal-state.js';
 import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
-import { closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
+import { bindTargetInput, closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
 import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRows } from './segment-utils.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
