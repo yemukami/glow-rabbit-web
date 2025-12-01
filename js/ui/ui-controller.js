@@ -469,7 +469,7 @@ function freezeRace(id) {
     saveRaces();
 }
 
-function finalizeRace(id) { const r = races.find(x=>x.id===id); finalizeRaceState(r); setActiveRaceId(null); setExpandedRaceId(null); renderRace(); saveRaces(); }
+function finalizeRace(id) { const r = races.find(x=>x.id===id); finalizeRaceState(r); setExpandedRaceId(null); renderRace(); saveRaces(); }
 function resetRace(id) { const r = races.find(x=>x.id===id); resetRaceState(r); renderRace(); saveRaces(); }
 function updateStartPos(id, val) { 
     const r = races.find(x=>x.id===id); 

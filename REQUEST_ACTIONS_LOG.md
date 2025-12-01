@@ -78,3 +78,4 @@
 - 追記: モーダルUI操作とセグメント処理を`race-modal-view`/`segment-utils`に分離し、ui-controllerのDOM/ロジックを軽量化（挙動不変）。バージョンをv2.1.0-beta.89に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node --check js/ui/segment-utils.js`, `node js/test/race-modal-view.test.js` を実行（前段のモーダル系テストもPass）。手動E2Eは未実施。
 - 追記: モーダル入力バインドもview側で吸収し、ui-controllerのイベント設定を削減（挙動不変）。バージョンをv2.1.0-beta.90に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node --check js/ui/race-modal-view.js`, `node js/test/race-modal-view.test.js` を実行。手動E2Eは未実施（接続環境が必要）。
 - 追記: bindTargetInput未importによる起動エラーを修正し、バージョンをv2.1.0-beta.91に更新。STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js` を再実行（既存モーダルviewテストは前段でPass）。手動E2Eは未実施。
+- 追記: finalize/reset時のactiveRaceIdクリアをサービス側に寄せ、UI依存を減らす整理を進行。バージョンをv2.1.0-beta.92に更新し、STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js` を実行。手動E2Eは未実施。
