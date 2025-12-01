@@ -1,7 +1,7 @@
 現行 v2.1.0-beta.72。必読: REMORSE_AND_PREVENTION.md / REQUEST_ACTIONS_LOG.md / SYNC_START_SPEC.md / REMORSE_LOG.md。同期/START分離: 同期で色/ペース送信、STARTは先行点灯＋startRunnerのみ（未送信時は自動送信）。未接続で同期/STARTはアラート、STOPは未接続でもdry-runでUI停止（接続時は送信）。STOP後は再同期必須。syncNeededバッジあり。STOPは全体1回のみ（プロトコル制約）、表示は距離+50mまで進め、全員到達でSTOP。進捗: SYNCボタン整形、renderer ID衝突回避、FINISH_MARGINを50mに戻して整理。残タスク: renderer全面移行/状態遷移一元化/入力・ログ整理/STARTラグ可視化/ペーサー個別STOP検討/テスト追加。E2E手順（未接続アラート→SYNC→START/STOP→複数ペーサー距離+50m停止確認）を必ず実施。# 開始用コンテキスト
 
 - 必読ファイル: `REMORSE_AND_PREVENTION.md`（懺悔/再発防止チェック）、`REQUEST_ACTIONS_LOG.md`（要求ごとの対応記録）、`SYNC_START_SPEC.md`、`REMORSE_LOG.md`
-- .codex必読: `.codex/docs/agent_guide_web.md`, `.codex/docs/report_phase1.md`, `.codex/docs/plans.md`, `.codex/docs/SRS.md`, `.codex/docs/TESTS.md`
+- .codex必読: `.codex/docs/agent_guide_web.md`, `.codex/docs/report_phase1.md`, `.codex/docs/plans.md`, `.codex/docs/SRS.md`, `.codex/docs/TESTS.md`, `.codex/docs/implementation_rules.md`
 - テスト/TDD/E2E: `.codex/docs/TESTS.md` 記載のチェックを実施。コード変更時は `node --check` と該当ユニットテストを走らせ、E2E手動確認（未接続アラート→SYNC→START/STOP→複数ペーサー距離+50m停止）を必ず行う。
 - ログ: 作業・思考・反省は `TODAY_LOG.md`、懺悔は `REMORSE_LOG.md`、要求ごとの対応は `REQUEST_ACTIONS_LOG.md` に都度追記し、バージョン更新・コミット・プッシュまで行うこと。
 - 現行バージョン: **v2.1.0-beta.72**

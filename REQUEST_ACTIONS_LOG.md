@@ -41,3 +41,5 @@
   対応: FINISH_MARGINを50mに戻し、距離到達後は距離+50mまで表示進行、全員が到達したらSTOP1回送信に整理。バージョンをv2.1.0-beta.72に更新。
 - 要求: .codex含むルール/仕様ドキュメントを必読として明示すること。
   対応: STATUS_AND_TASKSとNEXT_THREAD_CONTEXTに `.codex/docs/agent_guide_web.md` ほか必読リストを追記（挙動変更なし）。
+- 要求: リファクタ防止の実装ルールを .codex に追加すること。
+  対応: `.codex/docs/implementation_rules.md` を追加し、必読リストに組み込み（挙動変更なし）。

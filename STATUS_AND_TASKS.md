@@ -2,7 +2,7 @@
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
-- .codex ドキュメント: `.codex/docs/agent_guide_web.md`, `.codex/docs/report_phase1.md`, `.codex/docs/plans.md`, `.codex/docs/SRS.md`, `.codex/docs/TESTS.md`
+- .codex ドキュメント: `.codex/docs/agent_guide_web.md`, `.codex/docs/report_phase1.md`, `.codex/docs/plans.md`, `.codex/docs/SRS.md`, `.codex/docs/TESTS.md`, `.codex/docs/implementation_rules.md`
 - 禁則: START/同期/stopRunner/ペース送信に触れる前に上記を再読。不明点や「可能性」ベースの変更は必ず人間に確認。
 - git: 作業完了ごとにバージョン更新・テスト実行・コミット/プッシュを徹底。
 - TDD/E2E: `.codex/docs/TESTS.md` 記載のテスト/チェックを実行。コード変更時は `node --check` と該当のユニットテストを走らせ、E2E手動確認も必須。  
