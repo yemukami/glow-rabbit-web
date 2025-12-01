@@ -27,7 +27,7 @@
 - フラグはレース単位: SYNCは対象レースのみinitialConfigSent=true/syncNeeded=false、STARTはそのレースの未送信時のみ初期設定を再送しセット、STOPはそのレースだけinitialConfigSent=false/syncNeeded=trueに戻る。他レースには波及しない。
 - レーステーブルのイベントデリゲーションを専用モジュールに分離し、renderer全面移行に向けUIロジックを薄くした。
 - Setup/レーステーブル描画をrenderer関数に集約し、ui-controllerのDOM操作を削減（挙動不変）。デバイスグリッドのイベントデリゲーションも外部モジュール化。
-- モーダル状態を専用モジュール化し、置換モーダル描画もrenderer化してUIコントローラの責務を整理。
+- モーダル状態を専用モジュール化し、置換モーダル描画・セグメント処理もrenderer/ヘルパー化してUIコントローラの責務を整理。
 - SYNCボタンを「レース設定再送」表記＋ツールチップに変更し、要同期バッジを「要レース設定再送」表記＋説明に更新。
 - セグメントモーダルのレンダリングを `race-modal-renderer` に分離し、UIコントローラの重複定義を解消。Setupテーブルの操作をデリゲーション化しinline handlerを削減。
 - デバイス一覧のセル/オーバーレイ操作をデリゲーション化し、inline handlerを削減。置換モーダルのボタンもdata-action化。
