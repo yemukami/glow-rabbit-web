@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { advanceRaceTick, prepareRacePlans, findActiveSegment, startRaceService } from '../core/race-service.js';
+import { advanceRaceTick, prepareRacePlans, findActiveSegment, startRaceService, stopRaceService } from '../core/race-service.js';
 
 function mockRace(distance = 800, pace = 80) {
   return {
@@ -55,10 +55,18 @@ async function testStartRaceServiceDryRun() {
   assert.strictEqual(records.length, 5, 'Expected 5 commands for single pacer flow');
 }
 
+async function testStopRaceServiceDryRun() {
+  const race = mockRace(400, 80);
+  const res = await stopRaceService(race, { dryRun: true });
+  assert.ok(res.records.length === 1, 'Stop should enqueue one command');
+  assert.strictEqual(res.records[0].opts.highPriority, true, 'Stop command should be high priority');
+}
+
 async function run() {
   testAdvanceRaceTickFinishes();
   testFindActiveSegment();
   await testStartRaceServiceDryRun();
+  await testStopRaceServiceDryRun();
   console.log('race-service tests passed');
 }
 

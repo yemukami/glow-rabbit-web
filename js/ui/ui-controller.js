@@ -6,7 +6,7 @@ import { PaceCalculator } from '../core/pace-calculator.js';
 import { roundToTenth, formatPace, formatPaceLabel, formatDistanceMeters, buildRaceBadge, formatTime } from '../utils/render-utils.js';
 import { sanitizeNumberInput, sanitizePositiveInt, parseTimeInput, resolvePaceValue } from '../utils/data-utils.js';
 import { getColorRGB } from '../utils/color-utils.js';
-import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded } from '../core/race-service.js';
+import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded, stopRaceService } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
 import { buildRaceViewModel, buildRaceRowClass, buildCollapsedPacerChips, buildSetupPacerChips, computeLeadAndFill } from './race-view-model.js';
 import { buildCollapsedRaceContent, buildExpandedRaceContent } from './race-renderer.js';
@@ -445,7 +445,11 @@ async function stopRaceWrapper(id) {
         return;
     }
     try {
-        await sendStopRunner();
+        const race = races.find(x=>x.id===id);
+        const res = await stopRaceService(race, { dryRun: false });
+        if (res && res.records) {
+            console.log("[stopRaceWrapper] Stop command records:", res.records.length, res.records);
+        }
     } catch (e) {
         console.error("[stopRaceWrapper] Failed to send stopRunner:", e);
     }

@@ -300,6 +300,6 @@
 - 感想: 描画責務の分離が進み、純粋関数のテストを追加できた。次は renderer の全面適用とサービス層での状態遷移一元化をさらに進めたい。
 
 ### 2025-12-xx 追加ログ（このターン-3）
-- 作業: STOPボタンでBLE未接続時はアラートを出し、送信失敗を検知したらログに残すよう `stopRaceWrapper` を async 化。race-view-model向けテストを追加済みのまま再確認。バージョンを `v2.1.0-beta.51` に更新。
-- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（いずれも成功）。
-- 感想: stopRunnerが飛ばないケースへの初動ガードを追加。今後、stop送信の確実性をBLE接続状態で検知する仕組み（送信結果のUI通知）も検討したい。
+- 作業: STOPボタンでBLE未接続時はアラートを出し、stop送信を `stopRaceService` 経由で高優先度送信するよう修正。dry-runテストでstopコマンドの記録を確認。バージョンを `v2.1.0-beta.52` に更新。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（stopのdry-runテストを追加）。
+- 感想: stopRunnerが飛ばないリスクに対し、サービス層経由の高優先度送信＋未接続ガードで初動を強化。送信成功をUIで可視化する仕組みは今後の課題。

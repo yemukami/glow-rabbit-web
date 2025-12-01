@@ -114,6 +114,13 @@ export async function sendStopRunner(queue = new BleCommandQueue()) {
     await queue.enqueue(BluetoothCommunity.commandStopRunner(), { highPriority: true });
 }
 
+export async function stopRaceService(race, queueOptions = {}) {
+    const queue = new BleCommandQueue(queueOptions);
+    await sendStopRunner(queue);
+    if (race) transitionToReview(race);
+    return { ok: true, records: queue.records };
+}
+
 export function findActiveSegment(runPlan, currentDist) {
     if (!runPlan || runPlan.length === 0) return null;
     return runPlan.find((seg) => currentDist < seg.endDist) || runPlan[runPlan.length - 1];
