@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { advanceRaceTick, prepareRacePlans, findActiveSegment, startRaceService, stopRaceService, resetSyncFlags, setRaceSynced } from '../core/race-service.js';
+import { advanceRaceTick, prepareRacePlans, findActiveSegment, startRaceService, stopRaceService, resetSyncFlags, setRaceSynced, finalizeRaceState, resetRaceState } from '../core/race-service.js';
 
 function mockRace(distance = 800, pace = 80) {
   return {
@@ -64,6 +64,25 @@ async function testStopRaceServiceDryRun() {
   assert.strictEqual(race.initialConfigSent, false, 'Stop should clear initialConfigSent');
 }
 
+async function testStopClearsActiveRaceId() {
+  const raceManager = await import('../core/race-manager.js');
+  const race = mockRace(400, 80);
+  raceManager.setActiveRaceId(99);
+  await stopRaceService(race, { dryRun: true });
+  assert.strictEqual(raceManager.activeRaceId, null, 'stop should clear activeRaceId');
+}
+
+async function testFinalizeAndResetClearActiveRaceId() {
+  const raceManager = await import('../core/race-manager.js');
+  const race = mockRace(400, 80);
+  raceManager.setActiveRaceId(5);
+  finalizeRaceState(race);
+  assert.strictEqual(raceManager.activeRaceId, null, 'finalize should clear activeRaceId');
+  raceManager.setActiveRaceId(7);
+  resetRaceState(race);
+  assert.strictEqual(raceManager.activeRaceId, null, 'reset should clear activeRaceId');
+}
+
 function testSyncFlagHelpers() {
   const race = mockRace(400, 80);
   setRaceSynced(race);
@@ -79,6 +98,8 @@ async function run() {
   testFindActiveSegment();
   await testStartRaceServiceDryRun();
   await testStopRaceServiceDryRun();
+  await testStopClearsActiveRaceId();
+  await testFinalizeAndResetClearActiveRaceId();
   testSyncFlagHelpers();
   console.log('race-service tests passed');
 }
