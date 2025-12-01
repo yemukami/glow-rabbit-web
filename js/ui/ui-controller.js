@@ -1,4 +1,4 @@
-import { races, saveRaces, loadRaces, activeRaceId, setActiveRaceId } from '../core/race-manager.js';
+import { races, saveRaces, loadRaces, activeRaceId } from '../core/race-manager.js';
 import { deviceList, deviceSettings, deviceInteraction, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
