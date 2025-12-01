@@ -39,3 +39,5 @@
   対応: FINISH_MARGINを0にし、ペーサーが距離到達した時点で停止・全員到達後に全体STOPを1回送る挙動に整理（コマンド仕様は不変）。
 - 要求: FINISH_MARGINを50m入れて運用することを確認する。
   対応: FINISH_MARGINを50mに戻し、距離到達後は距離+50mまで表示進行、全員が到達したらSTOP1回送信に整理。バージョンをv2.1.0-beta.72に更新。
+- 要求: .codex含むルール/仕様ドキュメントを必読として明示すること。
+  対応: STATUS_AND_TASKSとNEXT_THREAD_CONTEXTに `.codex/docs/agent_guide_web.md` ほか必読リストを追記（挙動変更なし）。

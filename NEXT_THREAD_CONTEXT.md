@@ -1,6 +1,7 @@
 # 次スレ開始用コンテキスト（必読・コピペ用）
 
 - 必読ファイル: `REMORSE_AND_PREVENTION.md`（懺悔/再発防止チェック）、`REQUEST_ACTIONS_LOG.md`（要求ごとの対応記録）、`SYNC_START_SPEC.md`、`REMORSE_LOG.md`
+- .codex必読: `.codex/docs/agent_guide_web.md`, `.codex/docs/report_phase1.md`, `.codex/docs/plans.md`, `.codex/docs/SRS.md`, `.codex/docs/TESTS.md`
 - 現行バージョン: **v2.1.0-beta.72**
 - 同期/STARTの設計: 同期フェーズで色/ペースを送信（`syncRaceConfigs`）。STARTは最小コマンド（先行点灯＋startRunner）。設定未送信の場合のみSTARTで自動送信する安全弁あり。`syncNeeded` で要同期を表示。STOP後は `initialConfigSent=false` / `syncNeeded=true` に戻して再同期を必須に。
 - BLEガード: 未接続で同期/STARTはアラート。STOPは未接続でもdry-runでUI停止＆記録（接続時は高優先度送信）。接続失敗もアラート。START失敗理由（no pacer/busy/not found）はアラートで明示。
