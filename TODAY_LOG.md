@@ -468,3 +468,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: レース間のフラグ混線がないことをドキュメントにも刻み、運用時に安心して多レースを扱える状態にした。
 - E2E確認手順メモ（手動）: 従来手順＋1行目をSYNC→2行目をSTARTした場合に、それぞれのsyncNeeded/initialConfigSentが独立して動くことを確認する（STOP後はそのレースのみsyncNeededが立つこと）。
+
+### 2025-12-xx 追加ログ（このターン-32）
+- 作業: renderer全面移行の一環として、レーステーブルのイベントデリゲーションを専用モジュール `race-table-events` に切り出し、UIロジックを薄くした。バージョンを `v2.1.0-beta.76` のまま据え置き（前段で更新済み）。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
+- 感想: イベント処理をモジュール化してrenderer移行を進めた。挙動は据え置きで、今後のテスト拡充やガード追加が行いやすい構造になった。
+- E2E確認手順メモ（手動）: これまでの手順に加え、複数レースを展開してSTART/SYNC/STOP/リセット/スタート位置変更がデリゲーション経由で期待通り動作し、行が誤って畳まれないことを確認する。

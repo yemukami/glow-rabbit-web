@@ -51,3 +51,5 @@
   対応: ルール再読の上、startPos変更で即時再描画しsyncNeeded表示を確実に出すよう修正（SYNC/START責務は変更なし）。バージョンをv2.1.0-beta.75へ更新し、STATUS/NEXT/TODAYに反映。`node --check`（ui-controller/race-service/race-sync-service）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を実行。E2E手順にstartPos変更後のバッジ即時表示確認を追記。コミット/プッシュ済み。
 - 要求: ルール/仕様を再確認し、次の優先度の作業に入ること。E2E手順も明記し、懺悔・作業ログ・バージョン管理・プッシュまで自律的に実施すること。
   対応: ルール再読後、フラグ挙動を文書化（SYNC/START/STOPはいずれも対象レースだけinitialConfigSent/syncNeededを更新し他レースへ波及しない）し、バージョンをv2.1.0-beta.76に更新。STATUS/NEXT/TODAYへ反映し、`node --check`（ui-controller/race-service/race-sync-service）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を再実行。E2E手順に「1行目をSYNC後、2行目をSTARTしても各レースのsyncNeeded/initialConfigSentが独立して動くことを確認」を追記。コミット/プッシュ済み。
+- 要求: 上から順にリファクタ残タスクを進め、ルール再読・E2E手順提示・ログ/バージョン/プッシュまで行うこと。
+  対応: renderer全面移行の一環でレーステーブルのイベントデリゲーションを `race-table-events` に切り出し、UIロジックを薄くした（SYNC/START責務変更なし）。バージョンはv2.1.0-beta.76据え置き。`node --check`（ui-controller/race-service/race-sync-service）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を実行。E2E手順にデリゲーション経由で行展開/START/SYNC/STOP/リセット/スタート位置変更が正しく動き、行が畳まれないことを確認する項目を追加。コミット/プッシュ済み。
