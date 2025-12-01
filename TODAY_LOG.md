@@ -480,3 +480,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: renderer移行を着実に進め、UIロジックの責務がさらに明確になった。挙動変更なしで安全に進められた。
 - E2E確認手順メモ（手動）: 従来手順＋複数レース展開でSTART/SYNC/STOP/リセット/スタート位置変更がデリゲーション経由で動作することを確認。行が誤って畳まれないことと、フラグがレース単位で独立していることを確認する。
+
+### 2025-12-xx 追加ログ（このターン-34）
+- 作業: ルール/仕様を再読し、SYNCボタンに「同期」表記＋ツールチップを付与、要同期バッジに説明ツールチップを追加して意味を明示。バージョンを `v2.1.0-beta.78` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/utils/render-utils.js`; `node --check js/ui/race-renderer.js`; `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
+- 感想: ボタン/バッジの意味が分かりやすくなり、再同期が必要な理由をUIで伝えやすくなった。挙動は不変。
+- E2E確認手順メモ（手動）: 従来手順に加え、要同期バッジのツールチップ（「色/ペース設定を再送」）が出ることと、SYNCボタンに「同期」表記があることを確認する。

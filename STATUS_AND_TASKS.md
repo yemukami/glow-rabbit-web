@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.77)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.78)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -14,7 +14,7 @@
   4) 複数ペーサー走行で、速いペーサーが距離+50mで止まり、全員到達後にSTOP 1回が送られることを確認。
 
 ## 現行バージョン
-- `v2.1.0-beta.77`
+- `v2.1.0-beta.78`
 - STOP/オーバーラン: プロトコル上 stopRunner は全体停止のみ。UIは距離+50mまで表示進行、全員到達時にSTOP 1回送信。ペーサー個別STOPはFW拡張が必要。
 
 ## これまでの主要作業
@@ -26,6 +26,7 @@
 - レースUI状態（展開行/経過時間/編集ペース）を `race-ui-state` に集約し、renderer移行の足場を整備。テーブル操作をデータ属性＋デリゲーションに置換し、行展開/アクションをUI層で一元処理。startPos変更時に再描画してsyncNeeded表示を即時反映。
 - フラグはレース単位: SYNCは対象レースのみinitialConfigSent=true/syncNeeded=false、STARTはそのレースの未送信時のみ初期設定を再送しセット、STOPはそのレースだけinitialConfigSent=false/syncNeeded=trueに戻る。他レースには波及しない。
 - レーステーブルのイベントデリゲーションを専用モジュールに分離し、renderer全面移行に向けUIロジックを薄くした。
+- SYNCボタンに「同期」表記とツールチップを付与し、要同期バッジにも「色/ペース設定を再送」の説明を追加。
 - テスト拡充: race-service / race-sync-service / race-renderer / ui-logic ほか。
 
 ## 残タスク（優先イメージ）

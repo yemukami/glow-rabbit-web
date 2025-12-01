@@ -31,6 +31,6 @@ export function buildRaceBadge(status, syncNeeded = false) {
     if(status === 'running') badge = '<span class="status-badge status-running">実行中</span>';
     if(status === 'review') badge = '<span class="status-badge status-review">記録確認</span>';
     if(status === 'finished') badge = '<span class="status-badge status-finished">完了</span>';
-    if (syncNeeded) badge += ' <span class="status-badge status-warning">要同期</span>';
+    if (syncNeeded) badge += ' <span class="status-badge status-warning" title="色/ペース設定を再送してください">要同期</span>';
     return badge;
 }
