@@ -355,11 +355,11 @@ function attachSetupTableHandlers() {
         if (!actionEl) return;
         const action = actionEl.dataset.action;
         const raceId = parseInt(actionEl.dataset.raceId, 10);
-        if (Number.isNaN(raceId)) return;
-        if (action === 'open-modal') {
-            openModal(raceId, null);
-        } else if (action === 'delete-race') {
-            deleteRow(raceId);
+        if (action === 'open-modal' && !Number.isNaN(raceId)) openModal(raceId, null);
+        else if (action === 'delete-race' && !Number.isNaN(raceId)) deleteRow(raceId);
+        else if (action === 'open-pacer-modal') {
+            const pacerId = parseInt(actionEl.dataset.pacerId, 10);
+            if (!Number.isNaN(raceId) && !Number.isNaN(pacerId)) openModal(raceId, pacerId);
         }
     });
 

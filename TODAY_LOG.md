@@ -522,3 +522,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: デバイス操作まわりのクラッシュ要因（inlineハンドラ漏れ）を減らし、renderer全面移行に一歩前進。挙動は据え置き。
 - E2E確認手順メモ（手動）: デバイスグリッドでセルクリック→アクションモーダル表示、モーダルの各ボタン（Blink/Swap/Replace scan・manual/Dummy/Remove/Close）がエラーなく動作し、グリッドが再描画されることを確認。従来のレース設定再送→START/STOP→距離+50m停止→バッジ表示が変わらないことも合わせて確認。
+
+### 2025-12-xx 追加ログ（このターン-41）
+- 作業: ルール再読し、Setupのペーサーチップをデリゲーション対応に変更（onclick除去）。デバイスグリッドHTML生成をrendererに分離済み。挙動は据え置き。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
+- 感想: setup側のinlineハンドラを排除し、renderer全面移行の足場をさらに整備。小さな修正でもテストを回して安心を確保。
+- E2E確認手順メモ（手動）: Setupでペーサーチップをクリックしてモーダルが開くことを確認（エラーなし）。従来のレース設定再送→START/STOP→距離+50m停止・バッジ表示が変わらないことも確認。

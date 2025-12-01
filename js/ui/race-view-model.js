@@ -38,7 +38,7 @@ export function buildSetupPacerChips(race) {
     return race.pacers
         .map(p => {
             const paceLabel = formatDisplayPaceLabel(p.pace);
-            return `<span class="pacer-chip" onclick="openModal(${race.id},${p.id})"><span class="dot bg-${p.color}"></span>${paceLabel}</span>`;
+            return `<span class="pacer-chip" data-action="open-pacer-modal" data-race-id="${race.id}" data-pacer-id="${p.id}"><span class="dot bg-${p.color}"></span>${paceLabel}</span>`;
         })
         .join(' ');
 }
