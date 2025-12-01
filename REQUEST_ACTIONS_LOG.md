@@ -86,3 +86,4 @@
 - 追記: addNewRaceをrace-managerに集約し、UIから状態生成を切り離しつつバージョンをv2.1.0-beta.97に更新。STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js` を再実行。手動E2Eは未実施。
 - 追記: activeRaceId参照をmanager経由（getActiveRace）に統一し、モード切替時のガードをサービス状態に寄せる方向に整理。バージョンをv2.1.0-beta.98に更新し、STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-manager.js` を実行。手動E2Eは未実施。
 - 追記: getActiveRace経由にしたガード整理を反映し、バージョンをv2.1.0-beta.99に更新。STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js` を再実行。手動E2Eは未実施。
+- 追記: dummy/未設定デバイスの試験点灯を防ぐガードを追加し、入力サニタイズを共通化。バージョンをv2.1.0-beta.101に更新。STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js`, `node --check js/utils/input-guards.js` を実行。手動E2Eは未実施。

@@ -23,6 +23,7 @@ import { createModalState, resetModalState, setActiveTab, setModalTarget, setSel
 import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
 import { bindTargetInput, closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
 import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRows } from './segment-utils.js';
+import { ensureNonNegativeNumber, ensurePositiveInt } from '../utils/input-guards.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -328,7 +329,7 @@ function updateData(id, f, v) {
         if(f==='distance') {
             const prevDist = r.distance;
             const pacerCount = r.pacers ? r.pacers.length : 0;
-            let d = sanitizeNumberInput(v, 0);
+            let d = ensureNonNegativeNumber(v, 0);
             if (pacerCount > 0 && d !== prevDist) {
                 const ok = confirm("距離変更に伴いペーサー設定を削除します。続行しますか？");
                 if (!ok) { renderSetup(); return; }
@@ -346,7 +347,7 @@ function updateData(id, f, v) {
                 const parsed = parseTimeInput(v, r.time);
                 r[f] = parsed === null ? r.time : formatTime(parsed);
             } else {
-                r[f] = isNumeric ? sanitizePositiveInt(v, 0) : v; 
+                r[f] = isNumeric ? ensurePositiveInt(v, 0) : v; 
             }
             if (f === 'startPos') markSyncNeeded(r);
             saveRaces();
@@ -644,7 +645,14 @@ function fillWithDummy() {
         renderDeviceList();
     }
 }
-function testBlinkDevice(i) { sendCommand(BluetoothCommunity.commandMakeLightUp(i+1, deviceList[i].mac)); }
+function testBlinkDevice(i) {
+    const d = deviceList[i];
+    if (!d || !d.mac || d.status === 'dummy' || d.mac === '00:00:00:00:00:00') {
+        alert("デバイスが設定されていません。置換または設置してから試験点灯してください。");
+        return;
+    }
+    sendCommand(BluetoothCommunity.commandMakeLightUp(i+1, d.mac));
+}
 
 function startReplaceMode(i) {
     deviceInteraction.mode = 'replacing';
