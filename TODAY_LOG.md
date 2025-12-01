@@ -348,3 +348,9 @@
 - 作業: レース描画をrenderer側に寄せ、行生成をテンプレート化＋進行中のタイマー/ヘッド/リード更新もrenderer経由に統一。renderer向けの純粋テストを追加し、モックDOMの検証をHTMLベースに更新。表示バージョンを `v2.1.0-beta.63` に更新。
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node --check js/core/race-sync-service.js`, `node --check js/ui/race-renderer.js`; `node js/test/pace-calculator.test.js`, `device-manager.test.js`, `render-utils.test.js`, `race-view-model.test.js`, `race-renderer.test.js`, `race-service.test.js`, `ui-logic.test.js`。
 - 感想: renderer移行が一歩進んで見通しが良くなった。mock修正で一度テストが落ちたが、仕様どおりのHTML評価に寄せて再整備できてほっとした。
+
+### 2025-12-xx 追加ログ（このターン-12）
+- 作業: 懺悔/再発防止チェック用の `REMORSE_AND_PREVENTION.md` と、要求対応を1文で残す `REQUEST_ACTIONS_LOG.md` を追加し、コンテキスト冒頭での必読を明記。バージョン表記を `v2.1.0-beta.64` に更新。NEXT_THREAD_CONTEXT を必読ファイルと最新版に更新。
+- テスト: なし（ドキュメント/バージョン表記のみ）。
+- 感想: ミス再発防止と要求トレーサビリティの運用ルールを明文化。LLM判断で揺れないよう、冒頭での再読を強制するようにした。
+- E2E確認手順メモ（手動）: 1) Race画面を開き、任意のレース行を展開し syncNeeded バッジを確認。2) BLE未接続状態で START を押しアラート表示を確認（仕様どおり最小構成）。3) ダミーで pacer を1件追加し、START→STOP を実行してタイマー停止とバッジ再表示（要同期）を確認。
