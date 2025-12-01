@@ -33,9 +33,9 @@ export function buildExpandedRaceContent(vm, elapsedTime, editingPaces = {}) {
                 <span style="color:#8E8E93; margin-left:10px;">${safeGroup}組 (${safeDistance}m)</span>
                     ${badge}
                 </div>
-                <button style="border:none; background:none; color:#CCC; font-size:18px;">▲</button>
+                <button style="border:none; background:none; color:#CCC; font-size:18px;" data-action="toggle" data-race-id="${race.id}">▲</button>
         </div>
-        <div class="race-control-layout" onclick="event.stopPropagation()">
+        <div class="race-control-layout" data-stop-toggle="true">
             <div>
                 <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
                     ${infoHeader}
@@ -85,16 +85,16 @@ export function updateRunningDisplays(race, elapsedTime) {
 
 function buildActionArea(raceId, status) {
     if (status === 'ready') {
-        return `<div class="action-btn-col"><button class="btn-reconnect" onclick="event.stopPropagation(); connectBLE();">📡 BLE接続</button><button class="btn-sync" onclick="event.stopPropagation(); syncRaceWrapper(${raceId})">SYNC</button><button class="btn-big-start" onclick="event.stopPropagation(); startRaceWrapper(${raceId})">START</button></div>`;
+        return `<div class="action-btn-col"><button class="btn-reconnect" data-action="connect">📡 BLE接続</button><button class="btn-sync" data-action="sync" data-race-id="${raceId}">SYNC</button><button class="btn-big-start" data-action="start" data-race-id="${raceId}">START</button></div>`;
     }
     if (status === 'running') {
-        return `<button class="btn-big-stop" onclick="event.stopPropagation(); stopRaceWrapper(${raceId})">STOP</button>`;
+        return `<button class="btn-big-stop" data-action="stop" data-race-id="${raceId}">STOP</button>`;
     }
     if (status === 'review') {
-        return `<button class="btn-big-close" onclick="event.stopPropagation(); finalizeRace(${raceId})">閉じる</button>`;
+        return `<button class="btn-big-close" data-action="finalize" data-race-id="${raceId}">閉じる</button>`;
     }
     if (status === 'finished') {
-        return `<button class="btn-big-reset" onclick="event.stopPropagation(); resetRace(${raceId})">リセット</button>`;
+        return `<button class="btn-big-reset" data-action="reset" data-race-id="${raceId}">リセット</button>`;
     }
     return '';
 }
@@ -102,7 +102,7 @@ function buildActionArea(raceId, status) {
 function buildInfoHeader(race, maxDist, safeStartPos, elapsedTime) {
     if (race.status === 'ready') {
         const syncTag = race.syncNeeded ? `<span class="status-badge status-warning">要同期</span>` : '';
-        return `<div style="display:flex; gap:10px; align-items:center;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" onchange="updateStartPos(${race.id},this.value)">${syncTag}</div>`;
+        return `<div style="display:flex; gap:10px; align-items:center;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" data-action="startPos" data-race-id="${race.id}">${syncTag}</div>`;
     }
     if (race.status === 'running') {
         return `<div class="timer-big" id="timer-display-${race.id}">${formatTime(elapsedTime || 0)}</div>`;
@@ -140,7 +140,7 @@ function buildPacerRows(r, elapsedTime, editingPaces) {
         let avgLabel = (avgPace > 0 && r.status !== 'ready') ? `<span class="avg-pace-label">Avg: ${formatPaceLabel(avgPace)}</span>` : "";
 
         return `
-        <div class="pacer-control-row" onclick="event.stopPropagation()">
+        <div class="pacer-control-row" data-stop-toggle="true">
             <div class="pacer-info"><span class="dot-large bg-${p.color}"></span></div>
             <div class="pacer-adjust">
                 <div style="font-size:24px; font-weight:bold; margin-left:10px;">${safePace}</div>
@@ -181,7 +181,7 @@ function buildRaceRow(race, expandedRaceId, elapsedTime, editingPaces = {}) {
     const content = vm.isExpanded
         ? buildExpandedRaceContent(vm, elapsedTime, editingPaces)
         : buildCollapsedRaceContent(vm);
-    return `<tr class="${rowClass}" onclick="toggleRow(${race.id}, event)"><td>${content}</td></tr>`;
+    return `<tr class="${rowClass}" data-race-id="${race.id}"><td>${content}</td></tr>`;
 }
 
 function updatePacerHeadsAndEstimates(race, totalScale) {

@@ -450,3 +450,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: UI側の状態を専用モジュールに寄せたので、今後 renderer 置換や状態遷移一元化の足場として使いやすくなった。挙動変更なしのまま安全に前進できた。
 - E2E確認手順メモ（手動）: 未実施（BLE接続/実機環境が不要な範囲の変更）。接続環境で従来手順（未接続アラート→SYNC→START/STOP→複数ペーサー距離+50m停止）を再確認すること。
+
+### 2025-12-xx 追加ログ（このターン-29）
+- 作業: ルール/仕様を再確認し、レーステーブルの行展開・START/STOP/SYNC/リセット/スタート位置変更をデータ属性＋イベントデリゲーションで一元化。`race-control-layout` 配下のクリックで行が畳まれないようガードを追加。バージョンを `v2.1.0-beta.74` に更新し、STATUS/NEXTコンテキストを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
+- 感想: inlineハンドラを避けてUI層でイベントを一元処理できる形に進めた。挙動は据え置きだが、renderer全面移行と状態遷移の整理に踏み出せた。
+- E2E確認手順メモ（手動）: 接続環境で従来手順（未接続アラート→SYNC→START/STOP→複数ペーサー距離+50m停止）を実施しつつ、(1) レース行クリックで展開/折り畳みできること、(2) 展開行内の START/SYNC/STOP/リセット/スタート位置入力が期待通り動作し行が誤って畳まれないことを確認する。
