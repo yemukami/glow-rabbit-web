@@ -31,6 +31,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/segment-utils.js`, `node js/test/race-modal-view.test.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
 - 感想: モーダルの状態・UI・計算がそれぞれモジュール化され、renderer全面移行と状態遷移整理に進みやすい形になった。
 
+### 2025-12-xx 追加ログ（renderer移行の残タスク-6）
+- 作業: モーダル入力のイベントバインドを `race-modal-view` 側で吸収し、ui-controllerのDOM操作をさらに削減（挙動不変）。バージョンを `v2.1.0-beta.90` に更新。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-modal-view.js`, `node js/test/race-modal-view.test.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
+- 感想: モーダル周りのUI操作がほぼview層にまとまり、状態/描画/バインドが分離できた。次は状態遷移一元化に取りかかりたい。
+
 # 作業ログ: Glow-Rabbit Web App - 2025年11月28日
 
 ## 本日の作業概要
