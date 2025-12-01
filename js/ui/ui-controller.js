@@ -19,12 +19,9 @@ import { attachDeviceGridHandlers } from './device-grid-events.js';
 import { renderSetupTable } from './setup-renderer.js';
 import { renderConnectionStatus } from './connection-renderer.js';
 import { renderReplaceModal, updateReplaceMacText } from './replace-modal-renderer.js';
+import { createModalState, setActiveTab, setModalTarget, setSelectedColor } from './race-modal-state.js';
 // modalTarget and modalSelectedColor are now part of modalState
-let modalState = {
-    target: {},
-    selectedColor: 'red',
-    activeTab: 'simple'
-};
+let modalState = createModalState();
 
 const UI_CONSTANTS = {
     PROGRESS_BAR_PADDING_METERS: 50,
@@ -483,7 +480,7 @@ function updateStartPos(id, val) {
 
 // --- MODAL ---
 function openModal(rid, pid) { 
-    modalState.target = {raceId:rid, pacerId:pid}; 
+    setModalTarget(modalState, { raceId: rid, pacerId: pid });
     const r=races.find(x=>x.id===rid); 
     
     // Reset Tab (default to simple)
@@ -527,13 +524,13 @@ function openModal(rid, pid) {
 
 function closeModal() { document.getElementById('modal-settings').classList.remove('open'); }
 function selectModalColor(c) { 
-    modalState.selectedColor = c; 
+    setSelectedColor(modalState, c);
     document.querySelectorAll('.color-option').forEach(e=>e.classList.remove('selected')); 
     document.querySelector('.bg-'+c).classList.add('selected'); 
 }
 
 function switchModalTab(tab) {
-    modalState.activeTab = tab;
+    setActiveTab(modalState, tab);
     document.querySelectorAll('.modal-tab').forEach(e => e.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
     document.getElementById('tab-btn-'+tab).classList.add('active');
