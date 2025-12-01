@@ -303,3 +303,8 @@
 - 作業: STOPボタンでBLE未接続時はアラートを出し、stop送信を `stopRaceService` 経由で高優先度送信するよう修正。dry-runテストでstopコマンドの記録を確認。バージョンを `v2.1.0-beta.52` に更新。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（stopのdry-runテストを追加）。
 - 感想: stopRunnerが飛ばないリスクに対し、サービス層経由の高優先度送信＋未接続ガードで初動を強化。送信成功をUIで可視化する仕組みは今後の課題。
+
+### 2025-12-xx 追加ログ（このターン-4）
+- 作業: stop送信の記録を確実に残すため `BleCommandQueue` を常に記録するよう変更し、`stopRaceService` が送信したコマンド記録を返すように統一。バージョンを `v2.1.0-beta.53` に更新。
+- テスト: `node --check js/ble/send-queue.js`, `js/ui/ui-controller.js`; `node js/test/race-service.test.js`（stop dry-run含む）、`node js/test/ui-logic.test.js`。
+- 感想: STOPの送信内容を確実に追跡できるようになった。今後は送信結果をUI通知に反映させる仕組みを検討したい。

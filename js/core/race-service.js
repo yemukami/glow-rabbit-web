@@ -115,10 +115,11 @@ export async function sendStopRunner(queue = new BleCommandQueue()) {
 }
 
 export async function stopRaceService(race, queueOptions = {}) {
-    const queue = new BleCommandQueue(queueOptions);
+    const records = [];
+    const queue = new BleCommandQueue({ ...queueOptions, onRecord: (r) => records.push(r) });
     await sendStopRunner(queue);
     if (race) transitionToReview(race);
-    return { ok: true, records: queue.records };
+    return { ok: true, records };
 }
 
 export function findActiveSegment(runPlan, currentDist) {
