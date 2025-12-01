@@ -3,7 +3,7 @@ global.document = {
     getElementById: (id) => {
         if (!global.mockDOM[id]) {
             global.mockDOM[id] = { 
-                innerHTML: '', 
+                _html: '',
                 style: {}, 
                 value: '',
                 addEventListener: () => {},
@@ -16,12 +16,19 @@ global.document = {
                 appendChild: (child) => { 
                     global.mockDOM[id].children.push(child);
                     // Simulate DOM insertion for innerHTML check
-                    global.mockDOM[id].innerHTML += child.innerHTML; 
+                    global.mockDOM[id].innerHTML = (global.mockDOM[id].innerHTML || '') + child.innerHTML; 
                 },
                 children: [],
                 remove: () => {},
                 querySelector: () => null
             };
+            Object.defineProperty(global.mockDOM[id], 'innerHTML', {
+                set: function(v) { 
+                    this._html = v; 
+                    this.children = [];
+                },
+                get: function() { return this._html || ''; }
+            });
         }
         return global.mockDOM[id];
     },
@@ -104,18 +111,17 @@ async function runTests() {
     // Check if race-tbody has content
     const tbody = document.getElementById('race-tbody');
     
-    // We expect 1 row (tr) to be appended
-    if (tbody.children.length === 1) {
-        console.log("✅ PASS: 1 Row appended to tbody.");
-        const rowContent = tbody.children[0].innerHTML;
+    const rowContent = tbody.innerHTML;
+    if (rowContent.includes('<tr')) {
+        console.log("✅ PASS: tbody rendered HTML content.");
         if (rowContent.includes('New Race')) {
             console.log("✅ PASS: Row content contains 'New Race'.");
         } else {
             console.error("❌ FAIL: Row content incorrect. Got: " + rowContent.substring(0, 50) + "...");
         }
     } else {
-        console.error("❌ FAIL: tbody children count is " + tbody.children.length + ", expected 1.");
-        console.log("Debug: tbody innerHTML: ", tbody.innerHTML);
+        console.error("❌ FAIL: tbody did not render rows.");
+        console.log("Debug: tbody innerHTML: ", rowContent);
     }
 
     // TEST 3: Pacer Rendering
@@ -128,29 +134,12 @@ async function runTests() {
     global.window.switchMode('race');
     
     const tbody2 = document.getElementById('race-tbody');
-    const row2 = tbody2.children[0]; // In our mock appendChild adds to list, but initUI clears it? 
-    // Wait, our mock appendChild appends. But renderRace does innerHTML=''; 
-    // So we need to check how mock handles innerHTML = ''.
-    // Our mock DOM assumes innerHTML setter is simple property set. 
-    // But renderRace does `tbody.innerHTML = ''`.
-    
-    // Let's inspect the latest child of tbody (since we might have cleared and appended new one)
-    // Actually, since renderRace clears innerHTML, our simple mock array `children` might not be cleared if we don't implement setter for innerHTML.
-    // Let's fix mock for innerHTML setter to clear children.
+    const rowHtml2 = tbody2.innerHTML;
+    if (rowHtml2.includes('pacer-chip') || rowHtml2.includes('pacer-control-row')) {
+        console.log("✅ PASS: Pacer info rendered in race row.");
+    } else {
+        console.error("❌ FAIL: Pacer info missing. Row HTML: " + rowHtml2);
+    }
 }
-
-// Improve Mock for Test 3 (ensure race-tbody exists first)
-if (!global.mockDOM) global.mockDOM = {};
-if (!global.mockDOM['race-tbody']) {
-    global.mockDOM['race-tbody'] = { children: [], _html: '' };
-}
-Object.defineProperty(global.mockDOM['race-tbody'], 'innerHTML', {
-    set: function(v) { 
-        this._html = v; 
-        if(v === '') this.children = []; 
-    },
-    get: function() { return this._html || ''; }
-});
-
 
 runTests().catch(e => console.error("TEST CRASHED:", e));

@@ -3,13 +3,13 @@ import { deviceList, deviceSettings, deviceInteraction, markDeviceListDirty, loa
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from '../core/pace-calculator.js';
-import { roundToTenth, formatPace, formatPaceLabel, formatDistanceMeters, buildRaceBadge, formatTime } from '../utils/render-utils.js';
+import { roundToTenth, formatPace, formatPaceLabel, formatTime } from '../utils/render-utils.js';
 import { sanitizeNumberInput, sanitizePositiveInt, parseTimeInput, resolvePaceValue, escapeHTML } from '../utils/data-utils.js';
 import { getColorRGB } from '../utils/color-utils.js';
 import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded, stopRaceService } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
-import { buildRaceViewModel, buildRaceRowClass, buildCollapsedPacerChips, buildSetupPacerChips, computeLeadAndFill } from './race-view-model.js';
-import { buildCollapsedRaceContent, buildExpandedRaceContent } from './race-renderer.js';
+import { buildSetupPacerChips } from './race-view-model.js';
+import { renderRaceTable, updateRunningDisplays } from './race-renderer.js';
 
 let expandedRaceId = null;
 let editingPaces = {};
@@ -362,30 +362,6 @@ function toggleRow(id, event) {
     renderRace();
 }
 
-function updatePacerHeadsAndEstimates(race, totalScale) {
-    race.pacers.forEach(p => {
-        const headEl = document.getElementById(`pacer-head-${p.id}`);
-        if (headEl) {
-             let cDist = p.currentDist || 0;
-             let leftPct = Math.min((cDist / totalScale) * 100, 100);
-             headEl.style.left = `${leftPct}%`;
-             const labelEl = headEl.querySelector('.pacer-head-label');
-             if(labelEl) labelEl.innerText = formatDistanceMeters(cDist);
-        }
-        const estEl = document.getElementById(`pacer-est-${p.id}`);
-        if (estEl) {
-            let estStr = "";
-             if (p.finishTime !== null) {
-                estStr = `Goal (${formatTime(p.finishTime)})`;
-            } else if (p.runPlan) {
-                const lastSeg = p.runPlan[p.runPlan.length - 1];
-                if(lastSeg) estStr = `Goal (${formatTime(lastSeg.endTime)})`;
-            }
-            estEl.innerText = estStr;
-        }
-    });
-}
-
 function renderRace() {
     console.log("[renderRace] Start. Races count:", races.length);
     const tbody = document.getElementById('race-tbody');
@@ -397,20 +373,8 @@ function renderRace() {
         return;
     }
     
-    races.forEach(r => {
-        try {
-            const vm = buildRaceViewModel(r, expandedRaceId);
-            const tr = document.createElement('tr');
-            tr.className = buildRaceRowClass(r, expandedRaceId);
-            tr.onclick = (e) => toggleRow(r.id, e);
-
-        const content = vm.isExpanded ? buildExpandedRaceContent(vm, elapsedTime, editingPaces) : buildCollapsedRaceContent(vm);
-        tr.innerHTML = `<td>${content}</td>`;
-        tbody.appendChild(tr);
-        } catch(e) {
-            console.error("[renderRace] Error rendering row:", r, e);
-        }
-    });
+    const rowsHtml = renderRaceTable(races, expandedRaceId, elapsedTime, editingPaces);
+    tbody.innerHTML = rowsHtml;
 }
 
 async function startRaceWrapper(id) {
@@ -450,21 +414,7 @@ async function updateState(race) {
     const tickResult = advanceRaceTick(race, elapsedTime, deviceSettings.interval);
     elapsedTime = tickResult.elapsedTime;
 
-    // Targeted DOM Update
-    const tEl = document.getElementById('timer-display');
-    if(tEl) tEl.innerText = formatTime(elapsedTime);
-
-    const { totalScale, maxDist: leadDist, fillPct } = computeLeadAndFill(race);
-    updatePacerHeadsAndEstimates(race, totalScale);
-    
-    const fillEl = document.getElementById(`progress-fill-${race.id}`);
-    if (fillEl) {
-         fillEl.style.width = `${fillPct}%`;
-    }
-    const leadEl = document.getElementById('lead-dist-display');
-    if(leadEl) {
-         leadEl.innerHTML = `先頭: <strong>${formatDistanceMeters(leadDist)}</strong>`;
-    }
+    updateRunningDisplays(race, elapsedTime);
 
     if(tickResult.allFinished) {
         try {

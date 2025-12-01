@@ -343,3 +343,8 @@
 - 作業: オーバーランは維持しつつ、ゴール後は追加のプレ送信/セグメント進行を止めるよう `advanceRaceTick` を修正（finishTimeが付いた後は移動のみ継続、FINISH_MARGINまでは走らせて完了判定）。stop後は再同期必須フラグ維持。バージョンを `v2.1.0-beta.62` に更新。
 - テスト: `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`。
 - 感想: 実機の「ゴール後少し光る」オーバーランは残しつつ、ゴール後の色混在を減らすため追加コマンドを抑制。実機で色が正しく切り替わるか再確認したい。
+
+### 2025-12-xx 追加ログ（このターン-11）
+- 作業: レース描画をrenderer側に寄せ、行生成をテンプレート化＋進行中のタイマー/ヘッド/リード更新もrenderer経由に統一。renderer向けの純粋テストを追加し、モックDOMの検証をHTMLベースに更新。表示バージョンを `v2.1.0-beta.63` に更新。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node --check js/core/race-sync-service.js`, `node --check js/ui/race-renderer.js`; `node js/test/pace-calculator.test.js`, `device-manager.test.js`, `render-utils.test.js`, `race-view-model.test.js`, `race-renderer.test.js`, `race-service.test.js`, `ui-logic.test.js`。
+- 感想: renderer移行が一歩進んで見通しが良くなった。mock修正で一度テストが落ちたが、仕様どおりのHTML評価に寄せて再整備できてほっとした。

@@ -1,4 +1,5 @@
 import { formatDistanceMeters, formatPaceLabel, formatTime } from '../utils/render-utils.js';
+import { buildRaceRowClass, buildRaceViewModel, computeLeadAndFill } from './race-view-model.js';
 
 export function buildCollapsedRaceContent(vm) {
     const { safeTime, safeName, safeGroup, safeDistance, badge, race } = vm;
@@ -48,6 +49,36 @@ export function buildExpandedRaceContent(vm, elapsedTime, editingPaces = {}) {
             </div>
             <div>${btnArea}</div>
         </div>`;
+}
+
+export function renderRaceTable(races, expandedRaceId, elapsedTime, editingPaces = {}) {
+    if (!races || races.length === 0) return '';
+    return races.map(race => {
+        const vm = buildRaceViewModel(race, expandedRaceId);
+        const rowClass = buildRaceRowClass(race, expandedRaceId);
+        const content = vm.isExpanded
+            ? buildExpandedRaceContent(vm, elapsedTime, editingPaces)
+            : buildCollapsedRaceContent(vm);
+        return `<tr class="${rowClass}" onclick="toggleRow(${race.id}, event)"><td>${content}</td></tr>`;
+    }).join('');
+}
+
+export function updateRunningDisplays(race, elapsedTime) {
+    if (!race) return;
+    const { totalScale, maxDist, fillPct } = computeLeadAndFill(race);
+
+    const timerEl = document.getElementById('timer-display');
+    if (timerEl) timerEl.innerText = formatTime(elapsedTime || 0);
+
+    updatePacerHeadsAndEstimates(race, totalScale);
+
+    const fillEl = document.getElementById(`progress-fill-${race.id}`);
+    if (fillEl) fillEl.style.width = `${fillPct}%`;
+
+    const leadEl = document.getElementById('lead-dist-display');
+    if (leadEl) {
+        leadEl.innerHTML = `先頭: <strong>${formatDistanceMeters(maxDist)}</strong>`;
+    }
 }
 
 // --- Renderer-local helpers (DOM-free string builders) ---
@@ -142,4 +173,29 @@ function buildCollapsedPacerChips(pacers) {
     return pacers
         .map(p => `<span class="pacer-chip"><span class="dot bg-${p.color||'red'}"></span>${formatPaceLabel(p.pace || 72)}</span>`)
         .join(' ');
+}
+
+function updatePacerHeadsAndEstimates(race, totalScale) {
+    if (!race.pacers || !Array.isArray(race.pacers)) return;
+    race.pacers.forEach(p => {
+        const headEl = document.getElementById(`pacer-head-${p.id}`);
+        if (headEl) {
+            const cDist = p.currentDist || 0;
+            const leftPct = Math.min((cDist / totalScale) * 100, 100);
+            headEl.style.left = `${leftPct}%`;
+            const labelEl = headEl.querySelector('.pacer-head-label');
+            if (labelEl) labelEl.innerText = formatDistanceMeters(cDist);
+        }
+        const estEl = document.getElementById(`pacer-est-${p.id}`);
+        if (estEl) {
+            let estStr = "";
+            if (p.finishTime !== null) {
+                estStr = `Goal (${formatTime(p.finishTime)})`;
+            } else if (p.runPlan) {
+                const lastSeg = p.runPlan[p.runPlan.length - 1];
+                if (lastSeg) estStr = `Goal (${formatTime(lastSeg.endTime)})`;
+            }
+            estEl.innerText = estStr;
+        }
+    });
 }
