@@ -486,3 +486,9 @@
 - テスト: `node --check js/utils/render-utils.js`; `node --check js/ui/race-renderer.js`; `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: ボタン/バッジの意味が分かりやすくなり、再同期が必要な理由をUIで伝えやすくなった。挙動は不変。
 - E2E確認手順メモ（手動）: 従来手順に加え、要同期バッジのツールチップ（「色/ペース設定を再送」）が出ることと、SYNCボタンに「同期」表記があることを確認する。
+
+### 2025-12-xx 追加ログ（このターン-35）
+- 作業: ルール/仕様を再読し、SYNCボタンを「レース設定再送」表記＋ツールチップに変更、要同期バッジを「要レース設定再送」表記＋説明に更新。バージョンを `v2.1.0-beta.79` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/utils/render-utils.js`; `node --check js/ui/race-renderer.js`; `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
+- 感想: ボタン/バッジの文言をレース設定再送に統一し、ユーザーが「何を送るのか」を明確にした。挙動は据え置き。
+- E2E確認手順メモ（手動）: 従来手順に加え、SYNCボタンの表記が「レース設定再送」であることと、要レース設定再送バッジのツールチップが表示されることを確認する。

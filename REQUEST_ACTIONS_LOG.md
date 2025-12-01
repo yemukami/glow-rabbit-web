@@ -57,3 +57,5 @@
   対応: ルール再読後、renderer移行を進めつつバージョンをv2.1.0-beta.77に更新し、STATUS/NEXT/TODAYへ反映。イベントデリゲーション分離を維持（SYNC/START仕様変更なし）。`node --check`（ui-controller/race-service/race-sync-service）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を実行。E2E手順に複数レース展開でデリゲーション経由のSTART/SYNC/STOP/リセット/スタート位置変更とフラグ独立性を確認する項目を追記。コミット/プッシュ済み。
 - 要求: ルール再読と優先タスク継続。E2E手順明示、ログ/バージョン/プッシュまで自律実施。
   対応: ルール再読後、SYNCボタンに「同期」表記＋ツールチップを付与し、要同期バッジに「色/ペース設定を再送」の説明を追加（挙動変更なし）。バージョンをv2.1.0-beta.78に更新し、STATUS/NEXT/TODAYへ反映。`node --check`（render-utils/race-renderer/ui-controller）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を実行。E2E手順にバッジ/ボタンの意味確認を追記。コミット/プッシュ済み。
+- 要求: syncの意味がレース設定送信であるならそのような名称にすること。
+  対応: SYNCボタンを「レース設定再送」表記＋ツールチップに変更し、要同期バッジを「要レース設定再送」表記＋説明に更新（挙動は不変）。バージョンをv2.1.0-beta.79に更新し、STATUS/NEXT/TODAYへ反映。`node --check`（render-utils/race-renderer/ui-controller）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を再実行。E2E手順に表記/ツールチップ確認を追加。コミット/プッシュ済み。
