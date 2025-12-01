@@ -474,3 +474,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: イベント処理をモジュール化してrenderer移行を進めた。挙動は据え置きで、今後のテスト拡充やガード追加が行いやすい構造になった。
 - E2E確認手順メモ（手動）: これまでの手順に加え、複数レースを展開してSTART/SYNC/STOP/リセット/スタート位置変更がデリゲーション経由で期待通り動作し、行が誤って畳まれないことを確認する。
+
+### 2025-12-xx 追加ログ（このターン-33）
+- 作業: ルール/仕様再確認の上、renderer移行を進め、レーステーブルのイベントデリゲーションを専用モジュール化した状態を整備しつつバージョンを `v2.1.0-beta.77` に更新。STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
+- 感想: renderer移行を着実に進め、UIロジックの責務がさらに明確になった。挙動変更なしで安全に進められた。
+- E2E確認手順メモ（手動）: 従来手順＋複数レース展開でSTART/SYNC/STOP/リセット/スタート位置変更がデリゲーション経由で動作することを確認。行が誤って畳まれないことと、フラグがレース単位で独立していることを確認する。
