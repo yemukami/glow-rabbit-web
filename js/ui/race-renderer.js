@@ -39,7 +39,7 @@ export function buildExpandedRaceContent(vm, elapsedTime, editingPaces = {}) {
             <div>
                 <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
                     ${infoHeader}
-                    <div id="lead-dist-display">先頭: <strong>${formatDistanceMeters(progress.maxDist)}</strong></div>
+                    <div id="lead-dist-display-${race.id}">先頭: <strong>${formatDistanceMeters(progress.maxDist)}</strong></div>
                 </div>
                 <div class="progress-container">
                     <div class="progress-fill" id="progress-fill-${race.id}" style="width:${progress.fillPct}%"></div>
@@ -67,7 +67,7 @@ export function updateRunningDisplays(race, elapsedTime) {
     if (!race) return;
     const { totalScale, maxDist, fillPct } = computeLeadAndFill(race);
 
-    const timerEl = document.getElementById('timer-display');
+    const timerEl = document.getElementById(`timer-display-${race.id}`);
     if (timerEl) timerEl.innerText = formatTime(elapsedTime || 0);
 
     updatePacerHeadsAndEstimates(race, totalScale);
@@ -75,7 +75,7 @@ export function updateRunningDisplays(race, elapsedTime) {
     const fillEl = document.getElementById(`progress-fill-${race.id}`);
     if (fillEl) fillEl.style.width = `${fillPct}%`;
 
-    const leadEl = document.getElementById('lead-dist-display');
+    const leadEl = document.getElementById(`lead-dist-display-${race.id}`);
     if (leadEl) {
         leadEl.innerHTML = `先頭: <strong>${formatDistanceMeters(maxDist)}</strong>`;
     }
@@ -105,7 +105,7 @@ function buildInfoHeader(race, maxDist, safeStartPos, elapsedTime) {
         return `<div style="display:flex; gap:10px; align-items:center;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" onchange="updateStartPos(${race.id},this.value)">${syncTag}</div>`;
     }
     if (race.status === 'running') {
-        return `<div class="timer-big" id="timer-display">${formatTime(elapsedTime || 0)}</div>`;
+        return `<div class="timer-big" id="timer-display-${race.id}">${formatTime(elapsedTime || 0)}</div>`;
     }
     if (race.status === 'review') {
         return `<div class="timer-big">${formatTime(elapsedTime || 0)}</div>`;

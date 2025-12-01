@@ -31,3 +31,5 @@
   対応: showStartErrorで no pacer/busy/not found などの理由をアラート表示（挙動変更なし、SYNC_START_SPEC順守）。
 - 要求: rendererテストを拡充すること。
   対応: syncNeededバッジ表示/非表示を検証するテストを追加（挙動変更なし、SYNC_START_SPEC順守）。
+- 要求: rendererのID重複を避けるようリファクタすること。
+  対応: timer/lead表示のDOM IDにrace.idを付与し、複数レース展開時の衝突を回避（挙動変更なし、SYNC_START_SPEC順守）。

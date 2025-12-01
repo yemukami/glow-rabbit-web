@@ -42,11 +42,11 @@ function testUpdateRunningDisplays() {
     const fillEl = { style: {} };
     const leadEl = { innerHTML: '' };
     const elements = {
-        'timer-display': timerEl,
+        'timer-display-1': timerEl,
         'pacer-head-10': headEl,
         'pacer-est-10': estEl,
         'progress-fill-1': fillEl,
-        'lead-dist-display': leadEl
+        'lead-dist-display-1': leadEl
     };
     const originalDoc = global.document;
     global.document = { getElementById: (id) => elements[id] || null };
