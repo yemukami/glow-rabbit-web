@@ -540,3 +540,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
 - 感想: デバイス周りもrenderer側に寄せてUIコントローラを軽量化。挙動は据え置き。
 - E2E確認手順メモ（手動）: デバイスグリッドでセルクリック→モーダル表示、ボタン（Blink/Swap/Replace scan・manual/Dummy/Remove/Close）がクラッシュなく動くことを確認。
+
+### 2025-12-xx 追加ログ（このターン-44）
+- 作業: ルール再読し、セグメントタブ切替の未定義参照（updateSegmentSummary）を修正し、renderer分離済みの関数に一本化。デバイスオーバーレイのrenderer分離を維持。挙動は不変。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
+- 感想: モーダル周りの呼び出し漏れを潰し、クラッシュを解消。引き続きrenderer化を安全に進行。
+- E2E確認手順メモ（手動）: セグメントタブを開いてもエラーが出ないことを確認し、従来のレース設定再送→START/STOP→距離+50m停止・バッジ挙動が変わらないことを確認する。

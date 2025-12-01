@@ -585,7 +585,7 @@ function switchModalTab(tab) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
     document.getElementById('tab-btn-'+tab).classList.add('active');
     document.getElementById('tab-content-'+tab).classList.add('active');
-    if (tab === 'segments') updateSegmentSummary();
+    if (tab === 'segments') updateSegmentSummaryFromDom();
 }
 
 function updateCalcPace() {
