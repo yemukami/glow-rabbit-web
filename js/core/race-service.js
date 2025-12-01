@@ -16,12 +16,15 @@ const UI_CONSTANTS = {
 
 export function advanceRaceTick(race, currentElapsed, intervalMeters) {
     let elapsed = currentElapsed + 0.1;
-    let allFinished = true;
-    const limit = race.distance + UI_CONSTANTS.FINISH_MARGIN_METERS;
+    let finishedCount = 0;
 
     race.pacers.forEach((p, idx) => {
         const runnerId = idx + 1;
         if (!p.runPlan) return;
+        if (p.finishTime !== null) {
+            finishedCount++;
+            return;
+        }
 
         let currentSeg = findActiveSegment(p.runPlan, p.currentDist);
         const nextSeg = p.runPlan[p.currentSegmentIdx + 1];
@@ -50,14 +53,14 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
             }
         }
 
-        if (p.currentDist < limit) {
-            allFinished = false;
-            if (p.currentDist >= race.distance && p.finishTime === null) p.finishTime = elapsed;
-        } else if (p.finishTime === null) {
+        if (p.currentDist >= race.distance && p.finishTime === null) {
+            p.currentDist = race.distance;
             p.finishTime = elapsed;
+            finishedCount++;
         }
     });
 
+    const allFinished = finishedCount === race.pacers.length && race.pacers.length > 0;
     return { elapsedTime: elapsed, allFinished };
 }
 
@@ -118,7 +121,11 @@ export async function stopRaceService(race, queueOptions = {}) {
     const records = [];
     const queue = new BleCommandQueue({ ...queueOptions, onRecord: (r) => records.push(r) });
     await sendStopRunner(queue);
-    if (race) transitionToReview(race);
+    if (race) {
+        transitionToReview(race);
+        race.initialConfigSent = false;
+        race.syncNeeded = true;
+    }
     return { ok: true, records };
 }
 

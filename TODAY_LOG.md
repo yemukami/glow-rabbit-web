@@ -322,4 +322,9 @@
 ### 2025-12-xx 追加ログ（このターン-7）
 - 作業: 完走/停止後の busy ガードを解放するため、`freezeRace` で `setActiveRaceId(null)` を行うように変更。バージョン据え置き。
 - テスト: `node --check js/ui/ui-controller.js`。
-- 感想: レース終了後に他レースの開始を妨げないよう、activeRaceId を明示的に解放した。引き続き状態遷移の一元化を進める。***
+- 感想: レース終了後に他レースの開始を妨げないよう、activeRaceId を明示的に解放した。引き続き状態遷移の一元化を進める。
+
+### 2025-12-xx 追加ログ（このターン-8）
+- 作業: pacerがゴールしたら距離をレース距離で打ち止めし、finish後は移動・プレ送信を停止するよう `advanceRaceTick` を修正（オーバーラン時の色混在対策）。stop後に再同期が必須になるよう `stopRaceService` で `initialConfigSent=false` / `syncNeeded=true` をセット。バージョンを `v2.1.0-beta.58` に更新。
+- テスト: `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`。
+- 感想: ゴール後に走行を続けて色が混ざるリスクを抑制。stop後は必ず再同期が必要になるため、次回START時に色/ペースを再送できる。
