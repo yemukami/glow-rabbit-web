@@ -318,3 +318,8 @@
 - 作業: オーバーラン後に必ず stopRunner を送るよう、`updateState` を async 化し、完走検知時に `stopRaceService` を await して送信記録をログ出しするよう変更。バージョンを `v2.1.0-beta.55` に更新。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
 - 感想: 走行完了後のstop抜けを防ぐためサービス経由でSTOP送信を確実化。今後、必要に応じて送信結果の可視化も検討できるよう記録ログを残した。
+
+### 2025-12-xx 追加ログ（このターン-7）
+- 作業: 完走/停止後の busy ガードを解放するため、`freezeRace` で `setActiveRaceId(null)` を行うように変更。バージョン据え置き。
+- テスト: `node --check js/ui/ui-controller.js`。
+- 感想: レース終了後に他レースの開始を妨げないよう、activeRaceId を明示的に解放した。引き続き状態遷移の一元化を進める。***

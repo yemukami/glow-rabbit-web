@@ -479,7 +479,7 @@ async function updateState(race) {
     }
 }
 
-function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); transitionToReview(r); renderRace(); saveRaces(); }
+function freezeRace(id) { clearInterval(raceInterval); const r = races.find(x=>x.id===id); transitionToReview(r); setActiveRaceId(null); renderRace(); saveRaces(); }
 function finalizeRace(id) { const r = races.find(x=>x.id===id); finalizeRaceState(r); setActiveRaceId(null); expandedRaceId = null; renderRace(); saveRaces(); }
 function resetRace(id) { const r = races.find(x=>x.id===id); resetRaceState(r); renderRace(); saveRaces(); }
 function updateStartPos(id, val) { 
