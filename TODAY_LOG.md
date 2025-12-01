@@ -664,3 +664,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
 - 感想: 残タスクを一箇所に集約できたので、作業中の参照がシンプルになった。
 - E2E確認手順メモ（手動）: 従来手順（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認）を継続。入力ガードや残タスクは REMAINING_TASKS.md 参照。
+
+### 2025-12-xx 追加ログ（このターン-50）
+- 作業: startPosサニタイズ時に警告ログを出すようにし、デバッグ時に生値と丸め結果を確認できるようにした。バージョンを `v2.1.0-beta.107` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
+- 感想: startPos周りの挙動をさらに透明化でき、入力/ログ整理の足がかりを追加できた。
+- E2E確認手順メモ（手動）: startPosを負値/NaNにしてSTARTした際に警告ログが出ることと、丸め後に正常に進むことを確認する。従来手順も継続。

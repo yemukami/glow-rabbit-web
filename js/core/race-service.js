@@ -72,6 +72,9 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
 
     setActiveRaceId(id);
     const startPos = ensureNonNegativeNumber(startPosRaw, 0);
+    if (startPos !== startPosRaw) {
+        console.warn("[startRaceService] startPos sanitized", { raceId: id, raw: startPosRaw, sanitized: startPos });
+    }
     race.startPos = startPos;
     const queue = new BleCommandQueue(queueOptions);
     if (options.sendStop) {
