@@ -9,6 +9,11 @@ export function addNewRace() {
     races.push({id: Date.now(), time:"10:00", name:"New Race", group:1, distance:1000, startPos:0, count:10, status:"ready", pacers:[], markers:[]});
 }
 
+export function getActiveRace() {
+    if (activeRaceId === null) return null;
+    return races.find(r => r.id === activeRaceId) || null;
+}
+
 export function loadRaces() {
     const saved = localStorage.getItem('glow_races');
     if (saved) {

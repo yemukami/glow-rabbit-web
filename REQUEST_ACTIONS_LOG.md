@@ -84,3 +84,4 @@
 - 追記: activeRaceIdのUI依存をさらに削減し、バージョンをv2.1.0-beta.95に更新。STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js` を実行。手動E2Eは未実施。
 - 追記: activeRaceIdのUI依存をさらに削減（reset時もサービス側でクリア）し、バージョンをv2.1.0-beta.96に更新。STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js` を実行。手動E2Eは未実施。
 - 追記: addNewRaceをrace-managerに集約し、UIから状態生成を切り離しつつバージョンをv2.1.0-beta.97に更新。STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js` を再実行。手動E2Eは未実施。
+- 追記: activeRaceId参照をmanager経由（getActiveRace）に統一し、モード切替時のガードをサービス状態に寄せる方向に整理。バージョンをv2.1.0-beta.98に更新し、STATUS/NEXT/TODAYに反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-manager.js` を実行。手動E2Eは未実施。

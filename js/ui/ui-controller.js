@@ -1,4 +1,4 @@
-import { races, saveRaces, loadRaces, activeRaceId, addNewRace } from '../core/race-manager.js';
+import { races, saveRaces, loadRaces, activeRaceId, addNewRace, getActiveRace } from '../core/race-manager.js';
 import { deviceList, deviceSettings, deviceInteraction, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
@@ -291,12 +291,10 @@ async function switchMode(mode, skipGuard = false) {
             if (await checkDirtyAndSync() === false) return;
         }
         if (!skipGuard && document.getElementById('screen-race').classList.contains('active') && mode !== 'race') {
-            if (activeRaceId !== null) {
-                const r = races.find(x => x.id === activeRaceId);
-                if (r && r.status === 'running') {
-                    if (!confirm("レース実行中です。停止しますか？")) return;
-                    stopRaceWrapper(activeRaceId);
-                }
+            const activeRace = getActiveRace();
+            if (activeRace && activeRace.status === 'running') {
+                if (!confirm("レース実行中です。停止しますか？")) return;
+                stopRaceWrapper(activeRace.id);
             }
         }
     } catch(e) { console.warn(e); }

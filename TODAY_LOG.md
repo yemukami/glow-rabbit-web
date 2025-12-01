@@ -71,6 +71,11 @@
 - テスト: `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
 - 感想: 状態生成/管理をmanager側に寄せられ、状態遷移一元化にまた一歩近づいた。入力バリデーション/ログ整理に移る準備が整ってきた。
 
+### 2025-12-xx 追加ログ（状態遷移整理の一歩目-7）
+- 作業: activeRaceId参照をmanagerのgetActiveRaceに寄せ、モード切替時のガードをサービス状態で見るように整理。バージョンを `v2.1.0-beta.98` に更新。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/race-manager.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
+- 感想: 状態参照もmanager経由になり、状態遷移一元化の土台が整ってきた。次は入力バリデーション/ログ整理へ進める。
+
 # 作業ログ: Glow-Rabbit Web App - 2025年11月28日
 
 ## 本日の作業概要
