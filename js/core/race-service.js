@@ -86,8 +86,9 @@ export async function startRaceService(race, id, startPosRaw, onBusy, queueOptio
     race.markers = [];
     race.pacers.forEach(p => { p.currentDist=0; p.finishTime=null; });
     const estMs = estimateStartLatencyMs(race.pacers.length);
-    console.log("[startRaceService] sendStop:", options.sendStop, "resendConfig:", options.resendConfig, "commands:", queue.records.length);
-    console.log("[startRaceService] Estimated start lag(ms):", estMs, "commands approx:", queue.records.length);
+    const summary = summarizeRecords(queue.records);
+    console.log("[startRaceService] sendStop:", options.sendStop, "resendConfig:", options.resendConfig, "commands:", summary.total, "highPriority:", summary.highPriority);
+    console.log("[startRaceService] Estimated start lag(ms):", estMs, "commands approx:", summary.total);
     return { ok: true, estMs, records: queue.records };
 }
 
@@ -122,6 +123,8 @@ export async function stopRaceService(race, queueOptions = {}) {
         transitionToReview(race);
         resetSyncFlags(race);
     }
+    const summary = summarizeRecords(records);
+    console.log("[stopRaceService] commands:", summary.total, "highPriority:", summary.highPriority);
     return { ok: true, records };
 }
 
@@ -162,4 +165,10 @@ export function setRaceSynced(race) {
     if (!race) return;
     race.initialConfigSent = true;
     race.syncNeeded = false;
+}
+
+function summarizeRecords(records) {
+    const total = records?.length || 0;
+    const highPriority = records?.filter(r => r?.opts?.highPriority).length || 0;
+    return { total, highPriority };
 }

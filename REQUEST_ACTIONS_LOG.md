@@ -21,3 +21,5 @@
   対応: setRaceSynced/resetSyncFlags を追加し、START/STOP/リセットでフラグ更新をサービス層に集約。sync送信後にinitialConfigSent/syncNeededを明示設定。テストにフラグヘルパー確認を追加（仕様変更なし、SYNC_START_SPEC順守）。
 - 要求: リファクタ優先順3（sync導線強化）に着手すること。
   対応: レース行のアクションにSYNCボタンを追加し、未接続/ペーサー未設定はアラート、成功時は保存・再描画とログ出力（SYNC/START仕様変更なし、SYNC_START_SPEC順守）。
+- 要求: リファクタ優先順4（号砲同期/送信可視化）に着手すること。
+  対応: start/stop/syncでコマンド本数と高優先度数をログ集計して出力（挙動変更なし、SYNC_START_SPEC順守）。

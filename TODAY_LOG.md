@@ -372,3 +372,9 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node js/test/race-renderer.test.js`, `node js/test/ui-logic.test.js`。
 - 感想: 同期の入口をSTARTと分けて明確化できた。挙動は変えず、ユーザーが迷わない導線だけ強化した形。
 - E2E確認手順メモ（手動）: Race行を展開→SYNCボタン押下で「同期完了」表示＆syncNeededバッジ消失を確認→未接続でSYNCを押すとアラートを確認→pacer追加後にSTART→STOPでsyncNeeded再表示を確認。
+
+### 2025-12-xx 追加ログ（このターン-16）
+- 作業: 送信可視化強化として、start/stop/syncのコマンド本数と高優先度数をログ出力する集計を追加（挙動変更なし、SYNC_START_SPEC順守）。バージョンを `v2.1.0-beta.66` に更新。
+- テスト: `node --check js/core/race-service.js`, `node --check js/core/race-sync-service.js`, `node js/test/race-service.test.js`。
+- 感想: コマンド内訳を即座に把握できるようになり、号砲同期検討やトラブルシュートの足がかりになる。挙動は全く変えていないので安心。
+- E2E確認手順メモ（手動）: Race行展開→SYNCボタン押下で従来どおり同期されることを確認（コンソールに送信数/高優先度数が出る）→pacer追加してSTART→STOPを実行し、コンソールログに本数サマリが出ることを確認（UI挙動は不変）。

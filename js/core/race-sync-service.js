@@ -11,7 +11,8 @@ export async function syncRaceConfigs(race, queueOptions = {}) {
     await sendInitialConfigs(race, deviceSettings.interval, queue);
     race.initialConfigSent = true;
     race.syncNeeded = false;
-    console.log("[syncRaceConfigs] Sent initial configs", { commands: queue.records.length, pacers: race.pacers.length, interval: deviceSettings.interval });
+    const summary = summarizeRecords(queue.records);
+    console.log("[syncRaceConfigs] Sent initial configs", { commands: summary.total, highPriority: summary.highPriority, pacers: race.pacers.length, interval: deviceSettings.interval });
     return { ok: true, records: queue.records };
 }
 
@@ -46,4 +47,10 @@ export async function sendInitialConfigs(race, intervalMeters, queue = new BleCo
             );
         }
     }
+}
+
+function summarizeRecords(records) {
+    const total = records?.length || 0;
+    const highPriority = records?.filter(r => r?.opts?.highPriority).length || 0;
+    return { total, highPriority };
 }
