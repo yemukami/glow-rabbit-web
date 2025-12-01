@@ -18,6 +18,7 @@ import { attachSetupTableHandlers } from './setup-table-events.js';
 import { attachDeviceGridHandlers } from './device-grid-events.js';
 import { renderSetupTable } from './setup-renderer.js';
 import { renderConnectionStatus } from './connection-renderer.js';
+import { renderReplaceModal, updateReplaceMacText } from './replace-modal-renderer.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = {
     target: {},
@@ -742,20 +743,7 @@ function confirmReplace() {
 function updateReplaceModalUI(mac) {
     let el = document.getElementById('modal-replace-overlay');
     if (!el) {
-        el = document.createElement('div');
-        el.id = 'modal-replace-overlay';
-        el.className = 'modal-overlay open';
-        el.innerHTML = `
-            <div class="modal-content">
-                <h3>Replace Device</h3>
-                <p>Target: #${deviceInteraction.targetIndex + 1}</p>
-                <p>Detected MAC: <strong id="replace-mac-display" style="font-size:1.2em; color:var(--primary-color);">Scanning...</strong></p>
-                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
-                    <button class="btn-sm btn-outline" data-action="replace-cancel">Cancel</button>
-                    <button class="btn-sm btn-primary" data-action="replace-confirm">Replace</button>
-                </div>
-            </div>
-        `;
+        el = renderReplaceModal(deviceInteraction.targetIndex, "Scanning... (Press Button on Device)");
         document.body.appendChild(el);
         el.addEventListener('click', (e) => {
             if (e.target === el) el.remove();
@@ -765,8 +753,7 @@ function updateReplaceModalUI(mac) {
             if (actionEl.dataset.action === 'replace-confirm') confirmReplace();
         });
     }
-    const display = document.getElementById('replace-mac-display');
-    if(display) display.innerText = mac;
+    updateReplaceMacText(mac);
 }
 
 function openDeviceActionMenu(i) {
