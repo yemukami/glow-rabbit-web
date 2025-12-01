@@ -126,6 +126,7 @@ export async function stopRaceService(race, queueOptions = {}) {
     if (race) {
         transitionToReview(race);
         resetSyncFlags(race);
+        setActiveRaceId(null);
     }
     const summary = summarizeRecords(records);
     console.log("[stopRaceService] commands:", summary.total, "highPriority:", summary.highPriority);

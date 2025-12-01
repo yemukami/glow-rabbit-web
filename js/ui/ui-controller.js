@@ -464,7 +464,6 @@ function freezeRace(id) {
     resetElapsedTime();
     const r = races.find(x=>x.id===id);
     transitionToReview(r);
-    setActiveRaceId(null);
     renderRace();
     saveRaces();
 }
