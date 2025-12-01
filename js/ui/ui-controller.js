@@ -13,6 +13,7 @@ import { buildRaceTableHTML, updateRunningDisplays } from './race-renderer.js';
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
 import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
+import { renderSegmentTable, addSegmentRow, updateSegmentSummary } from './race-modal-renderer.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = {
     target: {},
@@ -102,8 +103,6 @@ export function initUI() {
     window.closeModal = closeModal;
     window.selectModalColor = selectModalColor;
     window.switchModalTab = switchModalTab;
-    window.addSegmentRow = addSegmentRow;
-    window.removeSegmentRow = removeSegmentRow;
     window.saveModalData = saveModalData;
     window.deletePacerFromModal = deletePacerFromModal;
     window.updateData = updateData;
@@ -514,7 +513,7 @@ function openModal(rid, pid) {
         // Load Data
         if (p.type === 'segments' && p.segments && p.segments.length > 0) {
             switchModalTab('segments');
-            renderSegmentTable(p.segments);
+            renderSegmentTable(p.segments, document.getElementById('segment-tbody'), updateSegmentSummaryFromDom);
         } else {
             // Simple Mode
             let tVal = "";
@@ -537,8 +536,8 @@ function openModal(rid, pid) {
         selectModalColor('red'); 
         document.getElementById('modal-target-time').value = "";
         document.getElementById('modal-calc-pace').innerText = "--.-";
-        updateSegmentSummary();
-        renderSegmentTable([]);
+        updateSegmentSummaryFromDom();
+        renderSegmentTable([], document.getElementById('segment-tbody'), updateSegmentSummaryFromDom);
     } 
     document.getElementById('modal-settings').classList.add('open'); 
 }
@@ -579,37 +578,6 @@ function parseTimeStr(str) {
     } else {
         return parseFloat(str);
     }
-}
-
-function renderSegmentTable(segments) {
-    const tbody = document.getElementById('segment-tbody');
-    tbody.innerHTML = '';
-    segments.forEach((s, idx) => {
-        addSegmentRow(s.distance, s.pace);
-    });
-    if (segments.length === 0) addSegmentRow(400, 72); 
-    updateSegmentSummary();
-}
-
-function addSegmentRow(dist = "", pace = "") {
-    const tbody = document.getElementById('segment-tbody');
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td><input type="number" class="segment-input inp-dist" value="${dist}" step="100"></td>
-        <td><input type="number" class="segment-input inp-pace" value="${pace}" step="0.1"></td>
-        <td><button class="btn-sm btn-danger" onclick="removeSegmentRow(this)">×</button></td>
-    `;
-    tbody.appendChild(tr);
-    tr.querySelectorAll('input').forEach(inp => {
-        inp.addEventListener('input', updateSegmentSummary);
-        inp.addEventListener('change', updateSegmentSummary);
-    });
-    updateSegmentSummary();
-}
-
-function removeSegmentRow(btn) {
-    btn.closest('tr').remove();
-    updateSegmentSummary();
 }
 
 function saveModalData() { 
@@ -681,7 +649,7 @@ function commitPace(rid, pid) { /* logic */ renderRace(); saveRaces(); }
 function openVersionModal() { document.getElementById('modal-version').classList.add('open'); }
 function closeVersionModal() { document.getElementById('modal-version').classList.remove('open'); }
 
-function updateSegmentSummary() {
+function updateSegmentSummaryFromDom() {
     const summaryEl = document.getElementById('segment-total-time');
     if (!summaryEl) return;
     const r = races.find(x => x.id === modalState.target.raceId);
@@ -689,12 +657,7 @@ function updateSegmentSummary() {
         summaryEl.innerText = "ゴール予想タイム: --:--.-";
         return;
     }
-    const segments = [];
-    document.querySelectorAll('#segment-tbody tr').forEach(tr => {
-        const d = parseFloat(tr.querySelector('.inp-dist').value);
-        const p = parseFloat(tr.querySelector('.inp-pace').value);
-        if (d > 0 && p > 0) segments.push({ distance: d, pace: p });
-    });
+    const segments = readSegmentsFromDom();
     if (segments.length === 0) {
         summaryEl.innerText = "ゴール予想タイム: --:--.-";
         return;
@@ -706,6 +669,16 @@ function updateSegmentSummary() {
     const plan = PaceCalculator.createPlanFromSegments(segments, 400);
     const total = plan.length ? plan[plan.length - 1].endTime : 0;
     summaryEl.innerText = `ゴール予想タイム: ${total > 0 ? formatTime(total) : '--:--.-'}`;
+}
+
+function readSegmentsFromDom() {
+    const segments = [];
+    document.querySelectorAll('#segment-tbody tr').forEach(tr => {
+        const d = parseFloat(tr.querySelector('.inp-dist').value);
+        const p = parseFloat(tr.querySelector('.inp-pace').value);
+        if (d > 0 && p > 0) segments.push({ distance: d, pace: p });
+    });
+    return segments;
 }
 
 // Fallback global bindings in case initUI fails early

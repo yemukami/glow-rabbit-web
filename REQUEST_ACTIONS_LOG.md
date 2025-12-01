@@ -62,3 +62,4 @@
 - 要求: 他行のレース設定送信後に旧行の再送が必要とわかるようにし、表記も統一すること。
   対応: sync/start完了時に他レースのinitialConfigSentをfalse・syncNeededをtrueにする処理を追加し、上書き後に他行が「要レース設定再送」と表示されるようにした。文言はレース設定再送で統一済み。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js` を実行。コミット/プッシュ済み。
   - 追記: start時のimport漏れによる未定義エラーを修正（ヘルパーを正しく読み込み）。テスト再実行。
+  - 追記2: セグメントモーダルのrenderer分離で重複定義エラーを解消し、`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を再実行。コミット/プッシュ予定。
