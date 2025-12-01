@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.105)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.106)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -14,7 +14,7 @@
   4) 複数ペーサー走行で、速いペーサーが距離+50mで止まり、全員到達後にSTOP 1回が送られることを確認。
 
 ## 現行バージョン
-- `v2.1.0-beta.105`
+- `v2.1.0-beta.106`
 - STOP/オーバーラン: プロトコル上 stopRunner は全体停止のみ。UIは距離+50mまで表示進行、全員到達時にSTOP 1回送信。ペーサー個別STOPはFW拡張が必要。
 
 ## これまでの主要作業
@@ -38,13 +38,8 @@
 - 入力ガード（非負/正整数）のユニットテストを追加し、サニタイズ挙動を固定化。
 - テスト拡充: race-service / race-sync-service / race-renderer / ui-logic ほか。
 
-## 残タスク（優先イメージ）
-1. renderer全面移行: `ui-controller`に残るDOM操作・進行更新をrenderer/view-model経由に集約。  
-2. 状態遷移一元化: `activeRaceId`/status遷移をサービス側に寄せ、UIはイベント発火＋描画のみ。  
-3. 入力バリデーション/ログ整理: 距離/startPos/人数/ペースのガード共通化、エラーメッセージ統一。  
-4. STARTラグ可視化UI: 送信サマリを軽いデバッグ表示へ（挙動変更なし）。  
-5. ペーサー個別STOPの可否検討: プロトコル拡張前提。FW対応が必要か要判断。  
-6. テスト追加: renderer/view-modelケース、ui-controllerのガード/エラー表示周り。
+## 残タスク（作業時は REMAINING_TASKS.md を参照）
+- 詳細は `REMAINING_TASKS.md` に集約（完了済みは除外）。  
 
 ## 次スレ開始時に伝えること（コピペ用）
 「現行 v2.1.0-beta.102。必読: REMORSE_AND_PREVENTION.md / REQUEST_ACTIONS_LOG.md / SYNC_START_SPEC.md / REMORSE_LOG.md。同期/START分離: 同期で色/ペース送信、STARTは先行点灯＋startRunnerのみ（未送信時は自動送信）。未接続で同期/STARTはアラート、STOPは未接続でもdry-run（接続時は送信）。STOP後は再同期必須。syncNeededバッジあり。STOPは全体1回のみで表示は距離+50mまで進め、全員到達でSTOP。進捗: renderer/デリゲーション化を維持しつつ、レース参照をmanagerのgetRaceById/getActiveRace経由に統一し start/stop/sync/モーダルのガードを強化、startPosを非負サニタイズ。dummy/未設定デバイス試験点灯ガードも継続。残タスク: renderer全面移行/状態遷移一元化/入力・ログ整理/STARTラグ可視化/ペーサー個別STOP検討/テスト追加。E2E手順（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止確認、バッジ/ツールチップ確認）を必ず実施。」

@@ -658,3 +658,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（Pass）。
 - 感想: サニタイズ挙動をテストで固定でき、今後の入力バリデーション整理の土台を作れた。
 - E2E確認手順メモ（手動）: 従来手順に加え、距離/人数/スタート位置で負値・無効値を入れてもデフォルトに丸められることを確認する。
+
+### 2025-12-xx 追加ログ（このターン-49）
+- 作業: 残作業を明示する `REMAINING_TASKS.md` を追加し、残タスク参照先をSTATUS/NEXTに記載。バージョンを `v2.1.0-beta.106` に更新。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
+- 感想: 残タスクを一箇所に集約できたので、作業中の参照がシンプルになった。
+- E2E確認手順メモ（手動）: 従来手順（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認）を継続。入力ガードや残タスクは REMAINING_TASKS.md 参照。
