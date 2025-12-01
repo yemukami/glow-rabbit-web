@@ -17,3 +17,9 @@ export function setSelectedColor(state, color) {
 export function setActiveTab(state, tab) {
     state.activeTab = tab;
 }
+
+export function resetModalState(state) {
+    state.target = {};
+    state.selectedColor = 'red';
+    state.activeTab = 'simple';
+}

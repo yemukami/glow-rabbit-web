@@ -19,7 +19,7 @@ import { attachDeviceGridHandlers } from './device-grid-events.js';
 import { renderSetupTable } from './setup-renderer.js';
 import { renderConnectionStatus } from './connection-renderer.js';
 import { renderReplaceModal, updateReplaceMacText } from './replace-modal-renderer.js';
-import { createModalState, setActiveTab, setModalTarget, setSelectedColor } from './race-modal-state.js';
+import { createModalState, resetModalState, setActiveTab, setModalTarget, setSelectedColor } from './race-modal-state.js';
 import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
@@ -481,6 +481,7 @@ function updateStartPos(id, val) {
 
 // --- MODAL ---
 function openModal(rid, pid) { 
+    resetModalState(modalState);
     setModalTarget(modalState, { raceId: rid, pacerId: pid });
     const r=races.find(x=>x.id===rid); 
     
