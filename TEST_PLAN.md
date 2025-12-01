@@ -19,6 +19,6 @@
    - デバイスアクションモーダルの表示内容とボタン動作がクラッシュなく動くこと（デリゲーション経由）を確認
 
 ## Results
-- `node --check js/ui/ui-controller.js`: Pass  
-- `node js/test/ui-logic.test.js`: Pass  
+- 2025-12-xx: `node --check js/ui/ui-controller.js` (Pass)  
+- 2025-12-xx: `node js/test/ui-logic.test.js` (Pass)  
 - Manual E2E: 未実施（実機/HTTPS環境が必要）
