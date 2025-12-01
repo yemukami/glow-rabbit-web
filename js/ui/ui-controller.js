@@ -13,7 +13,7 @@ import { buildRaceTableHTML, updateRunningDisplays } from './race-renderer.js';
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
 import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
-import { renderSegmentTable, addSegmentRow, updateSegmentSummary } from './race-modal-renderer.js';
+import { renderSegmentTable } from './race-modal-renderer.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = {
     target: {},
@@ -210,8 +210,8 @@ export function initUI() {
         console.error("[Init] Switch Mode Failed, falling back to 'setup'", e);
         switchMode('setup', true);
     }
-    const tbody = document.getElementById('race-tbody');
-    attachRaceTableHandlers(tbody, {
+    const raceTbody = document.getElementById('race-tbody');
+    attachRaceTableHandlers(raceTbody, {
         onToggleRow: toggleRow,
         onConnect: connectBLE,
         onSync: syncRaceWrapper,
@@ -221,6 +221,7 @@ export function initUI() {
         onReset: resetRace,
         onUpdateStartPos: updateStartPos
     });
+    attachSetupTableHandlers();
 }
 
 function handleNotification(event) {
@@ -330,16 +331,44 @@ function renderSetup() {
         const startPosVal = escapeHTML(r.startPos);
         const countVal = escapeHTML(r.count);
         tr.innerHTML = `
-            <td><input type="time" class="input-cell" value="${timeVal}" onchange="updateData(${r.id}, 'time', this.value)"></td>
-            <td><input type="text" class="input-cell" value="${nameVal}" onchange="updateData(${r.id}, 'name', this.value)"></td>
-            <td><input type="number" class="input-cell" min="1" value="${groupVal}" onchange="updateData(${r.id}, 'group', this.value)"></td>
-            <td><input type="number" class="input-cell" min="0" value="${distanceVal}" onchange="updateData(${r.id}, 'distance', this.value)"></td>
-            <td><input type="number" class="input-cell input-start" min="0" value="${startPosVal}" onchange="updateData(${r.id}, 'startPos', this.value)" step="any"></td>
-            <td><input type="number" class="input-cell" min="0" value="${countVal}" onchange="updateData(${r.id}, 'count', this.value)"></td>
-            <td>${ph} <button class="btn-sm btn-outline" onclick="openModal(${r.id},null)">＋</button></td>
-            <td><button class="btn-sm btn-danger" style="border:none; background:#FFF0F0;" onclick="deleteRow(${r.id})">削除</button></td>
+            <td><input type="time" class="input-cell" value="${timeVal}" data-action="update-field" data-field="time" data-race-id="${r.id}"></td>
+            <td><input type="text" class="input-cell" value="${nameVal}" data-action="update-field" data-field="name" data-race-id="${r.id}"></td>
+            <td><input type="number" class="input-cell" min="1" value="${groupVal}" data-action="update-field" data-field="group" data-race-id="${r.id}"></td>
+            <td><input type="number" class="input-cell" min="0" value="${distanceVal}" data-action="update-field" data-field="distance" data-race-id="${r.id}"></td>
+            <td><input type="number" class="input-cell input-start" min="0" value="${startPosVal}" data-action="update-field" data-field="startPos" data-race-id="${r.id}" step="any"></td>
+            <td><input type="number" class="input-cell" min="0" value="${countVal}" data-action="update-field" data-field="count" data-race-id="${r.id}"></td>
+            <td>${ph} <button class="btn-sm btn-outline" data-action="open-modal" data-race-id="${r.id}">＋</button></td>
+            <td><button class="btn-sm btn-danger" style="border:none; background:#FFF0F0;" data-action="delete-race" data-race-id="${r.id}">削除</button></td>
         `;
         tb.appendChild(tr);
+    });
+}
+
+function attachSetupTableHandlers() {
+    const tb = document.getElementById('setup-tbody');
+    if (!tb || tb.__handlersAttached) return;
+    tb.__handlersAttached = true;
+
+    tb.addEventListener('click', (event) => {
+        const actionEl = event.target.closest('[data-action]');
+        if (!actionEl) return;
+        const action = actionEl.dataset.action;
+        const raceId = parseInt(actionEl.dataset.raceId, 10);
+        if (Number.isNaN(raceId)) return;
+        if (action === 'open-modal') {
+            openModal(raceId, null);
+        } else if (action === 'delete-race') {
+            deleteRow(raceId);
+        }
+    });
+
+    tb.addEventListener('change', (event) => {
+        const fieldEl = event.target.closest('[data-action="update-field"]');
+        if (!fieldEl) return;
+        const raceId = parseInt(fieldEl.dataset.raceId, 10);
+        const field = fieldEl.dataset.field;
+        if (Number.isNaN(raceId) || !field) return;
+        updateData(raceId, field, fieldEl.value);
     });
 }
 

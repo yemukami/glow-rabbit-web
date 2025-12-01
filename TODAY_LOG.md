@@ -510,3 +510,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: モーダル周りのrenderer移行を進め、重複定義によるクラッシュを防止。挙動は据え置き。
 - E2E確認手順メモ（手動）: モーダルを開き、セグメント行の追加/削除がクラッシュせず動作することを確認（レース設定再送/START/STOPの基本手順は従来通り）。***
+
+### 2025-12-xx 追加ログ（このターン-39）
+- 作業: ルール再読し、Setupテーブルの操作をデリゲーション化してinline handlerを削減。レースモーダルrenderer分離を維持し、バージョンを `v2.1.0-beta.80` に更新（STATUS/NEXTは後続で同期予定）。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
+- 感想: renderer全面移行に向けたUI分離を進め、コントローラの責務を軽くした。挙動は据え置き。
+- E2E確認手順メモ（手動）: Setupで各入力を変更/削除/モーダル開閉がクラッシュなく動作することを確認し、レース設定再送→START/STOPの基本フローとバッジ表示が変わらないことを確認する。
