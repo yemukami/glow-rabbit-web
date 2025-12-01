@@ -492,3 +492,9 @@
 - テスト: `node --check js/utils/render-utils.js`; `node --check js/ui/race-renderer.js`; `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: ボタン/バッジの文言をレース設定再送に統一し、ユーザーが「何を送るのか」を明確にした。挙動は据え置き。
 - E2E確認手順メモ（手動）: 従来手順に加え、SYNCボタンの表記が「レース設定再送」であることと、要レース設定再送バッジのツールチップが表示されることを確認する。
+
+### 2025-12-xx 追加ログ（このターン-36）
+- 作業: ルール/仕様を再読し、レース設定再送を行った際に他レースを未同期扱いにする処理を追加（sync/start完了時に他レースのinitialConfigSentをfalse、syncNeededをtrueへ）。要レース設定再送文言は維持。挙動は仕様（STOP後再同期必須・SYNC/STARTは色/ペース送信）を踏襲。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
+- 感想: レースごとに設定を上書きする運用を明示し、他レースが再送待ちであることを確実に可視化できるようにした。
+- E2E確認手順メモ（手動）: 1) レース1でレース設定再送→レース1のバッジ消失、レース2が「要レース設定再送」になることを確認。2) レース2をSTART→レース1のバッジは残り、レース2は走行後STOPで再度バッジが立つことを確認。3) ツールチップ表記が「レース設定再送」であることを確認。

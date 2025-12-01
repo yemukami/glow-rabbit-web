@@ -59,3 +59,5 @@
   対応: ルール再読後、SYNCボタンに「同期」表記＋ツールチップを付与し、要同期バッジに「色/ペース設定を再送」の説明を追加（挙動変更なし）。バージョンをv2.1.0-beta.78に更新し、STATUS/NEXT/TODAYへ反映。`node --check`（render-utils/race-renderer/ui-controller）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を実行。E2E手順にバッジ/ボタンの意味確認を追記。コミット/プッシュ済み。
 - 要求: syncの意味がレース設定送信であるならそのような名称にすること。
   対応: SYNCボタンを「レース設定再送」表記＋ツールチップに変更し、要同期バッジを「要レース設定再送」表記＋説明に更新（挙動は不変）。バージョンをv2.1.0-beta.79に更新し、STATUS/NEXT/TODAYへ反映。`node --check`（render-utils/race-renderer/ui-controller）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を再実行。E2E手順に表記/ツールチップ確認を追加。コミット/プッシュ済み。
+- 要求: 他行のレース設定送信後に旧行の再送が必要とわかるようにし、表記も統一すること。
+  対応: sync/start完了時に他レースのinitialConfigSentをfalse・syncNeededをtrueにする処理を追加し、上書き後に他行が「要レース設定再送」と表示されるようにした。文言はレース設定再送で統一済み。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js` を実行。コミット/プッシュ済み。

@@ -12,6 +12,7 @@ import { buildSetupPacerChips } from './race-view-model.js';
 import { buildRaceTableHTML, updateRunningDisplays } from './race-renderer.js';
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
+import { markRaceUnsynced } from './race-unsync-helpers.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = {
     target: {},
@@ -416,6 +417,7 @@ async function startRaceWrapper(id) {
     if (startResult && startResult.records) {
         console.log("[startRaceWrapper] Start command records:", startResult.records.length, startResult.records);
     }
+    markOtherRacesUnsynced(races, id);
     resetElapsedTime();
     clearRaceInterval();
     renderRace();
@@ -451,6 +453,7 @@ async function syncRaceWrapper(id) {
     if (res.ok) {
         console.log("[syncRaceWrapper] Synced race", { raceId: r.id, commands: res.records?.length });
         saveRaces();
+        markOtherRacesUnsynced(races, r.id);
         renderRace();
         alert("同期完了（色/ペース送信）");
     }
