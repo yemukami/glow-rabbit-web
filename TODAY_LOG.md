@@ -293,3 +293,8 @@
 - 作業: 同期/START仕様のリマインドファイル SYNC_START_SPEC.md を追加し、旧BLE API を legacy/ 配下に退避（戻し方メモを添付）。syncNeeded/initialConfigSent をサービス側に寄せ、UIの直接操作を削減。race-view-model/render-utils/data-utils/color-utils を活用し、レース行描画を renderer 分割の第一歩として切り出し。完走時の未定義関数呼び出しを修正。
 - テスト: `node --check js/core/race-service.js`, `js/core/race-sync-service.js`, `js/ui/ui-controller.js`, `js/utils/render-utils.js`; `node js/test/race-service.test.js`; `node js/test/ui-logic.test.js`（いずれも成功）。
 - 感想: 同期/START責務を固定したまま可読性を上げる方向に進めた。renderer分割は未完了だが、view-modelとの分離が進み、次ターンでDOM生成を全面移行しやすい状態になった。
+
+### 2025-12-xx 追加ログ（このターン-2）
+- 作業: renderer を view-model と連携させ、編集中ペースも表示できるよう調整。race-view-model向けのミニテストを追加（computeLeadAndFillとエスケープ/バッジ確認）。バージョンを `v2.1.0-beta.50` に更新。
+- テスト: `node --check js/ui/race-renderer.js`, `js/ui/ui-controller.js`; `node js/test/race-view-model.test.js`; 既存 race-service/ui-logic テストを再確認。
+- 感想: 描画責務の分離が進み、純粋関数のテストを追加できた。次は renderer の全面適用とサービス層での状態遷移一元化をさらに進めたい。
