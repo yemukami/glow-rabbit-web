@@ -333,3 +333,8 @@
 - 作業: pacerがゴールしたあとも距離上昇を続けていた挙動を見直し、finishTime 設定後は移動/プレ送信を止めつつ、オーバーラン許容のまま完走判定するよう `advanceRaceTick` を修正。stop後は同期必須にするため `initialConfigSent=false` / `syncNeeded=true` を設定を継続。バージョンを `v2.1.0-beta.59` に更新。
 - テスト: `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`。
 - 感想: ゴール後に色/ペースが混ざるリスクを減らしつつ、オーバーラン自体は維持する形に調整。実機で色混在が解消するか再確認したい。
+
+### 2025-12-xx 追加ログ（このターン-9）
+- 作業: STOPを未接続でも押せるようにし、未接続時はdry-runで記録だけ行いつつUIを停止するよう変更（接続時は従来通り送信）。バージョンを `v2.1.0-beta.61` に更新。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
+- 感想: 実機未接続でもSTOP操作でUIを止められるようにし、接続時はこれまで通りstopRunnerを送る。接続が切れても緊急停止しやすい状態にした。

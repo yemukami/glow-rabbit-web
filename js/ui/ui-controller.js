@@ -429,13 +429,13 @@ async function startRaceWrapper(id) {
 }
 
 async function stopRaceWrapper(id) {
-    if (!isConnected) {
-        alert("BLE未接続です。接続してからSTOPしてください。");
-        return;
+    const dryRun = !isConnected;
+    if (dryRun) {
+        alert("BLE未接続のためSTOP信号は送れません。表示のみ停止します。");
     }
     try {
         const race = races.find(x=>x.id===id);
-        const res = await stopRaceService(race, { dryRun: false });
+        const res = await stopRaceService(race, { dryRun });
         if (res && res.records) {
             console.log("[stopRaceWrapper] Stop command records:", res.records.length, res.records);
         }
