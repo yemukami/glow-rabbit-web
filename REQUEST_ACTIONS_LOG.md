@@ -65,3 +65,4 @@
   - 追記2: セグメントモーダルのrenderer分離で重複定義エラーを解消し、`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を再実行。コミット/プッシュ予定。
 - 要求: 残タスク順に進め、ルール再読・E2E手順提示・ログ/バージョン/プッシュを行うこと。
   対応: Setupテーブル操作をデリゲーション化してinline handlerを削減。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行。バージョンをv2.1.0-beta.80に更新予定（STATUS/NEXT/TODAY同期含む）。
+  追記: デバイス一覧・置換モーダルの操作をデリゲーション化し、inline handlerを除去。バージョンをv2.1.0-beta.81に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行。E2E手順にデバイス操作確認を追加。

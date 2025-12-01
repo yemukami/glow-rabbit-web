@@ -713,8 +713,6 @@ function readSegmentsFromDom() {
 // Fallback global bindings in case initUI fails early
 if (typeof window !== 'undefined') {
     window.switchModalTab = window.switchModalTab || switchModalTab;
-    window.addSegmentRow = window.addSegmentRow || addSegmentRow;
-    window.removeSegmentRow = window.removeSegmentRow || removeSegmentRow;
 }
 
 function renderDeviceList() {
@@ -728,7 +726,7 @@ function renderDeviceList() {
         countEl.innerText = `${deviceList.length} / ${maxDevices}`;
     }
 
-    let html = `<div class="device-grid ${deviceInteraction.mode === 'swapping' ? 'mode-swapping' : ''}">`;
+    let html = `<div class="device-grid ${deviceInteraction.mode === 'swapping' ? 'mode-swapping' : ''}" id="device-grid">`;
     for (let i = 0; i < maxDevices; i++) {
         const d = deviceList[i];
         const dist = i * deviceSettings.interval;
@@ -740,14 +738,11 @@ function renderDeviceList() {
             else { cellClass += ' cell-active'; macDisplay=d.mac.slice(-5); } // Simplified
         } else { cellClass += ' cell-empty'; }
         
-        let onClick = `openDeviceActionMenu(${i})`;
-        if (deviceInteraction.mode === 'swapping') onClick = `triggerStartSwap(${i})`; // Wait, executeSwap?
-        // Re-bind execute logic needs export
-        
-        html += `<div class="${cellClass}" onclick="${onClick}"><span>#${i+1} ${dist}m</span><br><small>${macDisplay}</small></div>`;
+        html += `<div class="${cellClass}" data-device-idx="${i}" data-action="open-device"><span>#${i+1} ${dist}m</span><br><small>${macDisplay}</small></div>`;
     }
     html += `</div>`;
     container.innerHTML = html;
+    attachDeviceListHandlers();
 }
 
 // CSV functions...
@@ -813,12 +808,19 @@ function updateReplaceModalUI(mac) {
                 <p>Target: #${deviceInteraction.targetIndex + 1}</p>
                 <p>Detected MAC: <strong id="replace-mac-display" style="font-size:1.2em; color:var(--primary-color);">Scanning...</strong></p>
                 <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
-                    <button class="btn-sm btn-outline" onclick="cancelReplace()">Cancel</button>
-                    <button class="btn-sm btn-primary" onclick="confirmReplace()">Replace</button>
+                    <button class="btn-sm btn-outline" data-action="replace-cancel">Cancel</button>
+                    <button class="btn-sm btn-primary" data-action="replace-confirm">Replace</button>
                 </div>
             </div>
         `;
         document.body.appendChild(el);
+        el.addEventListener('click', (e) => {
+            if (e.target === el) el.remove();
+            const actionEl = e.target.closest('[data-action]');
+            if (!actionEl) return;
+            if (actionEl.dataset.action === 'replace-cancel') cancelReplace();
+            if (actionEl.dataset.action === 'replace-confirm') confirmReplace();
+        });
     }
     const display = document.getElementById('replace-mac-display');
     if(display) display.innerText = mac;
@@ -830,24 +832,57 @@ function openDeviceActionMenu(i) {
     
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay open';
-    overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
-    
     overlay.innerHTML = `
         <div class="modal-content" style="width:320px;">
             <h3 style="margin-top:0;">Device #${i+1} (${dist}m)</h3>
             <p style="color:#888; margin-bottom:20px;">MAC: ${d ? d.mac : 'None'} <br> Status: ${d ? d.status : 'Empty'}</p>
             <div style="display:flex; flex-direction:column; gap:12px;">
-                <button class="btn-sm btn-outline" onclick="triggerBlink(${i})">💡 Test Blink</button>
-                <button class="btn-sm btn-outline" onclick="triggerStartSwap(${i}); this.closest('.modal-overlay').remove();">⇄ Swap Position</button>
-                <button class="btn-sm btn-outline" onclick="triggerStartReplace(${i}); this.closest('.modal-overlay').remove();">🔄 Replace (Scan)</button>
-                 <button class="btn-sm btn-outline" onclick="triggerReplace(${i}); this.closest('.modal-overlay').remove();">✏️ Edit MAC Manually</button>
-                <button class="btn-sm btn-outline" onclick="triggerDummy(${i}); this.closest('.modal-overlay').remove();">👻 Set to Dummy</button>
-                <button class="btn-sm btn-danger" onclick="triggerRemove(${i}); this.closest('.modal-overlay').remove();">🗑 Remove</button>
+                <button class="btn-sm btn-outline" data-action="device-blink" data-idx="${i}">💡 Test Blink</button>
+                <button class="btn-sm btn-outline" data-action="device-swap" data-idx="${i}">⇄ Swap Position</button>
+                <button class="btn-sm btn-outline" data-action="device-replace-scan" data-idx="${i}">🔄 Replace (Scan)</button>
+                <button class="btn-sm btn-outline" data-action="device-replace-manual" data-idx="${i}">✏️ Edit MAC Manually</button>
+                <button class="btn-sm btn-outline" data-action="device-dummy" data-idx="${i}">👻 Set to Dummy</button>
+                <button class="btn-sm btn-danger" data-action="device-remove" data-idx="${i}">🗑 Remove</button>
             </div>
             <div style="margin-top:20px; text-align:right;">
-                <button class="btn-sm" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                <button class="btn-sm" data-action="modal-close">Close</button>
             </div>
         </div>
     `;
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+            return;
+        }
+        const actionEl = e.target.closest('[data-action]');
+        if (!actionEl) return;
+        const idx = parseInt(actionEl.dataset.idx, 10);
+        const action = actionEl.dataset.action;
+        if (action === 'modal-close') { overlay.remove(); return; }
+        if (Number.isNaN(idx)) return;
+        if (action === 'device-blink') triggerBlink(idx);
+        if (action === 'device-swap') { triggerStartSwap(idx); overlay.remove(); }
+        if (action === 'device-replace-scan') { triggerStartReplace(idx); overlay.remove(); }
+        if (action === 'device-replace-manual') { triggerReplace(idx); overlay.remove(); }
+        if (action === 'device-dummy') { triggerDummy(idx); overlay.remove(); }
+        if (action === 'device-remove') { triggerRemove(idx); overlay.remove(); }
+    });
     document.body.appendChild(overlay);
+}
+
+function attachDeviceListHandlers() {
+    const grid = document.getElementById('device-grid');
+    if (!grid || grid.__handlersAttached) return;
+    grid.__handlersAttached = true;
+    grid.addEventListener('click', (e) => {
+        const cell = e.target.closest('[data-action="open-device"]');
+        if (!cell) return;
+        const idx = parseInt(cell.dataset.deviceIdx, 10);
+        if (Number.isNaN(idx)) return;
+        if (deviceInteraction.mode === 'swapping') {
+            startSwapMode(idx);
+        } else {
+            openDeviceActionMenu(idx);
+        }
+    });
 }

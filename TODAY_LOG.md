@@ -516,3 +516,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: renderer全面移行に向けたUI分離を進め、コントローラの責務を軽くした。挙動は据え置き。
 - E2E確認手順メモ（手動）: Setupで各入力を変更/削除/モーダル開閉がクラッシュなく動作することを確認し、レース設定再送→START/STOPの基本フローとバッジ表示が変わらないことを確認する。
+
+### 2025-12-xx 追加ログ（このターン-40）
+- 作業: ルール/仕様を再読し、デバイス一覧と置換モーダルの操作をデリゲーション化（inline handler除去）。device-gridセルはdata-action経由、オーバーレイのボタンもdata-action化。バージョンを `v2.1.0-beta.81` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
+- 感想: デバイス操作まわりのクラッシュ要因（inlineハンドラ漏れ）を減らし、renderer全面移行に一歩前進。挙動は据え置き。
+- E2E確認手順メモ（手動）: デバイスグリッドでセルクリック→アクションモーダル表示、モーダルの各ボタン（Blink/Swap/Replace scan・manual/Dummy/Remove/Close）がエラーなく動作し、グリッドが再描画されることを確認。従来のレース設定再送→START/STOP→距離+50m停止→バッジ表示が変わらないことも合わせて確認。
