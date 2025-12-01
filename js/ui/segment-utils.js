@@ -1,5 +1,5 @@
 import { PaceCalculator } from '../core/pace-calculator.js';
-import { roundToTenth } from '../utils/render-utils.js';
+import { roundToTenth, formatTime } from '../utils/render-utils.js';
 
 export function readSegmentsFromDomRows(rows) {
     const segments = [];
@@ -36,7 +36,7 @@ export function computeSegmentSummaryText(race, rows) {
     if (segments.length === 0) return summary;
     const plan = PaceCalculator.createPlanFromSegments(segments, 400);
     const total = plan.length ? plan[plan.length - 1].endTime : 0;
-    summary.text = `ゴール予想タイム: ${total > 0 ? PaceCalculator.formatTime(total) : '--:--.-'}`;
+    summary.text = `ゴール予想タイム: ${total > 0 ? formatTime(total) : '--:--.-'}`;
     summary.valid = total > 0;
     return summary;
 }
