@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.104)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.105)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -14,7 +14,7 @@
   4) 複数ペーサー走行で、速いペーサーが距離+50mで止まり、全員到達後にSTOP 1回が送られることを確認。
 
 ## 現行バージョン
-- `v2.1.0-beta.104`
+- `v2.1.0-beta.105`
 - STOP/オーバーラン: プロトコル上 stopRunner は全体停止のみ。UIは距離+50mまで表示進行、全員到達時にSTOP 1回送信。ペーサー個別STOPはFW拡張が必要。
 
 ## これまでの主要作業
@@ -35,6 +35,7 @@
 - レース参照をmanagerの getRaceById/getActiveRace 経由に寄せ、start/stop/sync/モーダルのガードを強化。startPos更新を非負サニタイズに変更。
 - startRaceServiceでもstartPosを非負サニタイズし、race.startPosへ反映するように統一。
 - startPosサニタイズをテストでカバーし、負値入力が0に丸められることを確認。
+- 入力ガード（非負/正整数）のユニットテストを追加し、サニタイズ挙動を固定化。
 - テスト拡充: race-service / race-sync-service / race-renderer / ui-logic ほか。
 
 ## 残タスク（優先イメージ）

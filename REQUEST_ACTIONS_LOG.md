@@ -96,3 +96,6 @@
 
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
   対応: startPosの非負サニタイズをrace-serviceテストでカバーし、負値入力が0に丸められることを検証。バージョンをv2.1.0-beta.104に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js` を実行（Pass）。SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定。
+
+- 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
+  対応: 入力ガードの単体テスト `input-guards.test.js` を追加し、非負/正整数サニタイズを検証。バージョンをv2.1.0-beta.105に更新し、STATUS/NEXT/TODAYへ反映。`node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js`, `node js/test/input-guards.test.js` を実行（Pass）。SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定。

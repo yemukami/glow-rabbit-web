@@ -652,3 +652,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（Pass）。
 - 感想: サービス層ガードの動作をテストで固定でき、今後のリファクタでも安心して触れるようになった。
 - E2E確認手順メモ（手動）: 従来手順＋startPos負値でSTARTしても0扱いになることを確認する。
+
+### 2025-12-xx 追加ログ（このターン-48）
+- 作業: 入力ガード（非負/正整数）を単体テストでカバーする `input-guards.test.js` を追加し、バージョンを `v2.1.0-beta.105` に更新。STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（Pass）。
+- 感想: サニタイズ挙動をテストで固定でき、今後の入力バリデーション整理の土台を作れた。
+- E2E確認手順メモ（手動）: 従来手順に加え、距離/人数/スタート位置で負値・無効値を入れてもデフォルトに丸められることを確認する。
