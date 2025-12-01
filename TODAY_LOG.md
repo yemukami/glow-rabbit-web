@@ -462,3 +462,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: startPos変更後に要同期バッジがすぐ見えるようになり、手動漏れを防げる形に整理。挙動は仕様どおりのまま。
 - E2E確認手順メモ（手動）: 従来手順に加え、展開行でstartPosを変更→syncNeededバッジが即表示されることを確認する。
+
+### 2025-12-xx 追加ログ（このターン-31）
+- 作業: ルール/仕様を再確認。フラグ挙動を明文化（SYNC/START/STOPはレース単位でinitialConfigSent/syncNeededを更新し、他レースには波及しない）。バージョンを `v2.1.0-beta.76` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
+- 感想: レース間のフラグ混線がないことをドキュメントにも刻み、運用時に安心して多レースを扱える状態にした。
+- E2E確認手順メモ（手動）: 従来手順＋1行目をSYNC→2行目をSTARTした場合に、それぞれのsyncNeeded/initialConfigSentが独立して動くことを確認する（STOP後はそのレースのみsyncNeededが立つこと）。
