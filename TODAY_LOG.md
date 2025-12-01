@@ -61,6 +61,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
 - 感想: activeRaceIdの責務がほぼサービス側にまとまり、状態遷移一元化の方向性が固まってきた。次は入力バリデーション/ログ整理に着手したい。
 
+### 2025-12-xx 追加ログ（状態遷移整理の一歩目-5）
+- 作業: reset時もサービス側でactiveRaceIdをクリアするよう整理し、UI依存をさらに削減。バージョンを `v2.1.0-beta.96` に更新。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`（Pass）。手動E2Eは未実施（接続環境が必要）。
+- 感想: 状態クリアの責務がサービス側に寄り、UIの重複処理が減った。次は入力ガード/ログ整理に進める段階。
+
 # 作業ログ: Glow-Rabbit Web App - 2025年11月28日
 
 ## 本日の作業概要
