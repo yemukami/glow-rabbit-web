@@ -634,3 +634,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
 - 感想: モーダル周りの呼び出し漏れを潰し、クラッシュを解消。引き続きrenderer化を安全に進行。
 - E2E確認手順メモ（手動）: セグメントタブを開いてもエラーが出ないことを確認し、従来のレース設定再送→START/STOP→距離+50m停止・バッジ挙動が変わらないことを確認する。
+
+### 2025-12-xx 追加ログ（このターン-45）
+- 作業: レース参照を race-manager の getRaceById/getActiveRace 経由に寄せ、start/stop/sync/モーダル周りのガードを強化。startPos 更新を非負サニタイズに変更し、対象レース未発見時にアラートを出すように整理。バージョンを `v2.1.0-beta.102` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-manager.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（Pass）。
+- 感想: レース参照をmanager経由にまとめたことで、存在しないID操作でクラッシュしにくくなった。startPosサニタイズも共通ガードに寄せ、今後のバリデーション整理が進めやすい状態にできた。
+- E2E確認手順メモ（手動）: 従来手順（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認）に加え、startPos を負数/空で入力しても0に丸められ要再送が表示されることと、start/stop/sync/モーダル操作で存在しないレースIDの場合にアラートして安全に停止することを確認する。

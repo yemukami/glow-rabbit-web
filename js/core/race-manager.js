@@ -14,6 +14,11 @@ export function getActiveRace() {
     return races.find(r => r.id === activeRaceId) || null;
 }
 
+export function getRaceById(id) {
+    if (id === null || id === undefined) return null;
+    return races.find(r => r.id === id) || null;
+}
+
 export function loadRaces() {
     const saved = localStorage.getItem('glow_races');
     if (saved) {
