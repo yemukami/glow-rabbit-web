@@ -188,17 +188,15 @@ export function initUI() {
     console.log("[Init] Globals bound. Switching mode...");
 
     // Modal input listeners (Simple tab)
-    const targetInput = document.getElementById('modal-target-time');
-    if (targetInput) {
-        targetInput.addEventListener('input', () => {
+    bindTargetInput(
+        () => updateCalcPace(),
+        () => {
+            const targetInput = document.getElementById('modal-target-time');
+            const sec = targetInput ? parseTimeStr(targetInput.value) : 0;
+            if (sec > 0 && targetInput) targetInput.value = formatTime(sec);
             updateCalcPace();
-        });
-        targetInput.addEventListener('blur', () => {
-            const sec = parseTimeStr(targetInput.value);
-            if (sec > 0) targetInput.value = formatTime(sec);
-            updateCalcPace();
-        });
-    }
+        }
+    );
 
     // Initial Render
     const savedMode = localStorage.getItem('glow_current_mode') || 'race';

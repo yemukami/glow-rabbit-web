@@ -44,3 +44,11 @@ export function setActiveTabUI(tab) {
     if (btn) btn.classList.add('active');
     if (content) content.classList.add('active');
 }
+
+export function bindTargetInput(onInput, onBlur) {
+    const targetInput = document.getElementById('modal-target-time');
+    if (!targetInput || targetInput.__bound) return;
+    targetInput.__bound = true;
+    if (onInput) targetInput.addEventListener('input', onInput);
+    if (onBlur) targetInput.addEventListener('blur', onBlur);
+}
