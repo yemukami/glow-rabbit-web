@@ -14,7 +14,7 @@ import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, g
 import { attachRaceTableHandlers } from './race-table-events.js';
 import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
 import { renderSegmentTable } from './race-modal-renderer.js';
-import { buildDeviceGridHtml } from './device-renderer.js';
+import { buildDeviceGridHtml, buildDeviceOverlayHtml } from './device-renderer.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = {
     target: {},
@@ -818,23 +818,7 @@ function openDeviceActionMenu(i) {
     
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay open';
-    overlay.innerHTML = `
-        <div class="modal-content" style="width:320px;">
-            <h3 style="margin-top:0;">Device #${i+1} (${dist}m)</h3>
-            <p style="color:#888; margin-bottom:20px;">MAC: ${d ? d.mac : 'None'} <br> Status: ${d ? d.status : 'Empty'}</p>
-            <div style="display:flex; flex-direction:column; gap:12px;">
-                <button class="btn-sm btn-outline" data-action="device-blink" data-idx="${i}">💡 Test Blink</button>
-                <button class="btn-sm btn-outline" data-action="device-swap" data-idx="${i}">⇄ Swap Position</button>
-                <button class="btn-sm btn-outline" data-action="device-replace-scan" data-idx="${i}">🔄 Replace (Scan)</button>
-                <button class="btn-sm btn-outline" data-action="device-replace-manual" data-idx="${i}">✏️ Edit MAC Manually</button>
-                <button class="btn-sm btn-outline" data-action="device-dummy" data-idx="${i}">👻 Set to Dummy</button>
-                <button class="btn-sm btn-danger" data-action="device-remove" data-idx="${i}">🗑 Remove</button>
-            </div>
-            <div style="margin-top:20px; text-align:right;">
-                <button class="btn-sm" data-action="modal-close">Close</button>
-            </div>
-        </div>
-    `;
+    overlay.innerHTML = buildDeviceOverlayHtml(i, dist, d);
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {
             overlay.remove();

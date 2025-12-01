@@ -534,3 +534,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
 - 感想: テスト方針を先に固定してから作業するフローを明示。挙動は変えていないが、以降の変更での漏れ防止に役立つ。
 - E2E確認手順メモ（手動）: TEST_PLAN.mdに記載の手順（未接続アラート→レース設定再送→START/STOP→距離+50m停止、バッジ/ツールチップ確認、デバイス/Setup動作確認）を参照して実施する。
+
+### 2025-12-xx 追加ログ（このターン-43）
+- 作業: ルール再読後、デバイスグリッドのオーバーレイHTML生成をrendererに分離（`buildDeviceOverlayHtml`）、UIコントローラからテンプレートを除去。バージョンを `v2.1.0-beta.83` に更新。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
+- 感想: デバイス周りもrenderer側に寄せてUIコントローラを軽量化。挙動は据え置き。
+- E2E確認手順メモ（手動）: デバイスグリッドでセルクリック→モーダル表示、ボタン（Blink/Swap/Replace scan・manual/Dummy/Remove/Close）がクラッシュなく動くことを確認。

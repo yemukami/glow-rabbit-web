@@ -69,3 +69,4 @@
   追記2: Setupのペーサーチップをデリゲーション対応に変更しonclick除去。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行。次版でバージョンを同期予定。
 - 要求: テスト仕様書mdを作成し、実施テストと結果を記載すること。
   対応: `TEST_PLAN.md` を作成し、node --check/ui-logicテストと手動E2E手順を明記。テスト実行結果（auto）はPass、E2Eは未実施(環境依存)と記載。バージョンをv2.1.0-beta.82に更新し、STATUS/NEXT/TODAYに反映。
+  追記: デバイスオーバーレイHTMLをrenderer側に分離し、テンプレートをUIコントローラから排除。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行。バージョンをv2.1.0-beta.83に更新予定（次の文脈で反映）。
