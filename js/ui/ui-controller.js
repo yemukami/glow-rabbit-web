@@ -12,7 +12,7 @@ import { buildSetupPacerChips } from './race-view-model.js';
 import { buildRaceTableHTML, updateRunningDisplays } from './race-renderer.js';
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
-import { markRaceUnsynced } from './race-unsync-helpers.js';
+import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = {
     target: {},
