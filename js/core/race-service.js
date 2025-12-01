@@ -145,6 +145,7 @@ export function transitionToReview(race) {
 export function finalizeRaceState(race) {
     if (!race) return;
     race.status = 'finished';
+    setActiveRaceId(null);
 }
 
 export function resetRaceState(race) {
@@ -152,6 +153,7 @@ export function resetRaceState(race) {
     race.status = 'ready';
     race.pacers?.forEach(p => { p.currentDist = 0; p.finishTime = null; });
     resetSyncFlags(race);
+    setActiveRaceId(null);
 }
 
 export function markSyncNeeded(race) {
