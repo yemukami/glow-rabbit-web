@@ -21,6 +21,7 @@ import { renderConnectionStatus } from './connection-renderer.js';
 import { renderReplaceModal, updateReplaceMacText } from './replace-modal-renderer.js';
 import { createModalState, resetModalState, setActiveTab, setModalTarget, setSelectedColor } from './race-modal-state.js';
 import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
+import { closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -504,7 +505,7 @@ function openModal(rid, pid) {
                 let totalSec = (r.distance / 400) * p.pace;
                 tVal = formatTime(totalSec);
             }
-            document.getElementById('modal-target-time').value = tVal;
+            setTargetTimeValue(tVal);
             updateCalcPace();
         }
         // Preference: if segments exist, segments tab takes priority
@@ -516,35 +517,31 @@ function openModal(rid, pid) {
     } else { 
         // New Pacer
         selectModalColor('red'); 
-        document.getElementById('modal-target-time').value = "";
-        document.getElementById('modal-calc-pace').innerText = "--.-";
+        setTargetTimeValue("");
+        setCalcPaceText("--.-");
         updateSegmentSummaryFromDom();
         renderSegmentTable([], document.getElementById('segment-tbody'), updateSegmentSummaryFromDom);
     } 
-    document.getElementById('modal-settings').classList.add('open'); 
+    openModalUI();
 }
 
-function closeModal() { document.getElementById('modal-settings').classList.remove('open'); }
+function closeModal() { closeModalUI(); }
 function selectModalColor(c) { 
     setSelectedColor(modalState, c);
-    document.querySelectorAll('.color-option').forEach(e=>e.classList.remove('selected')); 
-    document.querySelector('.bg-'+c).classList.add('selected'); 
+    setColorSelection(c);
 }
 
 function switchModalTab(tab) {
     setActiveTab(modalState, tab);
-    document.querySelectorAll('.modal-tab').forEach(e => e.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-    document.getElementById('tab-btn-'+tab).classList.add('active');
-    document.getElementById('tab-content-'+tab).classList.add('active');
+    setActiveTabUI(tab);
     if (tab === 'segments') updateSegmentSummaryFromDom();
 }
 
 function updateCalcPace() {
-    const val = document.getElementById('modal-target-time').value;
+    const val = document.getElementById('modal-target-time')?.value;
     const r = races.find(x => x.id === modalState.target.raceId);
     const pace = r ? computePaceFromTarget(r.distance, val) : null;
-    document.getElementById('modal-calc-pace').innerText = pace && pace > 0 ? formatPace(pace) : "--.-";
+    setCalcPaceText(pace && pace > 0 ? formatPace(pace) : "--.-");
 }
 
 function saveModalData() { 
@@ -559,7 +556,7 @@ function saveModalData() {
 
     if (modalState.activeTab === 'simple') {
         // In simple mode, any existing segments are cleared
-        const tStr = document.getElementById('modal-target-time').value;
+        const tStr = document.getElementById('modal-target-time')?.value;
         const totalSec = parseTimeStr(tStr);
         if (totalSec <= 0) return alert("目標タイムを入力してください");
         
@@ -577,7 +574,7 @@ function saveModalData() {
             const p = parseFloat(tr.querySelector('.inp-pace').value);
             if (d > 0 && p > 0) segments.push({ distance: d, pace: roundToTenth(p) });
         });
-        if (segments.length === 0) return alert("区間を入力してください");
+    if (segments.length === 0) return alert("区間を入力してください");
         // ensure ascending cumulative distance
         segments.sort((a,b) => a.distance - b.distance);
         if (segments[segments.length - 1].distance < r.distance) {
