@@ -16,20 +16,17 @@ const UI_CONSTANTS = {
 
 export function advanceRaceTick(race, currentElapsed, intervalMeters) {
     let elapsed = currentElapsed + 0.1;
-    let finishedCount = 0;
+    let allFinished = true;
+    const limit = race.distance + UI_CONSTANTS.FINISH_MARGIN_METERS;
 
     race.pacers.forEach((p, idx) => {
         const runnerId = idx + 1;
         if (!p.runPlan) return;
-        if (p.finishTime !== null) {
-            finishedCount++;
-            return;
-        }
 
         let currentSeg = findActiveSegment(p.runPlan, p.currentDist);
         const nextSeg = p.runPlan[p.currentSegmentIdx + 1];
 
-        if (currentSeg) {
+        if (currentSeg && p.finishTime === null) {
             const speed = 400.0 / currentSeg.paceFor400m;
             p.currentDist += (speed * 0.1);
 
@@ -53,14 +50,17 @@ export function advanceRaceTick(race, currentElapsed, intervalMeters) {
             }
         }
 
-        if (p.currentDist >= race.distance && p.finishTime === null) {
-            p.currentDist = race.distance;
-            p.finishTime = elapsed;
-            finishedCount++;
+        if (p.finishTime === null) {
+            if (p.currentDist >= race.distance) {
+                p.finishTime = elapsed;
+            } else {
+                allFinished = false;
+            }
+        } else {
+            if (p.currentDist < limit) allFinished = false;
         }
     });
 
-    const allFinished = finishedCount === race.pacers.length && race.pacers.length > 0;
     return { elapsedTime: elapsed, allFinished };
 }
 

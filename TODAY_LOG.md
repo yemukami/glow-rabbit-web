@@ -328,3 +328,8 @@
 - 作業: pacerがゴールしたら距離をレース距離で打ち止めし、finish後は移動・プレ送信を停止するよう `advanceRaceTick` を修正（オーバーラン時の色混在対策）。stop後に再同期が必須になるよう `stopRaceService` で `initialConfigSent=false` / `syncNeeded=true` をセット。バージョンを `v2.1.0-beta.58` に更新。
 - テスト: `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`。
 - 感想: ゴール後に走行を続けて色が混ざるリスクを抑制。stop後は必ず再同期が必要になるため、次回START時に色/ペースを再送できる。
+
+### 2025-12-xx 追加ログ（このターン-8）
+- 作業: pacerがゴールしたあとも距離上昇を続けていた挙動を見直し、finishTime 設定後は移動/プレ送信を止めつつ、オーバーラン許容のまま完走判定するよう `advanceRaceTick` を修正。stop後は同期必須にするため `initialConfigSent=false` / `syncNeeded=true` を設定を継続。バージョンを `v2.1.0-beta.59` に更新。
+- テスト: `node js/test/race-service.test.js`, `node js/test/ui-logic.test.js`。
+- 感想: ゴール後に色/ペースが混ざるリスクを減らしつつ、オーバーラン自体は維持する形に調整。実機で色混在が解消するか再確認したい。
