@@ -23,3 +23,5 @@
   対応: レース行のアクションにSYNCボタンを追加し、未接続/ペーサー未設定はアラート、成功時は保存・再描画とログ出力（SYNC/START仕様変更なし、SYNC_START_SPEC順守）。
 - 要求: リファクタ優先順4（号砲同期/送信可視化）に着手すること。
   対応: start/stop/syncでコマンド本数と高優先度数をログ集計して出力（挙動変更なし、SYNC_START_SPEC順守）。
+- 要求: リファクタ優先順5（テスト拡充）に着手すること。
+  対応: race-sync-serviceのdry-runテストを追加し、初期設定送信でinitialConfigSent/syncNeededが正しく更新されることを確認（仕様変更なし、SYNC_START_SPEC順守）。

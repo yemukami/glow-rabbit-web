@@ -378,3 +378,9 @@
 - テスト: `node --check js/core/race-service.js`, `node --check js/core/race-sync-service.js`, `node js/test/race-service.test.js`。
 - 感想: コマンド内訳を即座に把握できるようになり、号砲同期検討やトラブルシュートの足がかりになる。挙動は全く変えていないので安心。
 - E2E確認手順メモ（手動）: Race行展開→SYNCボタン押下で従来どおり同期されることを確認（コンソールに送信数/高優先度数が出る）→pacer追加してSTART→STOPを実行し、コンソールログに本数サマリが出ることを確認（UI挙動は不変）。
+
+### 2025-12-xx 追加ログ（このターン-17）
+- 作業: syncサービスのdry-runテスト `race-sync-service.test.js` を追加し、初期設定送信でフラグが立つことを検証。バージョンを `v2.1.0-beta.67` に更新。実装変更なし（SYNC/START仕様そのまま）。
+- テスト: `node --check js/test/race-sync-service.test.js`, `node js/test/race-sync-service.test.js`, `node js/test/race-service.test.js`。
+- 感想: 同期フローのフラグ挙動をテストでカバーでき、後続のリファクタでも安心感が増した。仕様は動かしていない。
+- E2E確認手順メモ（手動）: 1) Race行を展開→SYNCボタンで「同期完了」表示とバッジ消失を確認。2) pacer追加後にSTART→STOPでsyncNeeded再表示を確認（未接続時は従来どおりアラート）。
