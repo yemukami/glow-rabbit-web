@@ -47,3 +47,5 @@
   対応: 必読ドキュメントを再確認した上でレースUI状態（展開行/経過時間/編集ペース/タイマー）を `race-ui-state` に集約し、renderer移行の足場を整備。v2.1.0-beta.73に更新し、STATUS/NEXT/TODAYログへ反映、`node --check`とui-logic/race-serviceテストを実行（SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定）。コミット/プッシュを実施。
 - 要求: ルールファイル/仕様を再確認し、次の優先度作業に入り懺悔・作業ログ・バージョン管理・プッシュまで行うこと。E2Eは画面から確認する手順を明記すること。
   対応: ルール再確認後、レーステーブル操作をデータ属性＋イベントデリゲーションで一元化し、行展開やSTART/STOP/SYNC/リセット/スタート位置変更の伝播をUI層で統制（SYNC/START責務は変更なし）。バージョンをv2.1.0-beta.74へ更新し、STATUS/NEXT/TODAYへ反映。`node --check`（ui-controller/race-service/race-sync-service）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を実行。E2Eは画面上で未接続アラート→SYNC→START/STOP→複数ペーサー距離+50m停止に加え、行クリック展開と展開行内アクションが折り畳まれず動作することを確認する手順を明記。コミット/プッシュ済み。
+- 要求: ルール/仕様ファイルを再度確認し、次の優先度作業を進め懺悔・作業ログ・バージョン管理・プッシュまで実施すること。E2Eは画面から確認する手順を出すこと。
+  対応: ルール再読の上、startPos変更で即時再描画しsyncNeeded表示を確実に出すよう修正（SYNC/START責務は変更なし）。バージョンをv2.1.0-beta.75へ更新し、STATUS/NEXT/TODAYに反映。`node --check`（ui-controller/race-service/race-sync-service）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を実行。E2E手順にstartPos変更後のバッジ即時表示確認を追記。コミット/プッシュ済み。

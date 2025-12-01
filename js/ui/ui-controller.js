@@ -529,7 +529,8 @@ function updateStartPos(id, val) {
     const r = races.find(x=>x.id===id); 
     r.startPos = parseInt(val)||0; 
     markSyncNeeded(r);
-    saveRaces(); 
+    saveRaces();
+    renderRace();
 }
 
 // --- MODAL ---

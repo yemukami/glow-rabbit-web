@@ -456,3 +456,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: inlineハンドラを避けてUI層でイベントを一元処理できる形に進めた。挙動は据え置きだが、renderer全面移行と状態遷移の整理に踏み出せた。
 - E2E確認手順メモ（手動）: 接続環境で従来手順（未接続アラート→SYNC→START/STOP→複数ペーサー距離+50m停止）を実施しつつ、(1) レース行クリックで展開/折り畳みできること、(2) 展開行内の START/SYNC/STOP/リセット/スタート位置入力が期待通り動作し行が誤って畳まれないことを確認する。
+
+### 2025-12-xx 追加ログ（このターン-30）
+- 作業: ルール/仕様を再読後、startPos変更時に即時再描画するようにしてsyncNeeded表示を確実に反映。バージョンを `v2.1.0-beta.75` に更新し、STATUS/NEXTコンテキストを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node --check js/core/race-sync-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
+- 感想: startPos変更後に要同期バッジがすぐ見えるようになり、手動漏れを防げる形に整理。挙動は仕様どおりのまま。
+- E2E確認手順メモ（手動）: 従来手順に加え、展開行でstartPosを変更→syncNeededバッジが即表示されることを確認する。
