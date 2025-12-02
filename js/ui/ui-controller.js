@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.129'
+    APP_VERSION: 'v2.1.0-beta.130'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -611,7 +611,7 @@ function saveModalData() {
     renderSetup(); 
 }
 
-function deletePacerFromModal() { if(modalState.target.pacerId && confirm('削除?')) { const r=getRaceById(modalState.target.raceId); if (r) { r.pacers=r.pacers.filter(x=>x.id!==modalState.target.pacerId); saveRaces(); } } closeModal(); renderSetup(); }
+function deletePacerFromModal() { if(modalState.target.pacerId && confirm('このペーサーを削除しますか？')) { const r=getRaceById(modalState.target.raceId); if (r) { r.pacers=r.pacers.filter(x=>x.id!==modalState.target.pacerId); saveRaces(); } } closeModal(); renderSetup(); }
 
 function startEditing(pid, v) { setEditingPace(pid, parseFloat(v)); renderRace(); }
 function updateEditValue(pid, v) { setEditingPace(pid, parseFloat(v)); /* don't re-render on every key, just store */ }
