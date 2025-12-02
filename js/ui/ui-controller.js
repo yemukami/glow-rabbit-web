@@ -25,6 +25,7 @@ import { bindTargetInput, closeModalUI, openModalUI, setActiveTabUI, setCalcPace
 import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRows } from './segment-utils.js';
 import { ensureNonNegativeNumber, ensurePositiveInt } from '../utils/input-guards.js';
 import { renderScreenMode } from './screen-renderer.js';
+import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -215,7 +216,7 @@ export function initUI() {
         console.error("[Init] Switch Mode Failed, falling back to 'setup'", e);
         switchMode('setup', true);
     }
-    const raceTbody = document.getElementById('race-tbody');
+    const raceTbody = getRaceTableBody();
     attachRaceTableHandlers(raceTbody, {
         onToggleRow: toggleRow,
         onConnect: connectBLE,
@@ -226,7 +227,7 @@ export function initUI() {
         onReset: resetRace,
         onUpdateStartPos: updateStartPos
     });
-    const setupTbody = document.getElementById('setup-tbody');
+    const setupTbody = getSetupTableBody();
     attachSetupTableHandlers(setupTbody, {
         onOpenModal: openModal,
         onOpenPacerModal: openModal,
@@ -315,7 +316,7 @@ async function switchMode(mode, skipGuard = false) {
 // --- SETUP SCREEN ---
 
 function renderSetup() {
-    const tb = document.getElementById('setup-tbody'); 
+    const tb = getSetupTableBody(); 
     if(!tb) return;
     renderSetupTable(tb, races);
 }
@@ -371,7 +372,7 @@ function toggleRow(id, event) {
 
 function renderRace() {
     console.log("[renderRace] Start. Races count:", races.length);
-    const tbody = document.getElementById('race-tbody');
+    const tbody = getRaceTableBody();
     if(!tbody) { console.error("[renderRace] No tbody found!"); return; }
     const expandedRaceId = getExpandedRaceId();
     const editingPaces = getEditingPaces();
