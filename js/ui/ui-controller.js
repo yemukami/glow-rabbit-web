@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.118'
+    APP_VERSION: 'v2.1.0-beta.119'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -282,7 +282,13 @@ async function syncWrapper() {
 
 function loadAppState() {
     const savedTitle = localStorage.getItem('glow_competition_title');
-    if(savedTitle) document.getElementById('competition-title').value = savedTitle;
+    if(savedTitle) {
+        const input = document.getElementById('competition-title');
+        if (input) {
+            input.value = savedTitle;
+            syncRaceTitle('competition-title', 'race-screen-title');
+        }
+    }
 }
 
 function saveCompetitionTitle(val) {
