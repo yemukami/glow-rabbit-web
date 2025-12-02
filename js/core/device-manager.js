@@ -1,4 +1,4 @@
-import { sendCommand } from '../ble/controller.js';
+import { sendCommand, isConnected } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 
 export let deviceList = []; 
@@ -208,6 +208,10 @@ export function fillRemainingWithDummy() {
 
 export async function checkDirtyAndSync() {
     if (isListDirty) {
+        if (!isConnected) {
+            alert("BLE未接続です。デバイス同期前に接続してください。");
+            return false;
+        }
         if (confirm("Device list has changed. Sync with Glow-C now?")) {
             await syncAllDevices();
             return true;
