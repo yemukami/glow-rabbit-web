@@ -28,7 +28,6 @@ import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
 import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
 import { openVersionModal, closeVersionModal } from './version-modal.js';
 import { renderRaceScreen, updateRunningRaceView } from './race-screen.js';
-import { renderRaceScreen } from './race-screen.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -37,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.121'
+    APP_VERSION: 'v2.1.0-beta.122'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -149,11 +148,8 @@ export function initUI() {
             renderDeviceList(); 
         } 
     };
-        window.syncAllDevices = async () => {
-        if (!isConnected) {
-            alert("BLE未接続です。接続してから同期してください。");
-            return;
-        }
+    window.syncAllDevices = async () => {
+        if (!requireConnection('デバイス同期')) return;
         const expandedRaceId = getExpandedRaceId();
         const r = getRaceById(expandedRaceId);
         if (r && r.pacers && r.pacers.length > 0) {
@@ -273,10 +269,6 @@ function handleNotification(event) {
 
 function updateConnectionStatus(connected) {
     renderConnectionStatus(connected);
-}
-
-async function syncWrapper() {
-    if(await syncAllDevices()) alert('同期完了');
 }
 
 // --- Navigation ---

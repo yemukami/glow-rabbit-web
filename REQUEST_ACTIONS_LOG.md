@@ -13,6 +13,12 @@
 - START/同期/stopRunner/ペース送信まわりの変更を含む場合は、対応欄で「SYNC_START_SPEC順守（変更なし）」など明記。
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
 
+- 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
+  対応: renderRaceScreenの重複importを解消した上でデバイス同期ボタンもrequireConnectionガードを使うよう統一し、未接続時のアラートを共通化（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.122に更新し、`node --check js/ui/ui-controller.js` と `node js/test/ui-logic.test.js` を実行（Pass）。
+
+- 要求: リファクタリング中に発生した「renderRaceScreen重複定義/ connectBLE未定義」エラーを理解し修正してほしい。
+  対応: `ui-controller.js` の重複importを削除してSyntaxErrorを解消し、初期化が走ってconnectBLEがグローバルにバインドされる状態に戻した（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js` と `node js/test/ui-logic.test.js` を実行しPass。
+
 - 要求: ミス再発防止ファイルと要求ログを用意し、冒頭注意に含めること。
   対応: REMORSE_AND_PREVENTION.md と REQUEST_ACTIONS_LOG.md を追加し、NEXT_THREAD_CONTEXT の冒頭必読リストに記載（SYNC/START仕様変更なし）。
 - 要求: リファクタ優先順1から着手し、renderer全面移行を進めること。

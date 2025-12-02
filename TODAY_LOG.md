@@ -6,6 +6,16 @@
 - 結果: Setup/レーステーブル描画をrendererに寄せるリファクタを完了し、`setup-renderer`を追加。レースrendererにDOM適用ヘルパーを追加し、ui-controller側のDOM操作を削減。バージョンをv2.1.0-beta.85に更新。上記テストはすべてPass、手動E2Eは未実施（要接続環境）。
 - 備考: renderer移行後もSYNC/START責務は不変。挙動差分が出ないことを優先して小刻みに進める。
 
+### 2025-12-xx 追加ログ（起動時エラー解消）
+- 作業: `ui-controller.js` の重複importで `renderRaceScreen` が二重定義になっていたSyntaxErrorを除去し、`connectBLE`がグローバルにバインドされる初期化が通るように修正。
+- テスト: `node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`（ともにPass）。ブラウザE2Eは未実施（接続環境後に実施予定）。
+- 感想: import重複で初期化ごと止まっていたので、再発を避けるため依存整理時はlint/`node --check`を先に回すよう意識する。
+
+### 2025-12-xx 追加ログ（デバイス同期ガード統一）
+- 作業: デバイス同期ボタンにrequireConnectionガードを適用して未接続時のアラートを共通化し、renderer import重複修正を含めてバージョンを `v2.1.0-beta.122` に更新。
+- テスト: `node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`（Pass）。手動E2Eは未実施（接続環境後に実施予定）。
+- 感想: ガードのメッセージ統一で未接続時の混乱を減らせた。今後も同期/START周りのガードは共通ヘルパーに寄せていく。
+
 ### 2025-12-xx 追加ログ（renderer移行の残タスク）
 - 作業: Setupテーブルとレーステーブルの描画をrenderer関数に集約し、`setup-renderer.js` を新設。race-rendererにDOM反映ヘルパーを追加し、ui-controllerからの直接DOM操作を削減（挙動不変）。
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node --check js/ui/setup-renderer.js`, `node js/test/ui-logic.test.js`, `node js/test/race-renderer.test.js`, `node js/test/race-service.test.js`, `node js/test/setup-renderer.test.js`（全てPass）。手動E2Eは未実施（BLE接続環境が必要）。
