@@ -712,3 +712,9 @@
 - テスト: `node --check js/ui/ui-controller.js`（Pass）。
 - 感想: renderer寄せを小刻みに進め、UIコントローラのDOM依存を減らせた。
 - E2E確認手順メモ（手動）: なし（挙動変更なし）。
+
+### 2025-12-xx 追加ログ（このターン-58）
+- 作業: レース描画呼び出しを `race-screen` ヘルパーに切り出し、ui-controllerのDOM依存をさらに削減。未使用のrenderer importを整理。バージョンは `v2.1.0-beta.120` 据え置き。
+- テスト: `node --check js/ui/ui-controller.js`（Pass）。
+- 感想: renderer全面移行に向けた安全な分離を継続できた。
+- E2E確認手順メモ（手動）: なし（挙動変更なし）。

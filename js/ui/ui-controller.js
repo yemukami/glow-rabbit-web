@@ -8,7 +8,7 @@ import { parseTimeInput, resolvePaceValue, escapeHTML } from '../utils/data-util
 import { getColorRGB } from '../utils/color-utils.js';
 import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded, stopRaceService } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
-import { renderRaceTableDom, updateRunningDisplays } from './race-renderer.js';
+import { updateRunningDisplays } from './race-renderer.js';
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
 import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
