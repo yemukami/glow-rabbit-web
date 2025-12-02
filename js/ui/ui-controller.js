@@ -285,7 +285,7 @@ function loadAppState() {
 
 function saveCompetitionTitle(val) {
     localStorage.setItem('glow_competition_title', val);
-    document.getElementById('race-screen-title').innerText = val;
+    syncRaceTitle('competition-title', 'race-screen-title');
 }
 
 async function switchMode(mode, skipGuard = false) {
