@@ -275,18 +275,17 @@ function updateConnectionStatus(connected) {
 
 function loadAppState() {
     const savedTitle = localStorage.getItem('glow_competition_title');
-    if(savedTitle) {
-        const input = document.getElementById('competition-title');
-        if (input) {
-            input.value = savedTitle;
-            syncRaceTitle('competition-title', 'race-screen-title');
-        }
-    }
+    if(!savedTitle) return;
+    const input = document.getElementById('competition-title');
+    const titleNode = document.getElementById('race-screen-title');
+    if (input) input.value = savedTitle;
+    if (titleNode) titleNode.textContent = savedTitle;
 }
 
 function saveCompetitionTitle(val) {
     localStorage.setItem('glow_competition_title', val);
-    syncRaceTitle('competition-title', 'race-screen-title');
+    const titleNode = document.getElementById('race-screen-title');
+    if (titleNode) titleNode.textContent = val;
 }
 
 async function switchMode(mode, skipGuard = false) {
@@ -311,7 +310,6 @@ async function switchMode(mode, skipGuard = false) {
     
     if(mode==='setup') renderSetup();
     if(mode==='race') {
-        syncRaceTitle('competition-title', 'race-screen-title');
         renderRace();
     }
     if(mode === 'devices') renderDeviceList();
