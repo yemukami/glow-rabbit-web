@@ -2,7 +2,7 @@
 
 作業中に見る用の残タスクリスト。完了済みは含めない。
 
-- renderer全面移行: ui-controllerに残るDOM更新/進行更新をrenderer/view-model経由に集約する。
+- renderer全面移行: ui-controllerに残るDOM更新/進行更新をrenderer/view-model経由に集約する（進行表示更新はrenderer済み、残りのDOM更新を洗い出す）。
 - 状態遷移一元化: activeRaceId/statusの管理をサービス側に寄せ、UIはイベント発火＋描画のみとする。
 - 入力/ログ整理: 距離・人数・ペース・startPosのガードとエラーメッセージを統一し、ログ出力を整理する。
 - STARTラグ可視化: 送信サマリを簡易デバッグ表示としてUIに出す（挙動変更なし）。
