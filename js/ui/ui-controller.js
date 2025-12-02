@@ -289,7 +289,8 @@ function saveCompetitionTitle(val) {
 }
 
 async function switchMode(mode, skipGuard = false) {
-    if (!renderScreenMode(mode)) return;
+    const targetScreen = document.getElementById(`screen-${mode}`);
+    if (!targetScreen) return;
 
     try {
         if (!skipGuard && document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
@@ -304,6 +305,7 @@ async function switchMode(mode, skipGuard = false) {
         }
     } catch(e) { console.warn(e); }
 
+    if (!renderScreenMode(mode)) return;
     localStorage.setItem('glow_current_mode', mode);
     
     if(mode==='setup') renderSetup();
