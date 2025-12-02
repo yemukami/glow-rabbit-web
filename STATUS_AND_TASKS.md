@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.134)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.135)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -44,7 +44,7 @@
 - バージョン表記同期をrendererヘルパーで担保し、UI/モーダルの表記ズレを防止。
 - ロード時に競技タイトルを入力とレース画面タイトルへ同期する処理をrendererヘルパー経由に移行。
 - レース描画・進行表示を `race-screen` ヘルパー経由に寄せ、ui-controllerのDOM依存を削減（挙動不変）。
-- バージョン表記をUI/モーダル/ドキュメントで同期（v2.1.0-beta.134）。
+- バージョン表記をUI/モーダル/ドキュメントで同期（v2.1.0-beta.135）。
 - デバイス同期ボタンも共通ガード（requireConnection）で未接続アラートを統一。
 - デバイス画面から離れる際、リストがdirtyかつ未接続ならアラートを出して同期をブロック（デバイス同期の未接続送信を防止）。
 - デバイス同期ダイアログ（checkDirtyAndSync）でも未接続を検出してアラートし、同期を実行しないようにガード。
