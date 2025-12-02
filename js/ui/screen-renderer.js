@@ -17,3 +17,10 @@ export function syncRaceTitle(inputId, titleId) {
         titleEl.innerText = input.value;
     }
 }
+
+export function updateVersionDisplay(version) {
+    const inlineEl = document.querySelector('.version-inline');
+    if (inlineEl) inlineEl.textContent = version;
+    const modalVersionEl = document.getElementById('modal-version-text');
+    if (modalVersionEl) modalVersionEl.textContent = `Version: ${version}`;
+}

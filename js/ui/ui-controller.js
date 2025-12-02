@@ -24,7 +24,7 @@ import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
 import { bindTargetInput, closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
 import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRows } from './segment-utils.js';
 import { ensureNonNegativeNumber, ensurePositiveInt } from '../utils/input-guards.js';
-import { renderScreenMode, syncRaceTitle } from './screen-renderer.js';
+import { renderScreenMode, syncRaceTitle, updateVersionDisplay } from './screen-renderer.js';
 import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
 import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
 import { openVersionModal, closeVersionModal } from './version-modal.js';
@@ -35,7 +35,8 @@ const UI_CONSTANTS = {
     PROGRESS_BAR_PADDING_METERS: 50,
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
-    UPDATE_INTERVAL_MS: 100
+    UPDATE_INTERVAL_MS: 100,
+    APP_VERSION: 'v2.1.0-beta.118'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -83,6 +84,7 @@ export function initUI() {
         console.log("[Init] Devices loaded:", deviceList.length);
         
         loadAppState();
+        updateVersionDisplay(UI_CONSTANTS.APP_VERSION);
     } catch (e) {
         console.error("[Init] Data Load Error:", e);
     }
