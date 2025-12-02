@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.125)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.126)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -14,7 +14,7 @@
   4) 複数ペーサー走行で、速いペーサーが距離+50mで止まり、全員到達後にSTOP 1回が送られることを確認。
 
 ## 現行バージョン
-- `v2.1.0-beta.125`
+- `v2.1.0-beta.126`
 - STOP/オーバーラン: プロトコル上 stopRunner は全体停止のみ。UIは距離+50mまで表示進行、全員到達時にSTOP 1回送信。ペーサー個別STOPはFW拡張が必要。
 
 ## これまでの主要作業
@@ -44,11 +44,12 @@
 - バージョン表記同期をrendererヘルパーで担保し、UI/モーダルの表記ズレを防止。
 - ロード時に競技タイトルを入力とレース画面タイトルへ同期する処理をrendererヘルパー経由に移行。
 - レース描画・進行表示を `race-screen` ヘルパー経由に寄せ、ui-controllerのDOM依存を削減（挙動不変）。
-- バージョン表記をUI/モーダル/ドキュメントで同期（v2.1.0-beta.125）。
+- バージョン表記をUI/モーダル/ドキュメントで同期（v2.1.0-beta.126）。
 - デバイス同期ボタンも共通ガード（requireConnection）で未接続アラートを統一。
 - デバイス画面から離れる際、リストがdirtyかつ未接続ならアラートを出して同期をブロック（デバイス同期の未接続送信を防止）。
 - デバイス同期ダイアログ（checkDirtyAndSync）でも未接続を検出してアラートし、同期を実行しないようにガード。
 - 未接続でも画面遷移は許可し、dirty時は警告だけ出して後続で接続後に同期できるように整理。
+- レース進行更新でelapsedTimeを一度計算してrendererへ渡し、二度読みを避ける軽微なリファクタ。
 - テスト拡充: race-service / race-sync-service / race-renderer / ui-logic ほか。
 
 ## 残タスク（作業時は REMAINING_TASKS.md を参照）

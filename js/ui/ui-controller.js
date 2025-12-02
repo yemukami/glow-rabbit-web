@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.125'
+    APP_VERSION: 'v2.1.0-beta.126'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -456,9 +456,10 @@ async function updateState(raceId) {
         return;
     }
     const tickResult = advanceRaceTick(race, getElapsedTime(), deviceSettings.interval);
-    setElapsedTime(tickResult.elapsedTime);
+    const elapsedTime = tickResult.elapsedTime;
+    setElapsedTime(elapsedTime);
 
-    updateRunningRaceView(race, getElapsedTime());
+    updateRunningRaceView(race, elapsedTime);
 
     if(tickResult.allFinished) {
         try {

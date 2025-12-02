@@ -31,6 +31,11 @@
 - テスト: `node --check js/core/device-manager.js`, `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施（接続環境後に実施予定）。
 - 感想: 未接続でも作業が続けられるようにしつつ、同期が走らない安全性を両立できた。
 
+### 2025-12-xx 追加ログ（進行更新リファクタ）
+- 作業: updateStateでelapsedTimeを一度だけ計算してrendererに渡すようにし、二重取得を解消。バージョンを `v2.1.0-beta.126` に更新し、STATUS/NEXT/TEST_PLANを同期。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js`（Pass）。手動E2Eは未実施（接続環境後に実施予定）。
+- 感想: renderer移行の一環として進行更新の無駄を減らした。引き続きDOM/状態処理をrenderer/サービス側に寄せたい。
+
 ### 2025-12-xx 追加ログ（TEST_PLAN更新）
 - 作業: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加。
 - テスト: ドキュメント更新のみ（コード変更なし）。
