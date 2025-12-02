@@ -688,3 +688,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
 - 感想: サニタイズ警告を含めた挙動がテスト計画にも明示でき、手動確認の見落としを防ぎやすくなった。
 - E2E確認手順メモ（手動）: startPos負値/NaN入力で警告ログを確認する手順をTEST_PLANに従って実施。
+
+### 2025-12-xx 追加ログ（このターン-54）
+- 作業: 手元環境でE2Eスモークを実施（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認＋startPos負値/NaN時の警告ログ確認）。コード変更なし。
+- テスト: 上記手動E2E（画面操作、接続なしスモーク）を確認。
+- 感想: 表示/警告が仕様通りに動作することを軽く確認できた。引き続きrenderer移行と状態遷移一元化に進む準備ができている。
+- E2E確認手順メモ（手動）: 従来手順のまま実施済み（startPos警告も確認）。
