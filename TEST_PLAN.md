@@ -1,4 +1,4 @@
-# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.122)
+# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.123)
 
 ## Scope
 - Inline handler排除とデリゲーション化（Setup/Device UI）によるリファクタの安全確認
@@ -26,6 +26,7 @@
    - START→距離+50m停止・全員到達でSTOP1回送信、STOP後は対象レースのみバッジ復活を確認  
    - バッジ/ボタンのツールチップが「レース設定（色/ペース）を再送」と表示されることを確認
    - デバイス同期ボタンを未接続状態で押すと未接続アラートが出て送信されないことを確認
+   - デバイス画面から他画面へ遷移する際、リストがdirtyで未接続ならアラートが出て遷移が止まることを確認
    - デバイスアクションモーダルの表示内容とボタン動作がクラッシュなく動くこと（デリゲーション経由）を確認
    - startPosを負値/NaNで入力しても警告ログが出て0に丸められることをUI上で確認する  
 
@@ -33,4 +34,5 @@
 - 2025-12-xx: `node --check js/ui/ui-controller.js` (Pass)  
 - 2025-12-xx: `node js/test/ui-logic.test.js` (Pass)  
 - 2025-12-xx: デバイス同期ボタンの未接続ガード（requireConnection）を手動確認予定（未実施）  
+- 2025-12-xx: デバイス画面離脱時のdirty＋未接続ガードを手動確認予定（未実施）  
 - Manual E2E: 未実施（実機/HTTPS環境が必要）

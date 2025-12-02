@@ -20,8 +20,13 @@ export let deviceInteraction = {
 
 export let isListDirty = false;
 export let isSyncing = false;
+
 export function markDeviceListDirty(val = true) {
     isListDirty = val;
+}
+
+export function isDeviceListDirty() {
+    return isListDirty;
 }
 
 export function loadDeviceList() {

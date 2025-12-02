@@ -1,5 +1,5 @@
 import { races, saveRaces, loadRaces, addNewRace, getActiveRace, getRaceById } from '../core/race-manager.js';
-import { deviceList, deviceSettings, deviceInteraction, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
+import { deviceList, deviceSettings, deviceInteraction, isDeviceListDirty, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from '../core/pace-calculator.js';
@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.122'
+    APP_VERSION: 'v2.1.0-beta.123'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -295,6 +295,10 @@ async function switchMode(mode, skipGuard = false) {
 
     try {
         if (!skipGuard && document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
+            if (isDeviceListDirty() && !isConnected) {
+                alert("BLE未接続です。デバイス同期前に接続してください。");
+                return;
+            }
             if (await checkDirtyAndSync() === false) return;
         }
         if (!skipGuard && document.getElementById('screen-race').classList.contains('active') && mode !== 'race') {
