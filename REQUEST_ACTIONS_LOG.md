@@ -34,6 +34,9 @@
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
   対応: ダミー一括埋めの確認文言に「元に戻すには手動削除」と追記し、ユーザーへの注意を明確化（バージョンは据え置き、SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js` を実行（Pass）。
 
+- 要求: あなたの優先順で続けて。
+  対応: START完了時に推定遅延と送信コマンド本数をダイアログ表示する簡易可視化を追加し、バージョンをv2.1.0-beta.131に更新。STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOG/TODAYを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js` を実行（Pass）。
+
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに（未接続ガード徹底）。
   対応: デバイス画面離脱時だけでなくcheckDirtyAndSyncでも未接続ならアラートで同期を止めるガードを追加し、デバイス同期を未接続で実行しないよう徹底（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.124に更新し、テスト計画/ステータス文書を同期。`node --check js/ui/ui-controller.js` を実行（Pass）。
 

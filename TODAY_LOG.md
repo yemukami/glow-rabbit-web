@@ -66,6 +66,11 @@
 - テスト: `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施。
 - 感想: 操作の不可逆性を明示して誤操作リスクを下げた。残タスクはrenderer移行/状態整理など少数なので安全に進める。
 
+### 2025-12-xx 追加ログ（START遅延の簡易可視化）
+- 作業: START完了時に推定遅延msと送信コマンド本数をダイアログ表示する簡易可視化を追加し、バージョンを `v2.1.0-beta.131` に更新。STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js`（Pass）。手動E2Eは未実施。
+- 感想: STARTラグの目安をUIで把握できるようになった。残タスクはrenderer移行/状態整理/テスト追加など少数なので引き続き小刻みに進めたい。
+
 ### 2025-12-xx 追加ログ（TEST_PLAN更新）
 - 作業: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加。
 - テスト: ドキュメント更新のみ（コード変更なし）。
