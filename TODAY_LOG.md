@@ -16,6 +16,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`（Pass）。手動E2Eは未実施（接続環境後に実施予定）。
 - 感想: ガードのメッセージ統一で未接続時の混乱を減らせた。今後も同期/START周りのガードは共通ヘルパーに寄せていく。
 
+### 2025-12-xx 追加ログ（TEST_PLAN更新）
+- 作業: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加。
+- テスト: ドキュメント更新のみ（コード変更なし）。
+- 感想: デバイス同期ガードも確認対象に含め、手動E2E漏れを防ぐ。
+
 ### 2025-12-xx 追加ログ（renderer移行の残タスク）
 - 作業: Setupテーブルとレーステーブルの描画をrenderer関数に集約し、`setup-renderer.js` を新設。race-rendererにDOM反映ヘルパーを追加し、ui-controllerからの直接DOM操作を削減（挙動不変）。
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node --check js/ui/setup-renderer.js`, `node js/test/ui-logic.test.js`, `node js/test/race-renderer.test.js`, `node js/test/race-service.test.js`, `node js/test/setup-renderer.test.js`（全てPass）。手動E2Eは未実施（BLE接続環境が必要）。

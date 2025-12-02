@@ -13,6 +13,9 @@
 - START/同期/stopRunner/ペース送信まわりの変更を含む場合は、対応欄で「SYNC_START_SPEC順守（変更なし）」など明記。
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
 
+- 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに（追加対応）。
+  対応: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加（挙動変更なし、SYNC_START_SPEC順守）。ドキュメントのみ更新。
+
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
   対応: renderRaceScreenの重複importを解消した上でデバイス同期ボタンもrequireConnectionガードを使うよう統一し、未接続時のアラートを共通化（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.122に更新し、`node --check js/ui/ui-controller.js` と `node js/test/ui-logic.test.js` を実行（Pass）。
 
