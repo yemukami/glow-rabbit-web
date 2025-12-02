@@ -27,6 +27,7 @@ import { ensureNonNegativeNumber, ensurePositiveInt } from '../utils/input-guard
 import { renderScreenMode, syncRaceTitle } from './screen-renderer.js';
 import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
 import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
+import { openVersionModal, closeVersionModal } from './version-modal.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -617,9 +618,6 @@ function updateEditValue(pid, v) { setEditingPace(pid, parseFloat(v)); /* don't 
 function adjustPace(pid, d) { /* logic */ } // Simplification for now
 function cancelPace(rid, pid) { clearEditingPace(pid); renderRace(); }
 function commitPace(rid, pid) { /* logic */ renderRace(); saveRaces(); }
-
-function openVersionModal() { document.getElementById('modal-version').classList.add('open'); }
-function closeVersionModal() { document.getElementById('modal-version').classList.remove('open'); }
 
 function updateSegmentSummaryFromDom() {
     const summaryEl = document.getElementById('segment-total-time');
