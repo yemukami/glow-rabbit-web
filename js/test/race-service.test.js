@@ -59,8 +59,14 @@ async function testStartRaceServiceClampsStartPos() {
   const race = mockRace(400, 80);
   const deviceManager = await import('../core/device-manager.js');
   deviceManager.deviceList[0] = { mac: 'AA:BB:CC:DD:EE:FF' };
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args);
   await startRaceService(race, 1, -25, () => false, { dryRun: true }, { sendStop: false, resendConfig: true });
+  console.warn = originalWarn;
   assert.strictEqual(race.startPos, 0, 'startPos should clamp to zero when negative');
+  const warningText = warnings.map(w => w.join(' ')).join(' ');
+  assert.ok(warningText.includes('startPos sanitized'), 'Should log startPos sanitized warning');
 }
 
 async function testStopRaceServiceDryRun() {

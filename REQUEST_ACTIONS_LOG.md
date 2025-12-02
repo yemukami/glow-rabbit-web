@@ -108,3 +108,6 @@
 
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
   対応: updateStartPosでもサニタイズ警告を出し、UI/サービス両方でraw/sanitizedを追えるように統一。バージョンをv2.1.0-beta.108に更新し、STATUS/NEXT/TODAYを同期。`node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js`, `node js/test/input-guards.test.js` を再実行（Pass）。SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定。
+
+- 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
+  対応: startPosサニタイズ警告をrace-serviceテストでも確認するようにし、バージョンをv2.1.0-beta.109に更新。STATUS/NEXT/TODAYを同期。`node --check js/ui/ui-controller.js`, `node --check js/core/race-service.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js`, `node js/test/input-guards.test.js` を再実行（Pass）。SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定。
