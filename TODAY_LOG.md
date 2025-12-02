@@ -46,6 +46,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js`（Pass）。手動E2Eは未実施。
 - 感想: メッセージ簡略化でユーザーの理解コストを下げた。残タスクはrenderer移行/状態遷移整理など少数なので引き続き小刻みに進める。
 
+### 2025-12-xx 追加ログ（ヒント文修正と全削除確認の日本語化）
+- 作業: レース画面のヒントから「要同期」文言を削除し、設置全削除確認を日本語化。バージョンを `v2.1.0-beta.128` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js`（Pass）。手動E2Eは未実施。
+- 感想: UI文言の仕様ズレを解消し、利用者への伝わりやすさを改善。残りのrenderer移行/状態整理を進めて完了に近づけたい。
+
 ### 2025-12-xx 追加ログ（TEST_PLAN更新）
 - 作業: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加。
 - テスト: ドキュメント更新のみ（コード変更なし）。

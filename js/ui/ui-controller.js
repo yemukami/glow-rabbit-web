@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.127'
+    APP_VERSION: 'v2.1.0-beta.128'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -141,7 +141,7 @@ export function initUI() {
     window.updateRaceSettings = (d, i) => { updateSettings(d, i); renderDeviceList(); };
     window.fillWithDummy = fillWithDummy;
     window.clearDeviceList = () => { 
-        if(confirm('All Clear?')) { 
+        if(confirm('全デバイスを削除してもよいですか？')) { 
             deviceList.length = 0; 
             markDeviceListDirty(true);
             saveDeviceList();
