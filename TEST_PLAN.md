@@ -9,6 +9,7 @@
 - `node --check js/core/race-service.js`
 - `node js/test/ui-logic.test.js`
 - `node js/test/race-service.test.js`
+- `node js/test/input-guards.test.js`
 - 手動E2E（接続環境で実施）: 未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認
 
 ## Test Cases
@@ -24,6 +25,7 @@
    - START→距離+50m停止・全員到達でSTOP1回送信、STOP後は対象レースのみバッジ復活を確認  
    - バッジ/ボタンのツールチップが「レース設定（色/ペース）を再送」と表示されることを確認
    - デバイスアクションモーダルの表示内容とボタン動作がクラッシュなく動くこと（デリゲーション経由）を確認
+   - startPosを負値/NaNで入力しても警告ログが出て0に丸められることをUI上で確認する  
 
 ## Results
 - 2025-12-xx: `node --check js/ui/ui-controller.js` (Pass)  

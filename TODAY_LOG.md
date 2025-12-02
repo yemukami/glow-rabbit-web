@@ -682,3 +682,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
 - 感想: startPosサニタイズ挙動をテストで固定し、ログ有無までカバーできた。デバッグ時の安心感が増した。
 - E2E確認手順メモ（手動）: 負値/NaNのstartPosで警告ログが出ることをUI/サービスで確認する。従来手順も継続。
+
+### 2025-12-xx 追加ログ（このターン-53）
+- 作業: startPosサニタイズ警告のテストをrace-serviceに追加し、TEST_PLANに入力ガード/警告確認を追記。バージョンを `v2.1.0-beta.110` に更新し、STATUS/NEXT/TEST_PLANを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
+- 感想: サニタイズ警告を含めた挙動がテスト計画にも明示でき、手動確認の見落としを防ぎやすくなった。
+- E2E確認手順メモ（手動）: startPos負値/NaN入力で警告ログを確認する手順をTEST_PLANに従って実施。
