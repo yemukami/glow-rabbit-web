@@ -76,6 +76,11 @@
 - テスト: `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施。
 - 感想: 進行表示の依存をrace-ui-stateから外し、renderer移行に一歩前進。残りのDOM/状態処理も同様に寄せていきたい。
 
+### 2025-12-xx 追加ログ（STOP遷移のサービス側集約）
+- 作業: STOP後の状態遷移（review/フラグ初期化）をサービス側に任せ、UI側の重複遷移を削除。バージョンを `v2.1.0-beta.133` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施。
+- 感想: 状態遷移の責務をサービスに寄せる一歩を踏み、状態一元化に近づけた。残タスクも少ないのでこのまま仕上げたい。
+
 ### 2025-12-xx 追加ログ（TEST_PLAN更新）
 - 作業: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加。
 - テスト: ドキュメント更新のみ（コード変更なし）。
