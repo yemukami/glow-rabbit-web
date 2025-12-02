@@ -209,8 +209,8 @@ export function fillRemainingWithDummy() {
 export async function checkDirtyAndSync() {
     if (isListDirty) {
         if (!isConnected) {
-            alert("BLE未接続です。デバイス同期前に接続してください。");
-            return false;
+            alert("BLE未接続です。同期は接続後に実施してください（今回は画面遷移のみ続行します）。");
+            return true;
         }
         if (confirm("Device list has changed. Sync with Glow-C now?")) {
             await syncAllDevices();

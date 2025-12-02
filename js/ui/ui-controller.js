@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.124'
+    APP_VERSION: 'v2.1.0-beta.125'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -295,10 +295,6 @@ async function switchMode(mode, skipGuard = false) {
 
     try {
         if (!skipGuard && document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
-            if (isDeviceListDirty() && !isConnected) {
-                alert("BLE未接続です。デバイス同期前に接続してください。");
-                return;
-            }
             if (await checkDirtyAndSync() === false) return;
         }
         if (!skipGuard && document.getElementById('screen-race').classList.contains('active') && mode !== 'race') {
