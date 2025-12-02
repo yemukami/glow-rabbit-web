@@ -46,6 +46,9 @@
 - 要求: ok、残作業を順に進めて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
   対応: START遅延のダイアログを廃止してコンソールログのみとし、バージョンをv2.1.0-beta.134に更新。STATUS/NEXT/TEST_PLAN/TODAYを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js` を実行（Pass）。
 
+- 要求: ok、残作業を順に進めて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに（renderer仕上げ）。
+  対応: 進行表示の更新をrendererの`updateRunningDisplaysForRace`に寄せ、ui-controllerからDOM更新を排除。バージョンをv2.1.0-beta.136に更新し、STATUS/NEXT/TEST_PLAN/TODAYを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js` を実行（Pass）。
+
 - 要求: ok、残作業を順に進めて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
   対応: START遅延表示をコンソールログのみにしつつバージョンをv2.1.0-beta.135に更新。STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js` を実行（Pass）。
 

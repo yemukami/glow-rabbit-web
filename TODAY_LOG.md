@@ -86,6 +86,11 @@
 - テスト: `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施。
 - 感想: 実行中の邪魔にならないようにしつつ必要情報はログで確認できる形にした。残作業は少数なので引き続き小刻みに進める。
 
+### 2025-12-xx 追加ログ（進行表示更新をrenderer経由に寄せる）
+- 作業: レース進行表示の更新をrendererの`updateRunningDisplaysForRace`に寄せ、ui-controllerからのDOM更新をさらに排除。バージョンを `v2.1.0-beta.136` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`（Pass）。手動E2Eは未実施。
+- 感想: renderer移行の仕上げに一歩前進。残る状態遷移/入力整理も同様に寄せていきたい。
+
 ### 2025-12-xx 追加ログ（TEST_PLAN更新）
 - 作業: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加。
 - テスト: ドキュメント更新のみ（コード変更なし）。

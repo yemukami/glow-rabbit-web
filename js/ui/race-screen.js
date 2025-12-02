@@ -10,6 +10,6 @@ export function renderRaceScreen(races, expandedRaceId, editingPaces, elapsedTim
     renderRaceTableDom(tbody, races, expandedRaceId, elapsedTime, editingPaces);
 }
 
-export function updateRunningRaceView(race, elapsedTime) {
+export function updateRunningDisplaysForRace(race, elapsedTime) {
     updateRunningDisplays(race, elapsedTime);
 }

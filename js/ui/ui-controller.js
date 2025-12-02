@@ -27,7 +27,7 @@ import { renderScreenMode, syncRaceTitle, updateVersionDisplay } from './screen-
 import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
 import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
 import { openVersionModal, closeVersionModal } from './version-modal.js';
-import { renderRaceScreen, updateRunningRaceView } from './race-screen.js';
+import { renderRaceScreen, updateRunningDisplaysForRace } from './race-screen.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.135'
+    APP_VERSION: 'v2.1.0-beta.136'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -462,7 +462,7 @@ async function updateState(raceId) {
     const elapsedTime = tickResult.elapsedTime;
     setElapsedTime(elapsedTime);
 
-    updateRunningRaceView(race, elapsedTime);
+    updateRunningDisplaysForRace(race, elapsedTime);
 
     if(tickResult.allFinished) {
         try {

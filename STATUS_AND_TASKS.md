@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.135)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.136)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -14,7 +14,7 @@
   4) 複数ペーサー走行で、速いペーサーが距離+50mで止まり、全員到達後にSTOP 1回が送られることを確認。
 
 ## 現行バージョン
-- `v2.1.0-beta.132`
+- `v2.1.0-beta.136`
 - STOP/オーバーラン: プロトコル上 stopRunner は全体停止のみ。UIは距離+50mまで表示進行、全員到達時にSTOP 1回送信。ペーサー個別STOPはFW拡張が必要。
 
 ## これまでの主要作業
@@ -56,6 +56,7 @@
 - 全レースクリアとペーサー削除の確認文言も日本語化。
 - START後の推定遅延と送信コマンド本数はコンソールログで確認（ダイアログは廃止）。
 - renderRaceScreenにelapsedTimeを引数で渡し、UI側で状態取得してrendererへ委譲する流れに整理（race-ui-state依存を削減）。
+- 進行表示更新をrendererのupdateRunningDisplaysForRaceに寄せ、ui-controllerのrenderer依存を明示。
 - STOP時の状態遷移（review/フラグ初期化）はサービス側に寄せ、UI側の重複遷移を削除。
 - テスト拡充: race-service / race-sync-service / race-renderer / ui-logic ほか。
 
