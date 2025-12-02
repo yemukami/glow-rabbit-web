@@ -8,7 +8,6 @@ import { parseTimeInput, resolvePaceValue, escapeHTML } from '../utils/data-util
 import { getColorRGB } from '../utils/color-utils.js';
 import { advanceRaceTick, startRaceService, sendStopRunner, transitionToReview, finalizeRaceState, resetRaceState, markSyncNeeded, stopRaceService } from '../core/race-service.js';
 import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/race-sync-service.js';
-import { updateRunningDisplays } from './race-renderer.js';
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
 import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
@@ -28,6 +27,7 @@ import { renderScreenMode, syncRaceTitle, updateVersionDisplay } from './screen-
 import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
 import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
 import { openVersionModal, closeVersionModal } from './version-modal.js';
+import { renderRaceScreen, updateRunningRaceView } from './race-screen.js';
 import { renderRaceScreen } from './race-screen.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
@@ -466,7 +466,7 @@ async function updateState(raceId) {
     const tickResult = advanceRaceTick(race, getElapsedTime(), deviceSettings.interval);
     setElapsedTime(tickResult.elapsedTime);
 
-    updateRunningDisplays(race, getElapsedTime());
+    updateRunningRaceView(race, getElapsedTime());
 
     if(tickResult.allFinished) {
         try {

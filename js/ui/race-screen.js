@@ -1,4 +1,4 @@
-import { renderRaceTableDom } from './race-renderer.js';
+import { renderRaceTableDom, updateRunningDisplays } from './race-renderer.js';
 import { getRaceTableBody } from './table-hooks.js';
 import { getElapsedTime } from './race-ui-state.js';
 
@@ -9,4 +9,8 @@ export function renderRaceScreen(races, expandedRaceId, editingPaces) {
         return;
     }
     renderRaceTableDom(tbody, races, expandedRaceId, getElapsedTime(), editingPaces);
+}
+
+export function updateRunningRaceView(race, elapsedTime) {
+    updateRunningDisplays(race, elapsedTime);
 }
