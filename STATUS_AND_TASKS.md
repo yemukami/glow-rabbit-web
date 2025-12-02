@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.132)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.134)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -44,7 +44,7 @@
 - バージョン表記同期をrendererヘルパーで担保し、UI/モーダルの表記ズレを防止。
 - ロード時に競技タイトルを入力とレース画面タイトルへ同期する処理をrendererヘルパー経由に移行。
 - レース描画・進行表示を `race-screen` ヘルパー経由に寄せ、ui-controllerのDOM依存を削減（挙動不変）。
-- バージョン表記をUI/モーダル/ドキュメントで同期（v2.1.0-beta.133）。
+- バージョン表記をUI/モーダル/ドキュメントで同期（v2.1.0-beta.134）。
 - デバイス同期ボタンも共通ガード（requireConnection）で未接続アラートを統一。
 - デバイス画面から離れる際、リストがdirtyかつ未接続ならアラートを出して同期をブロック（デバイス同期の未接続送信を防止）。
 - デバイス同期ダイアログ（checkDirtyAndSync）でも未接続を検出してアラートし、同期を実行しないようにガード。
@@ -54,7 +54,7 @@
 - レース一覧のヒント文から「要同期」文言を削除し、setup全削除確認を日本語化。
 - レース削除の確認文言を日本語で明示。
 - 全レースクリアとペーサー削除の確認文言も日本語化。
-- START後に推定遅延と送信コマンド本数をダイアログ表示する簡易可視化を追加。
+- START後の推定遅延と送信コマンド本数はコンソールログで確認（ダイアログは廃止）。
 - renderRaceScreenにelapsedTimeを引数で渡し、UI側で状態取得してrendererへ委譲する流れに整理（race-ui-state依存を削減）。
 - STOP時の状態遷移（review/フラグ初期化）はサービス側に寄せ、UI側の重複遷移を削除。
 - テスト拡充: race-service / race-sync-service / race-renderer / ui-logic ほか。

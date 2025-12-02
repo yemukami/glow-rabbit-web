@@ -43,6 +43,9 @@
 - 要求: 仕上げから順に続けて。
   対応: STOP後の状態遷移をサービス側に寄せ、UI側の重複遷移を削除しつつバージョンをv2.1.0-beta.133に更新。STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOG/TODAYを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js` を実行（Pass）。
 
+- 要求: ok、残作業を順に進めて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
+  対応: START遅延のダイアログを廃止してコンソールログのみとし、バージョンをv2.1.0-beta.134に更新。STATUS/NEXT/TEST_PLAN/TODAYを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js` を実行（Pass）。
+
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに（未接続ガード徹底）。
   対応: デバイス画面離脱時だけでなくcheckDirtyAndSyncでも未接続ならアラートで同期を止めるガードを追加し、デバイス同期を未接続で実行しないよう徹底（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.124に更新し、テスト計画/ステータス文書を同期。`node --check js/ui/ui-controller.js` を実行（Pass）。
 

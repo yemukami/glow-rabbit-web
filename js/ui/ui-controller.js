@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.133'
+    APP_VERSION: 'v2.1.0-beta.134'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -379,18 +379,6 @@ function renderRace() {
     renderRaceScreen(races, getExpandedRaceId(), getEditingPaces(), getElapsedTime());
 }
 
-function showStartLagInfo(result) {
-    if (!result) return;
-    const total = result.records?.length || 0;
-    if (typeof result.estMs === 'number') {
-        alert(`START送信完了\n推定遅延: ${result.estMs}ms\n送信コマンド: ${total}本`);
-        return;
-    }
-    if (total > 0) {
-        alert(`START送信完了\n送信コマンド: ${total}本`);
-    }
-}
-
 async function startRaceWrapper(id) {
     if (!requireConnection("START実行")) return;
     const r = getRaceById(id);
@@ -415,7 +403,9 @@ async function startRaceWrapper(id) {
     }
     if (startResult && startResult.records) {
         console.log("[startRaceWrapper] Start command records:", startResult.records.length, startResult.records);
-        showStartLagInfo(startResult);
+        if (typeof startResult.estMs === 'number') {
+            console.log("[startRaceWrapper] Estimated start lag(ms):", startResult.estMs);
+        }
     }
     markOtherRacesUnsynced(races, id);
     resetElapsedTime();
