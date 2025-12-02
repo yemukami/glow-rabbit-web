@@ -15,9 +15,19 @@ export function setTargetTimeValue(value) {
     if (input) input.value = value || '';
 }
 
+export function getTargetTimeValue() {
+    const input = getTargetTimeInput();
+    return input ? input.value : '';
+}
+
 export function setCalcPaceText(text) {
     const el = getCalcPaceEl();
     if (el) el.innerText = text;
+}
+
+export function setSegmentSummaryText(text) {
+    const summaryEl = document.getElementById('segment-total-time');
+    if (summaryEl) summaryEl.innerText = text;
 }
 
 export function openModalUI() {

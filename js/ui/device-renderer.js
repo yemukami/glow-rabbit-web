@@ -36,3 +36,53 @@ export function buildDeviceOverlayHtml(idx, dist, device) {
         </div>
     `;
 }
+
+export function renderDeviceGridView(
+    deviceList,
+    deviceSettings,
+    deviceInteraction,
+    handlers = {},
+    { containerId = 'device-list-container', countDisplayId = 'device-count-display' } = {}
+) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
+    const countEl = document.getElementById(countDisplayId);
+    if (countEl) {
+        countEl.innerText = `${deviceList.length} / ${maxDevices}`;
+    }
+
+    container.innerHTML = buildDeviceGridHtml(deviceList, deviceSettings, deviceInteraction);
+    const grid = container.querySelector('#device-grid');
+    if (grid) {
+        attachDeviceGridHandlers(grid, handlers);
+    }
+}
+
+export function renderDeviceOverlayView(idx, dist, device, handlers = {}) {
+    const overlay = createDeviceOverlay(buildDeviceOverlayHtml(idx, dist, device));
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+            return;
+        }
+        const actionEl = e.target.closest('[data-action]');
+        if (!actionEl) return;
+        const action = actionEl.dataset.action;
+        const parsedIdx = parseInt(actionEl.dataset.idx || '', 10);
+        if (action === 'modal-close') {
+            overlay.remove();
+            return;
+        }
+        if (Number.isNaN(parsedIdx)) return;
+        const handler = handlers[action];
+        if (typeof handler === 'function') {
+            handler(parsedIdx, overlay);
+        }
+    });
+    appendOverlay(overlay);
+    return overlay;
+}
+import { attachDeviceGridHandlers } from './device-grid-events.js';
+import { createDeviceOverlay, appendOverlay } from './overlay-renderer.js';

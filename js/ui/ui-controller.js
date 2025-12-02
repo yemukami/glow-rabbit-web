@@ -11,21 +11,19 @@ import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/r
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
 import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
-import { renderSegmentTable } from './race-modal-renderer.js';
-import { buildDeviceGridHtml, buildDeviceOverlayHtml } from './device-renderer.js';
+import { renderModalSegmentTable, renderSegmentTable } from './race-modal-renderer.js';
+import { renderDeviceGridView, renderDeviceOverlayView } from './device-renderer.js';
 import { attachSetupTableHandlers } from './setup-table-events.js';
-import { attachDeviceGridHandlers } from './device-grid-events.js';
 import { renderSetupTable } from './setup-renderer.js';
 import { renderConnectionStatus } from './connection-renderer.js';
-import { renderReplaceModal, updateReplaceMacText } from './replace-modal-renderer.js';
+import { getReplaceOverlay, showReplaceOverlay, updateReplaceMacText } from './replace-modal-renderer.js';
 import { createModalState, resetModalState, setActiveTab, setModalTarget, setSelectedColor } from './race-modal-state.js';
 import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
-import { bindTargetInput, closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
+import { bindTargetInput, closeModalUI, getTargetTimeValue, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setSegmentSummaryText, setTargetTimeValue } from './race-modal-view.js';
 import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRows } from './segment-utils.js';
 import { ensureNonNegativeNumber, ensurePositiveInt } from '../utils/input-guards.js';
-import { renderScreenMode, syncRaceTitle, updateVersionDisplay } from './screen-renderer.js';
+import { renderCompetitionTitle, renderScreenMode, updateVersionDisplay } from './screen-renderer.js';
 import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
-import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
 import { openVersionModal, closeVersionModal } from './version-modal.js';
 import { renderRaceScreen, updateRunningDisplaysForRace } from './race-screen.js';
 // modalTarget and modalSelectedColor are now part of modalState
@@ -36,7 +34,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.137'
+    APP_VERSION: 'v2.1.0-beta.144'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -276,16 +274,12 @@ function updateConnectionStatus(connected) {
 function loadAppState() {
     const savedTitle = localStorage.getItem('glow_competition_title');
     if(!savedTitle) return;
-    const input = document.getElementById('competition-title');
-    const titleNode = document.getElementById('race-screen-title');
-    if (input) input.value = savedTitle;
-    if (titleNode) titleNode.textContent = savedTitle;
+    renderCompetitionTitle(savedTitle);
 }
 
 function saveCompetitionTitle(val) {
     localStorage.setItem('glow_competition_title', val);
-    const titleNode = document.getElementById('race-screen-title');
-    if (titleNode) titleNode.textContent = val;
+    renderCompetitionTitle(val);
 }
 
 async function switchMode(mode, skipGuard = false) {
@@ -519,7 +513,7 @@ function openModal(rid, pid) {
         // Load Data
         if (p.type === 'segments' && p.segments && p.segments.length > 0) {
             switchModalTab('segments');
-            renderSegmentTable(p.segments, document.getElementById('segment-tbody'), updateSegmentSummaryFromDom);
+            renderModalSegmentTable(p.segments, updateSegmentSummaryFromDom);
         } else {
             // Simple Mode
             let tVal = "";
@@ -543,7 +537,7 @@ function openModal(rid, pid) {
         setTargetTimeValue("");
         setCalcPaceText("--.-");
         updateSegmentSummaryFromDom();
-        renderSegmentTable([], document.getElementById('segment-tbody'), updateSegmentSummaryFromDom);
+        renderModalSegmentTable([], updateSegmentSummaryFromDom);
     } 
     openModalUI();
 }
@@ -561,7 +555,7 @@ function switchModalTab(tab) {
 }
 
 function updateCalcPace() {
-    const val = document.getElementById('modal-target-time')?.value;
+    const val = getTargetTimeValue();
     const r = getRaceById(modalState.target.raceId);
     const pace = r ? computePaceFromTarget(r.distance, val) : null;
     setCalcPaceText(pace && pace > 0 ? formatPace(pace) : "--.-");
@@ -580,7 +574,7 @@ function saveModalData() {
 
     if (modalState.activeTab === 'simple') {
         // In simple mode, any existing segments are cleared
-        const tStr = document.getElementById('modal-target-time')?.value;
+        const tStr = getTargetTimeValue();
         const totalSec = parseTimeStr(tStr);
         if (totalSec <= 0) return alert("目標タイムを入力してください");
         
@@ -620,13 +614,11 @@ function cancelPace(rid, pid) { clearEditingPace(pid); renderRace(); }
 function commitPace(rid, pid) { /* logic */ renderRace(); saveRaces(); }
 
 function updateSegmentSummaryFromDom() {
-    const summaryEl = document.getElementById('segment-total-time');
-    if (!summaryEl) return;
     const r = getRaceById(modalState.target.raceId);
     if (!r) return;
     const rows = document.querySelectorAll('#segment-tbody tr');
     const summary = computeSegmentSummaryText(r, rows);
-    summaryEl.innerText = summary.text;
+    setSegmentSummaryText(summary.text);
 }
 
 // Fallback global bindings in case initUI fails early
@@ -635,23 +627,16 @@ if (typeof window !== 'undefined') {
 }
 
 function renderDeviceList() {
-    const container = document.getElementById('device-list-container');
-    if (!container) return;
-    const maxDevices = Math.ceil(deviceSettings.totalDistance / deviceSettings.interval);
-    
-    // Update Count Display
-    const countEl = document.getElementById('device-count-display');
-    if (countEl) {
-        countEl.innerText = `${deviceList.length} / ${maxDevices}`;
-    }
-
-    container.innerHTML = buildDeviceGridHtml(deviceList, deviceSettings, deviceInteraction);
-    const grid = document.getElementById('device-grid');
-    attachDeviceGridHandlers(grid, {
-        getMode: () => deviceInteraction.mode,
-        onSwapMode: (idx) => startSwapMode(idx),
-        onOpenDevice: (idx) => openDeviceActionMenu(idx)
-    });
+    renderDeviceGridView(
+        deviceList,
+        deviceSettings,
+        deviceInteraction,
+        {
+            getMode: () => deviceInteraction.mode,
+            onSwapMode: (idx) => startSwapMode(idx),
+            onOpenDevice: (idx) => openDeviceActionMenu(idx)
+        }
+    );
 }
 
 // CSV functions...
@@ -713,17 +698,16 @@ function confirmReplace() {
 }
 
 function updateReplaceModalUI(mac) {
-    let el = document.getElementById('modal-replace-overlay');
+    let el = getReplaceOverlay();
     if (!el) {
-        el = renderReplaceModal(deviceInteraction.targetIndex, "Scanning... (Press Button on Device)");
-        appendReplaceOverlay(el);
-        el.addEventListener('click', (e) => {
-            if (e.target === el) el.remove();
-            const actionEl = e.target.closest('[data-action]');
-            if (!actionEl) return;
-            if (actionEl.dataset.action === 'replace-cancel') cancelReplace();
-            if (actionEl.dataset.action === 'replace-confirm') confirmReplace();
-        });
+        el = showReplaceOverlay(
+            deviceInteraction.targetIndex,
+            "Scanning... (Press Button on Device)",
+            {
+                onCancel: () => cancelReplace(),
+                onConfirm: () => confirmReplace()
+            }
+        );
     }
     updateReplaceMacText(mac);
 }
@@ -731,27 +715,20 @@ function updateReplaceModalUI(mac) {
 function openDeviceActionMenu(i) {
     const d = deviceList[i];
     const dist = i * deviceSettings.interval;
-    
-    const overlay = createDeviceOverlay(buildDeviceOverlayHtml(i, dist, d));
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            overlay.remove();
-            return;
+
+    renderDeviceOverlayView(
+        i,
+        dist,
+        d,
+        {
+            'device-blink': (idx) => triggerBlink(idx),
+            'device-swap': (idx, overlay) => { triggerStartSwap(idx); overlay.remove(); },
+            'device-replace-scan': (idx, overlay) => { triggerStartReplace(idx); overlay.remove(); },
+            'device-replace-manual': (idx, overlay) => { triggerReplace(idx); overlay.remove(); },
+            'device-dummy': (idx, overlay) => { triggerDummy(idx); overlay.remove(); },
+            'device-remove': (idx, overlay) => { triggerRemove(idx); overlay.remove(); }
         }
-        const actionEl = e.target.closest('[data-action]');
-        if (!actionEl) return;
-        const idx = parseInt(actionEl.dataset.idx, 10);
-        const action = actionEl.dataset.action;
-        if (action === 'modal-close') { overlay.remove(); return; }
-        if (Number.isNaN(idx)) return;
-        if (action === 'device-blink') triggerBlink(idx);
-        if (action === 'device-swap') { triggerStartSwap(idx); overlay.remove(); }
-        if (action === 'device-replace-scan') { triggerStartReplace(idx); overlay.remove(); }
-        if (action === 'device-replace-manual') { triggerReplace(idx); overlay.remove(); }
-        if (action === 'device-dummy') { triggerDummy(idx); overlay.remove(); }
-        if (action === 'device-remove') { triggerRemove(idx); overlay.remove(); }
-    });
-    appendOverlay(overlay);
+    );
 }
 
 // Device grid handlers moved to device-grid-events for clarity.

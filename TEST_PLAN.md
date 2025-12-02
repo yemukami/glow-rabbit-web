@@ -1,4 +1,4 @@
-# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.137)
+# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.144)
 
 ## Scope
 - Inline handler排除とデリゲーション化（Setup/Device UI）によるリファクタの安全確認
@@ -32,8 +32,11 @@
    - startPosを負値/NaNで入力しても警告ログが出て0に丸められることをUI上で確認する  
 
 ## Results
-- 2025-12-xx: `node --check js/ui/ui-controller.js` (Pass)  
-- 2025-12-xx: `node js/test/ui-logic.test.js` (Pass)  
+- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/replace-modal-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  
+- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-view.js`; `node js/test/ui-logic.test.js` (Pass)  
+- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  
+- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/device-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  
+- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/screen-renderer.js`; `node --check js/ui/race-modal-view.js` (Pass)  
 - 2025-12-xx: デバイス同期ボタンの未接続ガード（requireConnection）を手動確認予定（未実施）  
 - 2025-12-xx: デバイス画面離脱時のdirty＋未接続時に警告のみで遷移できることを手動確認予定（未実施）  
 - 2025-12-xx: START後に推定遅延＋送信コマンド本数がダイアログ表示されることを手動確認予定（未実施）  

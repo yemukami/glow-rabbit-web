@@ -12,10 +12,8 @@ export function renderScreenMode(mode) {
 
 export function syncRaceTitle(inputId, titleId) {
     const input = document.getElementById(inputId);
-    const titleEl = document.getElementById(titleId);
-    if (input && titleEl) {
-        titleEl.innerText = input.value;
-    }
+    if (!input) return;
+    renderCompetitionTitle(input.value, inputId, titleId);
 }
 
 export function updateVersionDisplay(version) {
@@ -23,4 +21,11 @@ export function updateVersionDisplay(version) {
     if (inlineEl) inlineEl.textContent = version;
     const modalVersionEl = document.getElementById('modal-version-text');
     if (modalVersionEl) modalVersionEl.textContent = `Version: ${version}`;
+}
+
+export function renderCompetitionTitle(title, inputId = 'competition-title', titleId = 'race-screen-title') {
+    const input = document.getElementById(inputId);
+    if (input) input.value = title;
+    const titleEl = document.getElementById(titleId);
+    if (titleEl) titleEl.textContent = title;
 }

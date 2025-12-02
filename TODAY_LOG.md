@@ -808,3 +808,45 @@
 - テスト: `node --check js/ui/ui-controller.js`（Pass）。
 - 感想: renderer全面移行に向けた安全な分離を継続できた。
 - E2E確認手順メモ（手動）: なし（挙動変更なし）。
+
+### 2025-12-xx 追加ログ（このターン-59）
+- 作業: 競技タイトル反映とセグメント合計表示の更新をrenderer/viewヘルパーへ移し、ui-controllerのDOM依存をさらに削減。バージョンを `v2.1.0-beta.138` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/ui/screen-renderer.js`; `node --check js/ui/race-modal-view.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: renderer移行の残りを少しずつ片付けられた。UI責務が整理され、次のDOM移行もやりやすくなった。
+- E2E確認手順メモ（手動）: 挙動変更なし（DOM責務の整理のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-60）
+- 作業: デバイスグリッドの描画・カウント更新・ハンドラ接続をdevice-rendererに寄せ、ui-controllerのDOM操作を削減。バージョンを `v2.1.0-beta.139` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/ui/device-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: デバイス周りもrenderer側でまとめられ、UIコントローラの責務整理が進んだ。残りのDOM移行も小刻みに進めたい。
+- E2E確認手順メモ（手動）: 挙動変更なし（DOM責務整理のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-61）
+- 作業: デバイスアクションモーダルの生成とイベント付与をdevice-rendererに寄せ、ui-controllerのDOM依存をさらに削減。バージョンを `v2.1.0-beta.140` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/ui/device-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: デバイス周りのイベントもrenderer側にまとまり、残るDOM処理の洗い出しがしやすくなった。
+- E2E確認手順メモ（手動）: 挙動変更なし（DOM責務整理のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-62）
+- 作業: 置換モーダルの生成とイベント付与をrendererに寄せ、ui-controllerのDOM依存をさらに削減。バージョンを `v2.1.0-beta.141` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/ui/replace-modal-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: replaceフローもrenderer側で完結し、UIコントローラのDOM操作が一段と減った。残りのDOM移行に集中しやすくなった。
+- E2E確認手順メモ（手動）: 挙動変更なし（DOM責務整理のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-63）
+- 作業: セグメントテーブル描画をrendererのDOMヘルパーに寄せ、ui-controllerのDOM参照を削減。バージョンを `v2.1.0-beta.142` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: モーダル内のDOM処理も整理でき、残りのDOM移行がより少数になった。
+- E2E確認手順メモ（手動）: 挙動変更なし（DOM責務整理のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-64）
+- 作業: モーダル目標タイムのDOM参照をviewヘルパーに寄せ、ui-controllerのDOM依存をさらに削減。バージョンを `v2.1.0-beta.143` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-view.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: modal周辺のDOM参照が減り、残るDOM移行が明確になった。引き続き小刻みに進められる。
+- E2E確認手順メモ（手動）: 挙動変更なし（DOM責務整理のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-65）
+- 作業: 置換モーダル参照をrendererヘルパーに寄せ、ui-controllerのDOM依存をさらに削減。バージョンを `v2.1.0-beta.144` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/ui/replace-modal-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: replace周りもrenderer依存に統一でき、残DOM処理の洗い出しがさらに進んだ。引き続き小刻みで整理する。
+- E2E確認手順メモ（手動）: 挙動変更なし（DOM責務整理のみ）。***

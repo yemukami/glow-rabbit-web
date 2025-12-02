@@ -1,3 +1,5 @@
+import { appendReplaceOverlay } from './overlay-renderer.js';
+
 export function renderReplaceModal(targetIndex, macText) {
     const overlay = document.createElement('div');
     overlay.id = 'modal-replace-overlay';
@@ -19,4 +21,32 @@ export function renderReplaceModal(targetIndex, macText) {
 export function updateReplaceMacText(text) {
     const display = document.getElementById('replace-mac-display');
     if (display) display.innerText = text;
+}
+
+export function getReplaceOverlay() {
+    return document.getElementById('modal-replace-overlay');
+}
+
+export function showReplaceOverlay(targetIndex, macText, handlers = {}) {
+    const overlay = renderReplaceModal(targetIndex, macText);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+            handlers.onCancel && handlers.onCancel();
+            return;
+        }
+        const actionEl = e.target.closest('[data-action]');
+        if (!actionEl) return;
+        const action = actionEl.dataset.action;
+        if (action === 'replace-cancel') {
+            overlay.remove();
+            handlers.onCancel && handlers.onCancel();
+            return;
+        }
+        if (action === 'replace-confirm') {
+            handlers.onConfirm && handlers.onConfirm();
+        }
+    });
+    appendReplaceOverlay(overlay);
+    return overlay;
 }

@@ -13,6 +13,27 @@
 - START/同期/stopRunner/ペース送信まわりの変更を含む場合は、対応欄で「SYNC_START_SPEC順守（変更なし）」など明記。
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
 
+- 要求: 小刻みに残作業を進めて（ルール/ソース参照/テスト/ログ/バージョン/プッシュ）。
+  対応: 置換モーダル参照をrendererのヘルパーに寄せ、ui-controllerのDOM依存をさらに削減（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.144に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node --check js/ui/replace-modal-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。
+
+- 要求: 小刻みに残作業を進めて（ルール/ソース参照/ログ/テスト/バージョン更新）。
+  対応: モーダル目標タイムのDOM参照をviewヘルパーに寄せ、ui-controllerのDOM依存を削減（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.143に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node --check js/ui/race-modal-view.js`, `node js/test/ui-logic.test.js` を実行（Pass）。
+
+- 要求: 小刻みに残作業を進めること（ルール/ログ/テスト徹底、継続）。
+  対応: セグメントテーブル描画をrendererのDOMヘルパーに寄せ、ui-controllerのDOM参照を削減（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.142に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node --check js/ui/race-modal-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。
+
+- 要求: さらに小刻みに残作業を進めること（ルール/ログ/テスト徹底）。
+  対応: 置換モーダルの生成とイベント付与をrendererに寄せ、ui-controllerのDOM依存を削減（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.141に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node --check js/ui/replace-modal-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。
+
+- 要求: 小刻みに残作業を順に進めること（ルール/ログ/テスト徹底）。
+  対応: デバイスアクションモーダルの生成/イベント付与をdevice-rendererに寄せ、ui-controllerのDOM依存をさらに削減（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.140に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node --check js/ui/device-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。
+
+- 要求: 小刻みに残作業を進め、ルール/ログ/テストを守りつつ進捗を出してほしい。
+  対応: デバイスグリッドの描画・カウント更新・ハンドラ接続をdevice-rendererに寄せ、ui-controllerのDOM操作を削減（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.139に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node --check js/ui/device-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。
+
+- 要求: 現行v2.1.0-beta.137で必読ルールを守りつつ残タスクを小刻みに進め、command9の正体も確認してほしい。
+  対応: 競技タイトル反映とセグメント合計表示のDOM更新をrenderer/viewヘルパーへ移し、ui-controllerのDOM依存を削減（SYNC_START_SPEC順守・挙動変更なし、command9調査は未着手）。バージョンをv2.1.0-beta.138に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node --check js/ui/screen-renderer.js`, `node --check js/ui/race-modal-view.js`, `node js/test/ui-logic.test.js` を実行（Pass）。
+
 - 要求: 未接続でも画面遷移はしてよい。修正とリファクタリングを続けて。
   対応: デバイス同期ガードを緩和し、未接続時は警告のみで遷移を許可しつつ同期は実行しない挙動に整理。バージョンをv2.1.0-beta.125に更新し、ステータス/テスト計画/コンテキストを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/core/device-manager.js`, `node --check js/ui/ui-controller.js` を実行（Pass）。
 

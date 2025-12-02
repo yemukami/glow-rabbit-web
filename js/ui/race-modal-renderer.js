@@ -8,6 +8,11 @@ export function renderSegmentTable(segments, tbody, onChange) {
     onChange();
 }
 
+export function renderModalSegmentTable(segments, onChange) {
+    const tbody = document.getElementById('segment-tbody');
+    renderSegmentTable(segments, tbody, onChange);
+}
+
 export function addSegmentRow(tbody, dist = "", pace = "", onChange) {
     if (!tbody) return;
     const tr = document.createElement('tr');
