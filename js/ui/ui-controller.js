@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.128'
+    APP_VERSION: 'v2.1.0-beta.129'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -359,7 +359,7 @@ function updateData(id, f, v) {
 function addNewRow() { addNewRace(); saveRaces(); renderSetup(); }
 
 function deleteRow(id) { 
-    if(confirm("削除?")){
+    if(confirm("このレースを削除しますか？")){
         const idx = races.findIndex(r=>r.id===id);
         if(idx>=0) races.splice(idx,1);
         saveRaces(); renderSetup();

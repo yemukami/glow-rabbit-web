@@ -51,6 +51,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js`（Pass）。手動E2Eは未実施。
 - 感想: UI文言の仕様ズレを解消し、利用者への伝わりやすさを改善。残りのrenderer移行/状態整理を進めて完了に近づけたい。
 
+### 2025-12-xx 追加ログ（レース削除確認の日本語化）
+- 作業: レース削除確認ダイアログを日本語に統一し、バージョンを `v2.1.0-beta.129` に更新。STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js`（Pass）。手動E2Eは未実施。
+- 感想: 文言のばらつきを減らし、誤操作時の意図が伝わりやすくなった。残タスクも少ないのでこのまま収束させたい。
+
 ### 2025-12-xx 追加ログ（TEST_PLAN更新）
 - 作業: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加。
 - テスト: ドキュメント更新のみ（コード変更なし）。

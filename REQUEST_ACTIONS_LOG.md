@@ -25,6 +25,9 @@
 - 要求: 実行画面のヒント修正と設置全削除メッセージの日本語化。
   対応: レース画面のヒントから「要同期」文言を削除し、設置全削除の確認ダイアログを日本語化。バージョンをv2.1.0-beta.128に更新し、ステータス/コンテキスト/テスト計画/ログを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js` を実行（Pass）。
 
+- 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
+  対応: レース削除確認を日本語化し、バージョンをv2.1.0-beta.129に更新。STATUS/NEXT/TEST_PLAN/TODAYを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js` を実行（Pass）。
+
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに（未接続ガード徹底）。
   対応: デバイス画面離脱時だけでなくcheckDirtyAndSyncでも未接続ならアラートで同期を止めるガードを追加し、デバイス同期を未接続で実行しないよう徹底（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.124に更新し、テスト計画/ステータス文書を同期。`node --check js/ui/ui-controller.js` を実行（Pass）。
 
