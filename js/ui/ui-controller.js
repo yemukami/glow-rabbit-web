@@ -24,7 +24,7 @@ import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
 import { bindTargetInput, closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
 import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRows } from './segment-utils.js';
 import { ensureNonNegativeNumber, ensurePositiveInt } from '../utils/input-guards.js';
-import { renderScreenMode } from './screen-renderer.js';
+import { renderScreenMode, syncRaceTitle } from './screen-renderer.js';
 import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
 import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
 // modalTarget and modalSelectedColor are now part of modalState
@@ -307,8 +307,7 @@ async function switchMode(mode, skipGuard = false) {
     
     if(mode==='setup') renderSetup();
     if(mode==='race') {
-        const t = document.getElementById('competition-title');
-        if(t) document.getElementById('race-screen-title').innerText = t.value;
+        syncRaceTitle('competition-title', 'race-screen-title');
         renderRace();
     }
     if(mode === 'devices') renderDeviceList();

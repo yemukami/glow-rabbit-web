@@ -9,3 +9,11 @@ export function renderScreenMode(mode) {
     button.classList.add('active');
     return true;
 }
+
+export function syncRaceTitle(inputId, titleId) {
+    const input = document.getElementById(inputId);
+    const titleEl = document.getElementById(titleId);
+    if (input && titleEl) {
+        titleEl.innerText = input.value;
+    }
+}
