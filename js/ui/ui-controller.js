@@ -26,6 +26,7 @@ import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRow
 import { ensureNonNegativeNumber, ensurePositiveInt } from '../utils/input-guards.js';
 import { renderScreenMode } from './screen-renderer.js';
 import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
+import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -718,7 +719,7 @@ function updateReplaceModalUI(mac) {
     let el = document.getElementById('modal-replace-overlay');
     if (!el) {
         el = renderReplaceModal(deviceInteraction.targetIndex, "Scanning... (Press Button on Device)");
-        document.body.appendChild(el);
+        appendReplaceOverlay(el);
         el.addEventListener('click', (e) => {
             if (e.target === el) el.remove();
             const actionEl = e.target.closest('[data-action]');
@@ -734,9 +735,7 @@ function openDeviceActionMenu(i) {
     const d = deviceList[i];
     const dist = i * deviceSettings.interval;
     
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay open';
-    overlay.innerHTML = buildDeviceOverlayHtml(i, dist, d);
+    const overlay = createDeviceOverlay(buildDeviceOverlayHtml(i, dist, d));
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {
             overlay.remove();
@@ -755,7 +754,7 @@ function openDeviceActionMenu(i) {
         if (action === 'device-dummy') { triggerDummy(idx); overlay.remove(); }
         if (action === 'device-remove') { triggerRemove(idx); overlay.remove(); }
     });
-    document.body.appendChild(overlay);
+    appendOverlay(overlay);
 }
 
 // Device grid handlers moved to device-grid-events for clarity.
