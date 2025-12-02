@@ -658,7 +658,7 @@ function renderDeviceList() {
 function downloadCSV() {}
 function importCSV(input) {}
 function fillWithDummy() {
-    if(confirm("未設定の箇所をすべてダミーとして埋めますか？")) {
+    if(confirm("未設定の箇所をすべてダミーとして埋めますか？（元に戻すには手動で削除が必要です）")) {
         fillRemainingWithDummy();
         renderDeviceList();
     }
