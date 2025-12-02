@@ -490,7 +490,11 @@ function resetRace(id) { const r = getRaceById(id); resetRaceState(r); setExpand
 function updateStartPos(id, val) { 
     const r = getRaceById(id); 
     if (!r) return;
-    r.startPos = ensureNonNegativeNumber(val, 0); 
+    const sanitized = ensureNonNegativeNumber(val, 0);
+    if (sanitized !== val) {
+        console.warn("[updateStartPos] startPos sanitized", { raceId: id, raw: val, sanitized });
+    }
+    r.startPos = sanitized; 
     markSyncNeeded(r);
     saveRaces();
     renderRace();

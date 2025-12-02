@@ -670,3 +670,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
 - 感想: startPos周りの挙動をさらに透明化でき、入力/ログ整理の足がかりを追加できた。
 - E2E確認手順メモ（手動）: startPosを負値/NaNにしてSTARTした際に警告ログが出ることと、丸め後に正常に進むことを確認する。従来手順も継続。
+
+### 2025-12-xx 追加ログ（このターン-51）
+- 作業: startPosサニタイズ警告をUI側でも出すようにし、デバッグ時にraw/sanitizedが追えるよう統一。バージョンを `v2.1.0-beta.108` に更新し、STATUS/NEXTを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
+- 感想: UIとサービス両方でサニタイズ警告を出せるようになり、入力バリデーションの透明性が上がった。
+- E2E確認手順メモ（手動）: startPosを負値/NaNで入力→警告ログをUI側でも確認し、正常に丸められることを合わせて確認する。従来手順も継続。
