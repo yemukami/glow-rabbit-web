@@ -36,6 +36,11 @@
 - テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js`（Pass）。手動E2Eは未実施（接続環境後に実施予定）。
 - 感想: renderer移行の一環として進行更新の無駄を減らした。引き続きDOM/状態処理をrenderer/サービス側に寄せたい。
 
+### 2025-12-xx 追加ログ（文言整理＋バージョン更新）
+- 作業: デバイス同期確認の警告文言を簡潔化し、バージョンを `v2.1.0-beta.127` に更新。STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOG/TODAYを同期。
+- テスト: `node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js`（Pass）。手動E2Eは未実施（接続環境後に実施予定）。
+- 感想: 警告文をシンプルにして作業継続の意図を明確化。終盤なので引き続き小刻みに安全確認を続けたい。
+
 ### 2025-12-xx 追加ログ（TEST_PLAN更新）
 - 作業: TEST_PLANをv2.1.0-beta.122に更新し、デバイス同期ボタンの未接続ガード確認を手動E2E項目に追加。
 - テスト: ドキュメント更新のみ（コード変更なし）。

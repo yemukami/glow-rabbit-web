@@ -207,16 +207,14 @@ export function fillRemainingWithDummy() {
 }
 
 export async function checkDirtyAndSync() {
-    if (isListDirty) {
-        if (!isConnected) {
-            alert("BLE未接続です。同期は接続後に実施してください（今回は画面遷移のみ続行します）。");
-            return true;
-        }
-        if (confirm("Device list has changed. Sync with Glow-C now?")) {
-            await syncAllDevices();
-            return true;
-        }
-        return false;
+    if (!isListDirty) return true;
+    if (!isConnected) {
+        alert("BLE未接続です。同期は接続後に実施してください（今回は続行します）。");
+        return true;
     }
-    return true;
+    if (confirm("デバイスリストが変更されています。同期しますか？")) {
+        await syncAllDevices();
+        return true;
+    }
+    return false;
 }

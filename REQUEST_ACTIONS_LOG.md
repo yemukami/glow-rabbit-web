@@ -19,6 +19,9 @@
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。そろそろ終わるかな？
   対応: updateStateでelapsedTimeを一度だけ計算してrendererに渡すようリファクタし、二重取得を解消。バージョンをv2.1.0-beta.126に更新し、STATUS/NEXT/TEST_PLAN/TODAYへ反映（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js` を実行（Pass）。
 
+- 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
+  対応: デバイス同期確認の文言を簡潔化し、バージョンをv2.1.0-beta.127に更新。STATUS/NEXT/TEST_PLAN/TODAYを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js`, `node --check js/core/device-manager.js` を実行（Pass）。
+
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに（未接続ガード徹底）。
   対応: デバイス画面離脱時だけでなくcheckDirtyAndSyncでも未接続ならアラートで同期を止めるガードを追加し、デバイス同期を未接続で実行しないよう徹底（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.124に更新し、テスト計画/ステータス文書を同期。`node --check js/ui/ui-controller.js` を実行（Pass）。
 
