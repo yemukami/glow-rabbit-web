@@ -36,7 +36,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.131'
+    APP_VERSION: 'v2.1.0-beta.132'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -376,7 +376,7 @@ function toggleRow(id, event) {
 
 function renderRace() {
     console.log("[renderRace] Start. Races count:", races.length);
-    renderRaceScreen(races, getExpandedRaceId(), getEditingPaces());
+    renderRaceScreen(races, getExpandedRaceId(), getEditingPaces(), getElapsedTime());
 }
 
 function showStartLagInfo(result) {
