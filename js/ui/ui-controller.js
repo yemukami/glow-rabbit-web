@@ -24,6 +24,7 @@ import { computePaceFromTarget, parseTimeStr } from './race-modal-utils.js';
 import { bindTargetInput, closeModalUI, openModalUI, setActiveTabUI, setCalcPaceText, setColorSelection, setTargetTimeValue } from './race-modal-view.js';
 import { buildSegmentsForSave, computeSegmentSummaryText, readSegmentsFromDomRows } from './segment-utils.js';
 import { ensureNonNegativeNumber, ensurePositiveInt } from '../utils/input-guards.js';
+import { renderScreenMode } from './screen-renderer.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -285,7 +286,7 @@ function saveCompetitionTitle(val) {
 }
 
 async function switchMode(mode, skipGuard = false) {
-    if (!document.getElementById('screen-'+mode)) return;
+    if (!renderScreenMode(mode)) return;
 
     try {
         if (!skipGuard && document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
@@ -300,10 +301,6 @@ async function switchMode(mode, skipGuard = false) {
         }
     } catch(e) { console.warn(e); }
 
-    document.querySelectorAll('.screen').forEach(e => e.classList.remove('active'));
-    document.querySelectorAll('.mode-btn').forEach(e => e.classList.remove('active'));
-    document.getElementById('screen-'+mode).classList.add('active');
-    document.getElementById('btn-mode-'+mode).classList.add('active');
     localStorage.setItem('glow_current_mode', mode);
     
     if(mode==='setup') renderSetup();
