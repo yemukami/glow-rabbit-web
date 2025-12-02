@@ -28,6 +28,7 @@ import { renderScreenMode, syncRaceTitle, updateVersionDisplay } from './screen-
 import { getRaceTableBody, getSetupTableBody } from './table-hooks.js';
 import { appendOverlay, appendReplaceOverlay, createDeviceOverlay } from './overlay-renderer.js';
 import { openVersionModal, closeVersionModal } from './version-modal.js';
+import { renderRaceScreen } from './race-screen.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 
@@ -383,11 +384,7 @@ function toggleRow(id, event) {
 
 function renderRace() {
     console.log("[renderRace] Start. Races count:", races.length);
-    const tbody = getRaceTableBody();
-    if(!tbody) { console.error("[renderRace] No tbody found!"); return; }
-    const expandedRaceId = getExpandedRaceId();
-    const editingPaces = getEditingPaces();
-    renderRaceTableDom(tbody, races, expandedRaceId, getElapsedTime(), editingPaces);
+    renderRaceScreen(races, getExpandedRaceId(), getEditingPaces());
 }
 
 async function startRaceWrapper(id) {
