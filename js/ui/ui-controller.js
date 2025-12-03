@@ -29,9 +29,11 @@ import { renderRaceScreen, updateRunningDisplaysForRace } from './race-screen.js
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
 const SETTINGS_KEYS = {
-    AUTO_SYNC_ON_CONNECT: 'glow_auto_sync_on_connect'
+    AUTO_SYNC_ON_CONNECT: 'glow_auto_sync_on_connect',
+    SHOW_CONNECT_DIALOG: 'glow_show_connect_dialog'
 };
 let autoSyncOnConnect = false;
+let showConnectDialog = false;
 
 const UI_CONSTANTS = {
     PROGRESS_BAR_PADDING_METERS: 50,
@@ -64,6 +66,10 @@ function loadSettings() {
     autoSyncOnConnect = savedAuto === 'true';
     const cb = document.getElementById('auto-sync-on-connect');
     if (cb) cb.checked = autoSyncOnConnect;
+    const savedDialog = localStorage.getItem(SETTINGS_KEYS.SHOW_CONNECT_DIALOG);
+    showConnectDialog = savedDialog === 'true';
+    const dlgCb = document.getElementById('show-connect-dialog');
+    if (dlgCb) dlgCb.checked = showConnectDialog;
 }
 
 function setAutoSyncOnConnect(val) {
@@ -71,6 +77,13 @@ function setAutoSyncOnConnect(val) {
     localStorage.setItem(SETTINGS_KEYS.AUTO_SYNC_ON_CONNECT, autoSyncOnConnect ? 'true' : 'false');
     const cb = document.getElementById('auto-sync-on-connect');
     if (cb) cb.checked = autoSyncOnConnect;
+}
+
+function setShowConnectDialog(val) {
+    showConnectDialog = !!val;
+    localStorage.setItem(SETTINGS_KEYS.SHOW_CONNECT_DIALOG, showConnectDialog ? 'true' : 'false');
+    const cb = document.getElementById('show-connect-dialog');
+    if (cb) cb.checked = showConnectDialog;
 }
 
 function showStartError(reason) {
@@ -100,6 +113,15 @@ async function autoSyncDevicesIfEnabled() {
     }
 }
 
+function showConnectFeedback(ok) {
+    if (!showConnectDialog) return;
+    if (ok) {
+        alert("BLE接続に成功しました。");
+    } else {
+        alert("BLE接続に失敗しました。近くで再試行してください。");
+    }
+}
+
 export function initUI() {
     console.log("[Init] Starting UI Initialization...");
     
@@ -125,14 +147,15 @@ export function initUI() {
                 () => updateConnectionStatus(false), 
                 handleNotification
             );
-            updateConnectionStatus(true);
-            if (connected) {
-                await autoSyncDevicesIfEnabled();
-            }
+            const ok = !!connected || connected === undefined;
+            updateConnectionStatus(ok);
+            if (ok) await autoSyncDevicesIfEnabled();
+            showConnectFeedback(ok);
         } catch (e) {
             console.error("[connectBLE] Failed:", e);
             alert("BLE接続に失敗しました。近くで再試行してください。\n" + e.message);
             updateConnectionStatus(false);
+            showConnectFeedback(false);
         }
     };
     
@@ -168,6 +191,7 @@ export function initUI() {
     window.closeVersionModal = closeVersionModal;
     window.openVersionModal = openVersionModal;
     window.toggleAutoSyncOnConnect = (checked) => setAutoSyncOnConnect(checked);
+    window.toggleConnectDialog = (checked) => setShowConnectDialog(checked);
 
     // Devices
     window.updateRaceSettings = (d, i) => { updateSettings(d, i); renderDeviceList(); };

@@ -188,13 +188,18 @@
         <h3>Glow-Rabbit Web</h3>
         <p id="modal-version-text" style="color:#888; font-family:monospace;">Version: 2.1.0-beta.147</p>
         <p style="color:#CCC; font-size:12px;">Renderer/ガード整理の進行版</p>
-        <div style="text-align:left; font-size:13px; color:#444; background:#F7F7FA; border:1px solid #E0E0E5; padding:10px 12px; border-radius:10px; margin:12px 0; line-height:1.5;">
-            <label style="display:flex; gap:8px; align-items:center;">
-                <input type="checkbox" id="auto-sync-on-connect" onchange="toggleAutoSyncOnConnect(this.checked)">
-                <span>接続時に設置情報を自動同期する（dummy含む）</span>
-            </label>
-            <div style="margin-left:24px; color:#777; font-size:12px;">BLE接続後に設置画面の内容をGlow-Cへ送信します。半端な配置のままでもそのまま送信されます。</div>
-        </div>
+            <div style="text-align:left; font-size:13px; color:#444; background:#F7F7FA; border:1px solid #E0E0E5; padding:10px 12px; border-radius:10px; margin:12px 0; line-height:1.5;">
+                <label style="display:flex; gap:8px; align-items:center;">
+                    <input type="checkbox" id="auto-sync-on-connect" onchange="toggleAutoSyncOnConnect(this.checked)">
+                    <span>接続時に設置情報を自動同期する（dummy含む）</span>
+                </label>
+                <div style="margin-left:24px; color:#777; font-size:12px;">BLE接続後に設置画面の内容をGlow-Cへ送信します。半端な配置のままでもそのまま送信されます。</div>
+                <label style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+                    <input type="checkbox" id="show-connect-dialog" onchange="toggleConnectDialog(this.checked)">
+                    <span>接続の成功/失敗をダイアログで表示する</span>
+                </label>
+                <div style="margin-left:24px; color:#777; font-size:12px;">ONにすると接続結果をダイアログで知らせます。OFFの場合はヘッダー表示のみ。</div>
+            </div>
         <div style="text-align:left; font-size:12px; color:#834700; background:#FFF7E6; border:1px solid #FFE0A3; padding:10px 12px; border-radius:10px; margin:12px 0; line-height:1.5;">
             ⚠️ ブラウザをリロードするとBLE接続が切れます（再接続してください）<br>
             ⚠️ START前に接続と同期を完了させてください（レース展開時に初期設定を送信します）<br>
