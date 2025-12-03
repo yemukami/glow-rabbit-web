@@ -213,3 +213,6 @@
 
 - 要求: レース実行画面の「要同期」表記を「要レース設定送信」に統一し、バッジ色を赤にして明示すること。
   対応: syncNeededバッジ文言を「要レース設定送信」に統一し、バッジカラーを赤系に変更。関連テスト（race-renderer/race-view-model）を更新。`node --check js/utils/render-utils.js`, `node js/test/race-renderer.test.js`, `node js/test/race-view-model.test.js` を実行（Pass）。コミット/プッシュ予定。
+
+- 要求: 接続/同期フィードバックの改善とタスク整理を進めること。
+  対応: 接続成功/失敗をトースト＋任意ダイアログで通知できる設定を追加し、接続結果に依存せずステータスを更新。設置同期バッジをdirtyと連動させるレンダリングを追加。リファクタ/同期課題をREFACTORING_TASKS.mdとCONNECTION_SYNC_TASKS.mdに整理し、次スレ用プロンプトを作成。バージョンをv2.1.0-beta.149に更新。`node --check js/ui/ui-controller.js` を実行（Pass）。コミット/プッシュ済み。

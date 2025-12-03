@@ -874,3 +874,9 @@
 - テスト: `node --check js/utils/render-utils.js`; `node js/test/race-renderer.test.js`; `node js/test/race-view-model.test.js`（Pass）。
 - 感想: 表記と色が統一され、再送が必要な状態がより明確になった。
 - E2E確認手順メモ（手動）: レース行に「要レース設定送信」バッジが赤色で表示されること、sync後に消えることを確認する。***
+
+### 2025-12-xx 追加ログ（このターン-70）
+- 作業: 接続成功/失敗をトースト＋任意ダイアログで通知できる設定を追加し、接続ステータス更新を安定化。設置同期バッジをdirty状態と連動させて表示更新。バージョンを `v2.1.0-beta.149` に更新し、REFACTORING_TASKS/CONNECTION_SYNC_TASKS/NEXT_THREAD_PROMPTを追加。
+- テスト: `node --check js/ui/ui-controller.js`（Pass）。
+- 感想: 接続・設置同期の見える化を強化し、次スレでのリカバリ導線整備に備えた。
+- E2E確認手順メモ（手動）: 接続ON/OFFでトースト/ダイアログ（設定次第）が表示され、設置同期バッジがdirty/cleanで切り替わることを確認する。***
