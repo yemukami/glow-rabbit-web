@@ -34,7 +34,7 @@
    - 接続成功/失敗/切断や設置同期完了後にヘッダー表示と設置同期バッジが最新化されることを確認
 
 ## Results
-- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js` (Pass)  
+- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js` (Pass、デバイス同期バッジ表示のテスト追加)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/replace-modal-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-view.js`; `node js/test/ui-logic.test.js` (Pass)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  

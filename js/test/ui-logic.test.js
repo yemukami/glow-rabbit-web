@@ -53,6 +53,7 @@ global.window = {
     alert: (msg) => console.log("[Alert]", msg),
     location: {}
 };
+global.alert = global.window.alert;
 
 global.localStorage = {
     store: {},
@@ -79,6 +80,7 @@ global.resetMock = () => {
 
 import { initUI } from '../ui/ui-controller.js';
 import { races, loadRaces, saveRaces } from '../core/race-manager.js';
+import { markDeviceListDirty } from '../core/device-manager.js';
 
 async function runTests() {
     console.log("=== STARTING TDD CHECKS ===");
@@ -94,6 +96,8 @@ async function runTests() {
     document.getElementById('race-screen-title');
     document.getElementById('race-tbody'); 
     document.getElementById('setup-tbody'); 
+    document.getElementById('device-sync-status');
+    document.getElementById('screen-devices');
 
     // Run Init
     initUI();
@@ -139,6 +143,22 @@ async function runTests() {
         console.log("✅ PASS: Pacer info rendered in race row.");
     } else {
         console.error("❌ FAIL: Pacer info missing. Row HTML: " + rowHtml2);
+    }
+
+    // TEST 4: Device Sync Status Rendering
+    console.log("\n[Test 4] Device Sync Status Rendering");
+    const badge = document.getElementById('device-sync-status');
+    if (badge.className.includes('status-ready') && badge.textContent === '✓ 同期完了') {
+        console.log("✅ PASS: Initial device sync badge shows clean state.");
+    } else {
+        console.error("❌ FAIL: Initial device sync badge incorrect.", badge.className, badge.textContent);
+    }
+    markDeviceListDirty(true);
+    await global.window.checkDirtyAndSync();
+    if (badge.className.includes('status-warning') && badge.textContent.includes('要設置同期')) {
+        console.log("✅ PASS: Dirty state updates device sync badge.");
+    } else {
+        console.error("❌ FAIL: Dirty state badge not updated.", badge.className, badge.textContent);
     }
 }
 
