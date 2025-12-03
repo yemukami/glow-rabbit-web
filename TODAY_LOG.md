@@ -868,3 +868,9 @@
 - テスト: `node --check js/core/device-manager.js`; `node --check js/ui/ui-controller.js`; `node --check js/ui/race-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
 - 感想: 自動同期設定を入れたことで再接続後の手数を減らせる土台ができた。文言統一でユーザーへの意図も明確になった。
 - E2E確認手順メモ（手動）: 自動同期ONで接続→デバイス同期が走ること、OFFで現行通り自動同期しないこと、バッジ/ボタン表記が「レース設定送信」になっていることを確認する。***
+
+### 2025-12-xx 追加ログ（このターン-69）
+- 作業: レース画面のsyncNeededバッジを「要レース設定送信」に統一し、バッジ色を赤系に変更。関連テストを更新。
+- テスト: `node --check js/utils/render-utils.js`; `node js/test/race-renderer.test.js`; `node js/test/race-view-model.test.js`（Pass）。
+- 感想: 表記と色が統一され、再送が必要な状態がより明確になった。
+- E2E確認手順メモ（手動）: レース行に「要レース設定送信」バッジが赤色で表示されること、sync後に消えることを確認する。***

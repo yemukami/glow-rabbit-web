@@ -210,3 +210,6 @@
 
 - 要求: 自動同期設定と文言統一を進め、小刻みに対応（テスト/ログ/プッシュまで）。
   対応: バージョンモーダルに「接続時に設置情報を自動同期」チェックを追加し、状態を永続化。ON時は接続/再接続完了後にdevice-list（dummy含む）を自動同期。バッジ/ボタン文言を「レース設定送信」に統一。バージョンをv2.1.0-beta.147に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
+
+- 要求: レース実行画面の「要同期」表記を「要レース設定送信」に統一し、バッジ色を赤にして明示すること。
+  対応: syncNeededバッジ文言を「要レース設定送信」に統一し、バッジカラーを赤系に変更。関連テスト（race-renderer/race-view-model）を更新。`node --check js/utils/render-utils.js`, `node js/test/race-renderer.test.js`, `node js/test/race-view-model.test.js` を実行（Pass）。コミット/プッシュ予定。

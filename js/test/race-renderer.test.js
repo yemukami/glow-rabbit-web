@@ -22,7 +22,7 @@ function testRenderRaceTable() {
     const race = buildMockRace('ready');
     const html = renderRaceTable([race], race.id, 0, {});
     assert.ok(html.includes('data-action="toggle"'), 'row should include toggle handler');
-    assert.ok(html.includes('要同期'), 'syncNeeded badge should be present');
+    assert.ok(html.includes('要レース設定送信'), 'syncNeeded badge should be present');
     assert.ok(html.includes('START'), 'expanded race should render START button');
 }
 
@@ -30,7 +30,7 @@ function testRenderRaceTableSynced() {
     const race = buildMockRace('ready');
     race.syncNeeded = false;
     const html = renderRaceTable([race], race.id, 0, {});
-    assert.ok(!html.includes('要同期'), 'syncNeeded badge should be hidden when not needed');
+    assert.ok(!html.includes('要レース設定送信'), 'syncNeeded badge should be hidden when not needed');
 }
 
 function testUpdateRunningDisplays() {

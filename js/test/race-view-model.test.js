@@ -31,7 +31,7 @@ function testBuildRaceViewModelEscapes() {
     const race = mockRace();
     const vm = buildRaceViewModel(race, null);
     assert.ok(vm.safeName.includes('&lt;Race&gt;'), 'race name should be escaped');
-    assert.ok(vm.badge.includes('要同期'), 'syncNeeded badge should appear when true');
+    assert.ok(vm.badge.includes('要レース設定送信'), 'syncNeeded badge should appear when true');
 }
 
 async function run() {
