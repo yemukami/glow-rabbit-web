@@ -28,13 +28,17 @@ import { openVersionModal, closeVersionModal } from './version-modal.js';
 import { renderRaceScreen, updateRunningDisplaysForRace } from './race-screen.js';
 // modalTarget and modalSelectedColor are now part of modalState
 let modalState = createModalState();
+const SETTINGS_KEYS = {
+    AUTO_SYNC_ON_CONNECT: 'glow_auto_sync_on_connect'
+};
+let autoSyncOnConnect = false;
 
 const UI_CONSTANTS = {
     PROGRESS_BAR_PADDING_METERS: 50,
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.146'
+    APP_VERSION: 'v2.1.0-beta.147'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -55,6 +59,20 @@ function requireConnection(actionLabel) {
     return true;
 }
 
+function loadSettings() {
+    const savedAuto = localStorage.getItem(SETTINGS_KEYS.AUTO_SYNC_ON_CONNECT);
+    autoSyncOnConnect = savedAuto === 'true';
+    const cb = document.getElementById('auto-sync-on-connect');
+    if (cb) cb.checked = autoSyncOnConnect;
+}
+
+function setAutoSyncOnConnect(val) {
+    autoSyncOnConnect = !!val;
+    localStorage.setItem(SETTINGS_KEYS.AUTO_SYNC_ON_CONNECT, autoSyncOnConnect ? 'true' : 'false');
+    const cb = document.getElementById('auto-sync-on-connect');
+    if (cb) cb.checked = autoSyncOnConnect;
+}
+
 function showStartError(reason) {
     if (reason === 'no_pacers') {
         alert("ペーサーが設定されていません。設定後にSTARTしてください。");
@@ -71,6 +89,17 @@ function showStartError(reason) {
     alert("STARTに失敗しました。コンソールログを確認してください。");
 }
 
+async function autoSyncDevicesIfEnabled() {
+    if (!autoSyncOnConnect) return;
+    try {
+        console.log("[AutoSync] Syncing devices after connect (setting enabled)");
+        const res = await syncAllDevices();
+        if (res) console.log("[AutoSync] Device sync completed");
+    } catch (e) {
+        console.warn("[AutoSync] Device sync failed", e);
+    }
+}
+
 export function initUI() {
     console.log("[Init] Starting UI Initialization...");
     
@@ -82,6 +111,7 @@ export function initUI() {
         console.log("[Init] Devices loaded:", deviceList.length);
         
         loadAppState();
+        loadSettings();
         updateVersionDisplay(UI_CONSTANTS.APP_VERSION);
     } catch (e) {
         console.error("[Init] Data Load Error:", e);
@@ -96,6 +126,9 @@ export function initUI() {
                 handleNotification
             );
             updateConnectionStatus(!!connected);
+            if (connected) {
+                await autoSyncDevicesIfEnabled();
+            }
         } catch (e) {
             console.error("[connectBLE] Failed:", e);
             alert("BLE接続に失敗しました。近くで再試行してください。\n" + e.message);
@@ -134,6 +167,7 @@ export function initUI() {
     
     window.closeVersionModal = closeVersionModal;
     window.openVersionModal = openVersionModal;
+    window.toggleAutoSyncOnConnect = (checked) => setAutoSyncOnConnect(checked);
 
     // Devices
     window.updateRaceSettings = (d, i) => { updateSettings(d, i); renderDeviceList(); };

@@ -666,52 +666,52 @@
 - E2E確認手順メモ（手動）: 従来手順に加え、要同期バッジのツールチップ（「色/ペース設定を再送」）が出ることと、SYNCボタンに「同期」表記があることを確認する。
 
 ### 2025-12-xx 追加ログ（このターン-35）
-- 作業: ルール/仕様を再読し、SYNCボタンを「レース設定再送」表記＋ツールチップに変更、要同期バッジを「要レース設定再送」表記＋説明に更新。バージョンを `v2.1.0-beta.79` に更新し、STATUS/NEXTを同期。
+- 作業: ルール/仕様を再読し、SYNCボタンを「レース設定送信」表記＋ツールチップに変更、要同期バッジを「要レース設定送信」表記＋説明に更新。バージョンを `v2.1.0-beta.79` に更新し、STATUS/NEXTを同期。
 - テスト: `node --check js/utils/render-utils.js`; `node --check js/ui/race-renderer.js`; `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
-- 感想: ボタン/バッジの文言をレース設定再送に統一し、ユーザーが「何を送るのか」を明確にした。挙動は据え置き。
-- E2E確認手順メモ（手動）: 従来手順に加え、SYNCボタンの表記が「レース設定再送」であることと、要レース設定再送バッジのツールチップが表示されることを確認する。
+- 感想: ボタン/バッジの文言をレース設定送信に統一し、ユーザーが「何を送るのか」を明確にした。挙動は据え置き。
+- E2E確認手順メモ（手動）: 従来手順に加え、SYNCボタンの表記が「レース設定送信」であることと、要レース設定送信バッジのツールチップが表示されることを確認する。
 
 ### 2025-12-xx 追加ログ（このターン-36）
-- 作業: ルール/仕様を再読し、レース設定再送を行った際に他レースを未同期扱いにする処理を追加（sync/start完了時に他レースのinitialConfigSentをfalse、syncNeededをtrueへ）。要レース設定再送文言は維持。挙動は仕様（STOP後再同期必須・SYNC/STARTは色/ペース送信）を踏襲。
+- 作業: ルール/仕様を再読し、レース設定送信を行った際に他レースを未同期扱いにする処理を追加（sync/start完了時に他レースのinitialConfigSentをfalse、syncNeededをtrueへ）。要レース設定送信文言は維持。挙動は仕様（STOP後再同期必須・SYNC/STARTは色/ペース送信）を踏襲。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`.
 - 感想: レースごとに設定を上書きする運用を明示し、他レースが再送待ちであることを確実に可視化できるようにした。
-- E2E確認手順メモ（手動）: 1) レース1でレース設定再送→レース1のバッジ消失、レース2が「要レース設定再送」になることを確認。2) レース2をSTART→レース1のバッジは残り、レース2は走行後STOPで再度バッジが立つことを確認。3) ツールチップ表記が「レース設定再送」であることを確認。
+- E2E確認手順メモ（手動）: 1) レース1でレース設定送信→レース1のバッジ消失、レース2が「要レース設定送信」になることを確認。2) レース2をSTART→レース1のバッジは残り、レース2は走行後STOPで再度バッジが立つことを確認。3) ツールチップ表記が「レース設定送信」であることを確認。
 
 ### 2025-12-xx 追加ログ（このターン-37）
 - 作業: ルール再読後、start時のエラー（markOtherRacesUnsynced未定義）を修正し、ヘルパーを正しくimport。挙動は前回の「他レースを未同期に戻す」仕様通り。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: import漏れによるクラッシュを解消。デリゲーション経由のSTARTで他レースも再送待ちにできる状態に戻した。
-- E2E確認手順メモ（手動）: レース1でレース設定再送→レース2でSTARTし、レース1に「要レース設定再送」が表示されることを確認（エラーなく進むこと）。
+- E2E確認手順メモ（手動）: レース1でレース設定送信→レース2でSTARTし、レース1に「要レース設定送信」が表示されることを確認（エラーなく進むこと）。
 
 ### 2025-12-xx 追加ログ（このターン-38）
 - 作業: ルール再読し、セグメントモーダルのレンダリングを専用モジュールに分離（`race-modal-renderer`）し、UIコントローラから重複関数を排除。import漏れによる二重定義エラーを解消。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: モーダル周りのrenderer移行を進め、重複定義によるクラッシュを防止。挙動は据え置き。
-- E2E確認手順メモ（手動）: モーダルを開き、セグメント行の追加/削除がクラッシュせず動作することを確認（レース設定再送/START/STOPの基本手順は従来通り）。***
+- E2E確認手順メモ（手動）: モーダルを開き、セグメント行の追加/削除がクラッシュせず動作することを確認（レース設定送信/START/STOPの基本手順は従来通り）。***
 
 ### 2025-12-xx 追加ログ（このターン-39）
 - 作業: ルール再読し、Setupテーブルの操作をデリゲーション化してinline handlerを削減。レースモーダルrenderer分離を維持し、バージョンを `v2.1.0-beta.80` に更新（STATUS/NEXTは後続で同期予定）。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: renderer全面移行に向けたUI分離を進め、コントローラの責務を軽くした。挙動は据え置き。
-- E2E確認手順メモ（手動）: Setupで各入力を変更/削除/モーダル開閉がクラッシュなく動作することを確認し、レース設定再送→START/STOPの基本フローとバッジ表示が変わらないことを確認する。
+- E2E確認手順メモ（手動）: Setupで各入力を変更/削除/モーダル開閉がクラッシュなく動作することを確認し、レース設定送信→START/STOPの基本フローとバッジ表示が変わらないことを確認する。
 
 ### 2025-12-xx 追加ログ（このターン-40）
 - 作業: ルール/仕様を再読し、デバイス一覧と置換モーダルの操作をデリゲーション化（inline handler除去）。device-gridセルはdata-action経由、オーバーレイのボタンもdata-action化。バージョンを `v2.1.0-beta.81` に更新し、STATUS/NEXTを同期。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: デバイス操作まわりのクラッシュ要因（inlineハンドラ漏れ）を減らし、renderer全面移行に一歩前進。挙動は据え置き。
-- E2E確認手順メモ（手動）: デバイスグリッドでセルクリック→アクションモーダル表示、モーダルの各ボタン（Blink/Swap/Replace scan・manual/Dummy/Remove/Close）がエラーなく動作し、グリッドが再描画されることを確認。従来のレース設定再送→START/STOP→距離+50m停止→バッジ表示が変わらないことも合わせて確認。
+- E2E確認手順メモ（手動）: デバイスグリッドでセルクリック→アクションモーダル表示、モーダルの各ボタン（Blink/Swap/Replace scan・manual/Dummy/Remove/Close）がエラーなく動作し、グリッドが再描画されることを確認。従来のレース設定送信→START/STOP→距離+50m停止→バッジ表示が変わらないことも合わせて確認。
 
 ### 2025-12-xx 追加ログ（このターン-41）
 - 作業: ルール再読し、Setupのペーサーチップをデリゲーション対応に変更（onclick除去）。デバイスグリッドHTML生成をrendererに分離済み。挙動は据え置き。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`.
 - 感想: setup側のinlineハンドラを排除し、renderer全面移行の足場をさらに整備。小さな修正でもテストを回して安心を確保。
-- E2E確認手順メモ（手動）: Setupでペーサーチップをクリックしてモーダルが開くことを確認（エラーなし）。従来のレース設定再送→START/STOP→距離+50m停止・バッジ表示が変わらないことも確認。
+- E2E確認手順メモ（手動）: Setupでペーサーチップをクリックしてモーダルが開くことを確認（エラーなし）。従来のレース設定送信→START/STOP→距離+50m停止・バッジ表示が変わらないことも確認。
 
 ### 2025-12-xx 追加ログ（このターン-42）
 - 作業: ルール/仕様再読の上、テスト計画を `TEST_PLAN.md` に明文化し、既存の自動チェック（node --check/ui-logic）を実施。バージョンを `v2.1.0-beta.82` に更新し、STATUS/NEXTを同期。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
 - 感想: テスト方針を先に固定してから作業するフローを明示。挙動は変えていないが、以降の変更での漏れ防止に役立つ。
-- E2E確認手順メモ（手動）: TEST_PLAN.mdに記載の手順（未接続アラート→レース設定再送→START/STOP→距離+50m停止、バッジ/ツールチップ確認、デバイス/Setup動作確認）を参照して実施する。
+- E2E確認手順メモ（手動）: TEST_PLAN.mdに記載の手順（未接続アラート→レース設定送信→START/STOP→距離+50m停止、バッジ/ツールチップ確認、デバイス/Setup動作確認）を参照して実施する。
 
 ### 2025-12-xx 追加ログ（このターン-43）
 - 作業: ルール再読後、デバイスグリッドのオーバーレイHTML生成をrendererに分離（`buildDeviceOverlayHtml`）、UIコントローラからテンプレートを除去。バージョンを `v2.1.0-beta.83` に更新。
@@ -723,13 +723,13 @@
 - 作業: ルール再読し、セグメントタブ切替の未定義参照（updateSegmentSummary）を修正し、renderer分離済みの関数に一本化。デバイスオーバーレイのrenderer分離を維持。挙動は不変。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`。
 - 感想: モーダル周りの呼び出し漏れを潰し、クラッシュを解消。引き続きrenderer化を安全に進行。
-- E2E確認手順メモ（手動）: セグメントタブを開いてもエラーが出ないことを確認し、従来のレース設定再送→START/STOP→距離+50m停止・バッジ挙動が変わらないことを確認する。
+- E2E確認手順メモ（手動）: セグメントタブを開いてもエラーが出ないことを確認し、従来のレース設定送信→START/STOP→距離+50m停止・バッジ挙動が変わらないことを確認する。
 
 ### 2025-12-xx 追加ログ（このターン-45）
 - 作業: レース参照を race-manager の getRaceById/getActiveRace 経由に寄せ、start/stop/sync/モーダル周りのガードを強化。startPos 更新を非負サニタイズに変更し、対象レース未発見時にアラートを出すように整理。バージョンを `v2.1.0-beta.102` に更新し、STATUS/NEXTを同期。
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-manager.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`（Pass）。
 - 感想: レース参照をmanager経由にまとめたことで、存在しないID操作でクラッシュしにくくなった。startPosサニタイズも共通ガードに寄せ、今後のバリデーション整理が進めやすい状態にできた。
-- E2E確認手順メモ（手動）: 従来手順（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認）に加え、startPos を負数/空で入力しても0に丸められ要再送が表示されることと、start/stop/sync/モーダル操作で存在しないレースIDの場合にアラートして安全に停止することを確認する。
+- E2E確認手順メモ（手動）: 従来手順（未接続アラート→レース設定送信→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認）に加え、startPos を負数/空で入力しても0に丸められ要再送が表示されることと、start/stop/sync/モーダル操作で存在しないレースIDの場合にアラートして安全に停止することを確認する。
 
 ### 2025-12-xx 追加ログ（このターン-46）
 - 作業: startRaceServiceのstartPosも非負サニタイズに統一し、race.startPosへ反映するよう修正。ui-controllerの未使用ガードimportを整理。バージョンを `v2.1.0-beta.103` に更新し、STATUS/NEXTを同期。
@@ -753,7 +753,7 @@
 - 作業: 残作業を明示する `REMAINING_TASKS.md` を追加し、残タスク参照先をSTATUS/NEXTに記載。バージョンを `v2.1.0-beta.106` に更新。
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/core/race-service.js`; `node js/test/ui-logic.test.js`; `node js/test/race-service.test.js`; `node js/test/input-guards.test.js`（再実行、Pass）。
 - 感想: 残タスクを一箇所に集約できたので、作業中の参照がシンプルになった。
-- E2E確認手順メモ（手動）: 従来手順（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認）を継続。入力ガードや残タスクは REMAINING_TASKS.md 参照。
+- E2E確認手順メモ（手動）: 従来手順（未接続アラート→レース設定送信→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認）を継続。入力ガードや残タスクは REMAINING_TASKS.md 参照。
 
 ### 2025-12-xx 追加ログ（このターン-50）
 - 作業: startPosサニタイズ時に警告ログを出すようにし、デバッグ時に生値と丸め結果を確認できるようにした。バージョンを `v2.1.0-beta.107` に更新し、STATUS/NEXTを同期。
@@ -780,7 +780,7 @@
 - E2E確認手順メモ（手動）: startPos負値/NaN入力で警告ログを確認する手順をTEST_PLANに従って実施。
 
 ### 2025-12-xx 追加ログ（このターン-54）
-- 作業: 手元環境でE2Eスモークを実施（未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認＋startPos負値/NaN時の警告ログ確認）。コード変更なし。
+- 作業: 手元環境でE2Eスモークを実施（未接続アラート→レース設定送信→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認＋startPos負値/NaN時の警告ログ確認）。コード変更なし。
 - テスト: 上記手動E2E（画面操作、接続なしスモーク）を確認。
 - 感想: 表示/警告が仕様通りに動作することを軽く確認できた。引き続きrenderer移行と状態遷移一元化に進む準備ができている。
 - E2E確認手順メモ（手動）: 従来手順のまま実施済み（startPos警告も確認）。
@@ -852,13 +852,19 @@
 - E2E確認手順メモ（手動）: 挙動変更なし（DOM責務整理のみ）。***
 
 ### 2025-12-xx 追加ログ（このターン-66）
-- 作業: 再接続時はレース設定再送＋デバイス同期を再実施する運用をSTATUSに明記し、ダミー埋めが再読込で消える注意を追記。バージョンを `v2.1.0-beta.145` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- 作業: 再接続時はレース設定送信＋デバイス同期を再実施する運用をSTATUSに明記し、ダミー埋めが再読込で消える注意を追記。バージョンを `v2.1.0-beta.145` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`（Pass）。
 - 感想: 運用上の注意点を共有できたので、手順の認識ズレを減らせそう。DOM移行残も引き続き整理予定。
 - E2E確認手順メモ（手動）: 挙動変更なし（運用メモ追記のみ）。***
 
 ### 2025-12-xx 追加ログ（このターン-67）
-- 作業: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更。バージョンを `v2.1.0-beta.146` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- 作業: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更。バージョンを `v2.1.0-beta.147` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
 - テスト: `node --check js/core/device-manager.js`; `node js/test/ui-logic.test.js`（Pass）。
 - 感想: 再読込時のdummy消失を防げたので、再接続後の再同期をしやすくなった。今後は再接続リカバリ導線の実装に進みやすい。
 - E2E確認手順メモ（手動）: 挙動変更なし（デバイスロード挙動のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-68）
+- 作業: バージョンモーダルに「接続時に設置情報を自動同期」チェックを追加し、接続/再接続後にdevice-list（dummy含む）を自動同期できるようにした。バッジ/ボタン文言を「レース設定送信」に統一。バージョンを `v2.1.0-beta.147` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/core/device-manager.js`; `node --check js/ui/ui-controller.js`; `node --check js/ui/race-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: 自動同期設定を入れたことで再接続後の手数を減らせる土台ができた。文言統一でユーザーへの意図も明確になった。
+- E2E確認手順メモ（手動）: 自動同期ONで接続→デバイス同期が走ること、OFFで現行通り自動同期しないこと、バッジ/ボタン表記が「レース設定送信」になっていることを確認する。***

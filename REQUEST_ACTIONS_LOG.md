@@ -14,10 +14,10 @@
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
 
 - 要求: 再接続時dummy扱いの仕様確定を進めつつ小刻みに進め、テスト/ログ/プッシュまで。
-  対応: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.146に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
+  対応: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.147に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
 
 - 要求: 小刻みに残作業を進め、再接続時の挙動認識も共有してほしい。gitプッシュも。
-  対応: 再接続後はGlow-Cに設定が残る保証がないためレース設定再送とデバイス同期を再実施する方針をSTATUSに追記し、ダミー埋めが再読込で消える注意を明示（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.145に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
+  対応: 再接続後はGlow-Cに設定が残る保証がないためレース設定送信とデバイス同期を再実施する方針をSTATUSに追記し、ダミー埋めが再読込で消える注意を明示（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.145に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
 
 - 要求: 小刻みに残作業を進めて（ルール/ソース参照/テスト/ログ/バージョン/プッシュ）。
   対応: 置換モーダル参照をrendererのヘルパーに寄せ、ui-controllerのDOM依存をさらに削減（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.144に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node --check js/ui/replace-modal-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。
@@ -139,9 +139,9 @@
 - 要求: ルール再読と優先タスク継続。E2E手順明示、ログ/バージョン/プッシュまで自律実施。
   対応: ルール再読後、SYNCボタンに「同期」表記＋ツールチップを付与し、要同期バッジに「色/ペース設定を再送」の説明を追加（挙動変更なし）。バージョンをv2.1.0-beta.78に更新し、STATUS/NEXT/TODAYへ反映。`node --check`（render-utils/race-renderer/ui-controller）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を実行。E2E手順にバッジ/ボタンの意味確認を追記。コミット/プッシュ済み。
 - 要求: syncの意味がレース設定送信であるならそのような名称にすること。
-  対応: SYNCボタンを「レース設定再送」表記＋ツールチップに変更し、要同期バッジを「要レース設定再送」表記＋説明に更新（挙動は不変）。バージョンをv2.1.0-beta.79に更新し、STATUS/NEXT/TODAYへ反映。`node --check`（render-utils/race-renderer/ui-controller）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を再実行。E2E手順に表記/ツールチップ確認を追加。コミット/プッシュ済み。
+  対応: SYNCボタンを「レース設定送信」表記＋ツールチップに変更し、要同期バッジを「要レース設定送信」表記＋説明に更新（挙動は不変）。バージョンをv2.1.0-beta.79に更新し、STATUS/NEXT/TODAYへ反映。`node --check`（render-utils/race-renderer/ui-controller）と `node js/test/ui-logic.test.js`、`node js/test/race-service.test.js` を再実行。E2E手順に表記/ツールチップ確認を追加。コミット/プッシュ済み。
 - 要求: 他行のレース設定送信後に旧行の再送が必要とわかるようにし、表記も統一すること。
-  対応: sync/start完了時に他レースのinitialConfigSentをfalse・syncNeededをtrueにする処理を追加し、上書き後に他行が「要レース設定再送」と表示されるようにした。文言はレース設定再送で統一済み。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js` を実行。コミット/プッシュ済み。
+  対応: sync/start完了時に他レースのinitialConfigSentをfalse・syncNeededをtrueにする処理を追加し、上書き後に他行が「要レース設定送信」と表示されるようにした。文言はレース設定送信で統一済み。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`, `node js/test/race-service.test.js` を実行。コミット/プッシュ済み。
   - 追記: start時のimport漏れによる未定義エラーを修正（ヘルパーを正しく読み込み）。テスト再実行。
   - 追記2: セグメントモーダルのrenderer分離で重複定義エラーを解消し、`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を再実行。コミット/プッシュ予定。
 - 要求: 残タスク順に進め、ルール再読・E2E手順提示・ログ/バージョン/プッシュを行うこと。
@@ -204,3 +204,9 @@
   対応: バージョン表記をv2.1.0-beta.120に同期し、ロード時のタイトル同期をrenderer経由に整理（挙動変更なし）。`node --check js/ui/ui-controller.js` を実行。SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定。
 - 要求: 続けて。ルール、ソース参照、ログ、作業状況、ログ、git忘れずに。
   対応: レース描画呼び出しを `race-screen` ヘルパーに切り出し、ui-controllerのDOM依存を削減（挙動変更なし）。未使用のrenderer importを整理。`node --check js/ui/ui-controller.js` を実行（Pass）。SYNC/START仕様変更なし、E2Eは接続環境で従来手順を実施予定。
+
+- 要求: 再接続時dummy扱いの仕様確定を進めつつ小刻みに進め、テスト/ログ/プッシュまで。
+  対応: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.146に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
+
+- 要求: 自動同期設定と文言統一を進め、小刻みに対応（テスト/ログ/プッシュまで）。
+  対応: バージョンモーダルに「接続時に設置情報を自動同期」チェックを追加し、状態を永続化。ON時は接続/再接続完了後にdevice-list（dummy含む）を自動同期。バッジ/ボタン文言を「レース設定送信」に統一。バージョンをv2.1.0-beta.147に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。

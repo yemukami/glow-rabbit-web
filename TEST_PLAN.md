@@ -1,4 +1,4 @@
-# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.146)
+# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.147)
 
 ## Scope
 - Inline handler排除とデリゲーション化（Setup/Device UI）によるリファクタの安全確認
@@ -11,7 +11,7 @@
 - `node js/test/ui-logic.test.js`
 - `node js/test/race-service.test.js`
 - `node js/test/input-guards.test.js`
-- 手動E2E（接続環境で実施）: 未接続アラート→レース設定再送→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認
+- 手動E2E（接続環境で実施）: 未接続アラート→レース設定送信→START/STOP→複数ペーサー距離+50m停止、バッジ/ツールチップ確認
 
 ## Test Cases
 1) Syntax checks  
@@ -19,10 +19,10 @@
 2) Unit/logic  
    - `node js/test/ui-logic.test.js`
 3) Manual E2E（画面で実施）  
-   - 未接続で「レース設定再送」/STARTを押しアラート表示を確認  
+   - 未接続で「レース設定送信」/STARTを押しアラート表示を確認  
    - Setupで入力変更・削除・ペーサーチップクリック→モーダルが開くことを確認  
    - デバイスグリッドのセルクリック→モーダル表示、各ボタン（Blink/Swap/Replace scan・manual/Dummy/Remove/Close）が動作しグリッドが再描画されることを確認  
-   - レース1で「レース設定再送」→バッジ消失、レース2で「レース設定再送」→レース1に「要レース設定再送」表示を確認  
+   - レース1で「レース設定送信」→バッジ消失、レース2で「レース設定送信」→レース1に「要レース設定送信」表示を確認  
    - START→距離+50m停止・全員到達でSTOP1回送信、STOP後は対象レースのみバッジ復活を確認  
    - バッジ/ボタンのツールチップが「レース設定（色/ペース）を再送」と表示されることを確認
    - デバイス同期ボタンを未接続状態で押すと未接続アラートが出て送信されないことを確認
