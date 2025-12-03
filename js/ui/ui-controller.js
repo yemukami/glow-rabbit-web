@@ -724,7 +724,6 @@ function renderDeviceList() {
             onOpenDevice: (idx) => openDeviceActionMenu(idx)
         }
     );
-    renderDeviceSyncStatus();
 }
 
 // CSV functions...
