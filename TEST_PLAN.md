@@ -1,9 +1,10 @@
-# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.149)
+# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.150)
 
 ## Scope
 - Inline handler排除とデリゲーション化（Setup/Device UI）によるリファクタの安全確認
 - 既存のレース設定/START/STOPフローへの影響がないことを確認
 - デバイス同期ボタンの未接続ガード統一（requireConnection適用）の確認
+- 接続成功/失敗/切断や同期実行後にステータス/設置バッジが最新化される共通ハンドラの確認
 
 ## Planned Checks (状態遷移一元化/renderer残タスク)
 - `node --check js/ui/ui-controller.js`
@@ -30,8 +31,10 @@
    - START後に推定遅延と送信コマンド本数がダイアログ表示されることを確認（数値は参考情報）
    - デバイスアクションモーダルの表示内容とボタン動作がクラッシュなく動くこと（デリゲーション経由）を確認
    - startPosを負値/NaNで入力しても警告ログが出て0に丸められることをUI上で確認する  
+   - 接続成功/失敗/切断や設置同期完了後にヘッダー表示と設置同期バッジが最新化されることを確認
 
 ## Results
+- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js` (Pass)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/replace-modal-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-view.js`; `node js/test/ui-logic.test.js` (Pass)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  

@@ -6,6 +6,12 @@
 - 結果: Setup/レーステーブル描画をrendererに寄せるリファクタを完了し、`setup-renderer`を追加。レースrendererにDOM適用ヘルパーを追加し、ui-controller側のDOM操作を削減。バージョンをv2.1.0-beta.85に更新。上記テストはすべてPass、手動E2Eは未実施（要接続環境）。
 - 備考: renderer移行後もSYNC/START責務は不変。挙動差分が出ないことを優先して小刻みに進める。
 
+### 2025-12-xx 追加ログ（接続/同期ステータス共通化）
+- 作業: 接続成功/失敗/切断を共通ハンドラにまとめ、初期ロードや同期実行後もヘッダー表示と設置同期バッジがdirty/cleanを即時反映するよう整理。checkDirtyAndSyncや手動/自動同期後にもバッジ更新を走らせるようにした。バージョンを `v2.1.0-beta.150` に更新。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: ステータス更新の抜け道を塞ぎ、接続失敗や切断後の表示ずれを防ぎやすくなった。今後はdirty状態の通知改善と自動同期の競合整理に進みやすい。
+- E2E確認手順メモ（手動）: 接続成功/失敗/切断・設置同期実行後にヘッダー表示と設置同期バッジが最新化されることを確認する。従来の未接続アラート→レース設定送信→START/STOP→距離+50m停止・バッジ挙動確認も継続。
+
 ### 2025-12-xx 追加ログ（起動時エラー解消）
 - 作業: `ui-controller.js` の重複importで `renderRaceScreen` が二重定義になっていたSyntaxErrorを除去し、`connectBLE`がグローバルにバインドされる初期化が通るように修正。
 - テスト: `node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`（ともにPass）。ブラウザE2Eは未実施（接続環境後に実施予定）。

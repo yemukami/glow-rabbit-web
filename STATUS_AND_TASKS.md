@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.149)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.150)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -14,11 +14,12 @@
   4) 複数ペーサー走行で、速いペーサーが距離+50mで止まり、全員到達後にSTOP 1回が送られることを確認。
 
 ## 現行バージョン
-- `v2.1.0-beta.149`
+- `v2.1.0-beta.150`
 - STOP/オーバーラン: プロトコル上 stopRunner は全体停止のみ。UIは距離+50mまで表示進行、全員到達時にSTOP 1回送信。ペーサー個別STOPはFW拡張が必要。
 
 ## これまでの主要作業
 - 同期/START責務分離とガード整備、未接続アラート・syncNeededバッジ導入。
+- 接続成功/失敗/切断のいずれでも共通ハンドラでヘッダー表示と設置同期バッジを更新し、初期ロード/同期完了後もdirty状態がUIに反映されるように整理。
 - renderer分割進行（行生成・進行更新をrenderer経由へ）、ID衝突回避、syncNeeded表示テスト追加。
 - SYNCボタンを行アクションに追加し、スタイルを統一。
 - フラグ管理をサービス側に集約（initialConfigSent/syncNeeded）し、START/STOP/リセットでヘルパー利用。

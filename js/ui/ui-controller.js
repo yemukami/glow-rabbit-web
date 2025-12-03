@@ -40,7 +40,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.149'
+    APP_VERSION: 'v2.1.0-beta.150'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -117,15 +117,22 @@ function showStartError(reason) {
     alert("STARTに失敗しました。コンソールログを確認してください。");
 }
 
+async function checkDirtyAndSyncWithRender() {
+    const result = await checkDirtyAndSync();
+    renderDeviceSyncStatus();
+    return result;
+}
+
 async function autoSyncDevicesIfEnabled() {
     if (!autoSyncOnConnect) return;
     try {
         console.log("[AutoSync] Syncing devices after connect (setting enabled)");
         const res = await syncAllDevices();
         if (res) console.log("[AutoSync] Device sync completed");
-        renderDeviceSyncStatus();
     } catch (e) {
         console.warn("[AutoSync] Device sync failed", e);
+    } finally {
+        renderDeviceSyncStatus();
     }
 }
 
@@ -151,6 +158,7 @@ export function initUI() {
         loadAppState();
         loadSettings();
         updateVersionDisplay(UI_CONSTANTS.APP_VERSION);
+        renderDeviceSyncStatus();
     } catch (e) {
         console.error("[Init] Data Load Error:", e);
     }
@@ -175,7 +183,7 @@ export function initUI() {
         }
     };
     
-    window.checkDirtyAndSync = checkDirtyAndSync;
+    window.checkDirtyAndSync = checkDirtyAndSyncWithRender;
     
     // Setup
     window.saveCompetitionTitle = saveCompetitionTitle;
@@ -228,7 +236,11 @@ export function initUI() {
             const res = await syncRaceConfigs(r, { dryRun: false });
             if (res.ok) { saveRaces(); }
         }
-        if(await syncAllDevices()) alert('同期完了');
+        try {
+            if(await syncAllDevices()) alert('同期完了');
+        } finally {
+            renderDeviceSyncStatus();
+        }
     };
     window.downloadCSV = downloadCSV;
     window.importCSV = importCSV;
@@ -339,10 +351,6 @@ function handleNotification(event) {
     }
 }
 
-function updateConnectionStatus(connected) {
-    renderConnectionStatus(connected);
-}
-
 function renderDeviceSyncStatus() {
     const el = document.getElementById('device-sync-status');
     if (!el) return;
@@ -354,6 +362,11 @@ function renderDeviceSyncStatus() {
         el.className = 'status-badge status-ready';
         el.textContent = '✓ 同期完了';
     }
+}
+
+function updateConnectionStatus(connected) {
+    renderConnectionStatus(connected);
+    renderDeviceSyncStatus();
 }
 
 // --- Navigation ---
@@ -375,7 +388,7 @@ async function switchMode(mode, skipGuard = false) {
 
     try {
         if (!skipGuard && document.getElementById('screen-devices').classList.contains('active') && mode !== 'devices') {
-            if (await checkDirtyAndSync() === false) return;
+            if (await checkDirtyAndSyncWithRender() === false) return;
         }
         if (!skipGuard && document.getElementById('screen-race').classList.contains('active') && mode !== 'race') {
             const activeRace = getActiveRace();
@@ -724,6 +737,7 @@ function renderDeviceList() {
             onOpenDevice: (idx) => openDeviceActionMenu(idx)
         }
     );
+    renderDeviceSyncStatus();
 }
 
 // CSV functions...
