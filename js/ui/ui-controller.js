@@ -123,6 +123,7 @@ async function autoSyncDevicesIfEnabled() {
         console.log("[AutoSync] Syncing devices after connect (setting enabled)");
         const res = await syncAllDevices();
         if (res) console.log("[AutoSync] Device sync completed");
+        renderDeviceSyncStatus();
     } catch (e) {
         console.warn("[AutoSync] Device sync failed", e);
     }
@@ -162,7 +163,7 @@ export function initUI() {
                 () => updateConnectionStatus(false), 
                 handleNotification
             );
-            const ok = !!connected || connected === undefined;
+            const ok = connected === undefined ? !!isConnected : connected !== false;
             updateConnectionStatus(ok);
             if (ok) await autoSyncDevicesIfEnabled();
             showConnectFeedback(ok);
@@ -340,6 +341,19 @@ function handleNotification(event) {
 
 function updateConnectionStatus(connected) {
     renderConnectionStatus(connected);
+}
+
+function renderDeviceSyncStatus() {
+    const el = document.getElementById('device-sync-status');
+    if (!el) return;
+    const dirty = isDeviceListDirty();
+    if (dirty) {
+        el.className = 'status-badge status-warning';
+        el.textContent = '要設置同期';
+    } else {
+        el.className = 'status-badge status-ready';
+        el.textContent = '✓ 同期完了';
+    }
 }
 
 // --- Navigation ---
@@ -710,6 +724,7 @@ function renderDeviceList() {
             onOpenDevice: (idx) => openDeviceActionMenu(idx)
         }
     );
+    renderDeviceSyncStatus();
 }
 
 // CSV functions...
