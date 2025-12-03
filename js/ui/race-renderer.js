@@ -106,8 +106,7 @@ function buildActionArea(raceId, status) {
 
 function buildInfoHeader(race, maxDist, safeStartPos, elapsedTime) {
     if (race.status === 'ready') {
-        const syncTag = race.syncNeeded ? `<span class="status-badge status-warning">要レース設定送信</span>` : '';
-        return `<div style="display:flex; gap:10px; align-items:center;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" data-action="startPos" data-race-id="${race.id}">${syncTag}</div>`;
+        return `<div style="display:flex; gap:10px; align-items:center;"><div class="timer-big" style="color:#DDD;">00:00.0</div><input type="number" value="${safeStartPos}" style="width:50px;" data-action="startPos" data-race-id="${race.id}"></div>`;
     }
     if (race.status === 'running') {
         return `<div class="timer-big" id="timer-display-${race.id}">${formatTime(elapsedTime || 0)}</div>`;
