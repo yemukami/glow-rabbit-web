@@ -850,3 +850,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node --check js/ui/replace-modal-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
 - 感想: replace周りもrenderer依存に統一でき、残DOM処理の洗い出しがさらに進んだ。引き続き小刻みで整理する。
 - E2E確認手順メモ（手動）: 挙動変更なし（DOM責務整理のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-66）
+- 作業: 再接続時はレース設定再送＋デバイス同期を再実施する運用をSTATUSに明記し、ダミー埋めが再読込で消える注意を追記。バージョンを `v2.1.0-beta.145` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: 運用上の注意点を共有できたので、手順の認識ズレを減らせそう。DOM移行残も引き続き整理予定。
+- E2E確認手順メモ（手動）: 挙動変更なし（運用メモ追記のみ）。***

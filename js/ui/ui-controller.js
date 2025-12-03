@@ -34,7 +34,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.144'
+    APP_VERSION: 'v2.1.0-beta.145'
 };
 
 function formatDisplayPaceLabel(rawPace) {

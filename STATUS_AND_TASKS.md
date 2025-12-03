@@ -1,4 +1,4 @@
-# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.144)
+# Glow-Rabbit Web App - Status & Remaining Tasks (v2.1.0-beta.145)
 
 ## 必読ファイル / 運用ルール
 - ルール: `REMORSE_AND_PREVENTION.md`, `REQUEST_ACTIONS_LOG.md`, `SYNC_START_SPEC.md`, `REMORSE_LOG.md`
@@ -14,7 +14,7 @@
   4) 複数ペーサー走行で、速いペーサーが距離+50mで止まり、全員到達後にSTOP 1回が送られることを確認。
 
 ## 現行バージョン
-- `v2.1.0-beta.144`
+- `v2.1.0-beta.145`
 - STOP/オーバーラン: プロトコル上 stopRunner は全体停止のみ。UIは距離+50mまで表示進行、全員到達時にSTOP 1回送信。ペーサー個別STOPはFW拡張が必要。
 
 ## これまでの主要作業
@@ -50,6 +50,7 @@
 - セグメントテーブル描画をrendererのDOMヘルパー経由に寄せ、ui-controllerのDOM参照を削減。
 - モーダルの目標タイム読取をviewヘルパー経由に統一し、ui-controllerのDOM参照を削減。
 - 置換モーダル参照をrenderer経由に寄せ、ui-controllerのDOM直接参照をさらに減らした。
+- 再接続時の運用: Glow-Cに設定が残る保証がないため、再接続後は「レース設定再送」とデバイス同期の再実施を推奨。ページ再読込時はダミー埋めがフィルタで消えるため、必要に応じて再fillする。
 - レース描画・進行表示を `race-screen` ヘルパー経由に寄せ、ui-controllerのDOM依存を削減（挙動不変）。
 - バージョン表記をUI/モーダル/ドキュメントで同期（v2.1.0-beta.135）。
 - デバイス同期ボタンも共通ガード（requireConnection）で未接続アラートを統一。
