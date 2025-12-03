@@ -858,13 +858,13 @@
 - E2E確認手順メモ（手動）: 挙動変更なし（運用メモ追記のみ）。***
 
 ### 2025-12-xx 追加ログ（このターン-67）
-- 作業: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更。バージョンを `v2.1.0-beta.147` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- 作業: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更。バージョンを `v2.1.0-beta.148` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
 - テスト: `node --check js/core/device-manager.js`; `node js/test/ui-logic.test.js`（Pass）。
 - 感想: 再読込時のdummy消失を防げたので、再接続後の再同期をしやすくなった。今後は再接続リカバリ導線の実装に進みやすい。
 - E2E確認手順メモ（手動）: 挙動変更なし（デバイスロード挙動のみ）。***
 
 ### 2025-12-xx 追加ログ（このターン-68）
-- 作業: バージョンモーダルに「接続時に設置情報を自動同期」チェックを追加し、接続/再接続後にdevice-list（dummy含む）を自動同期できるようにした。バッジ/ボタン文言を「レース設定送信」に統一。バージョンを `v2.1.0-beta.147` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- 作業: バージョンモーダルに「接続時に設置情報を自動同期」チェックを追加し、接続/再接続後にdevice-list（dummy含む）を自動同期できるようにした。バッジ/ボタン文言を「レース設定送信」に統一。バージョンを `v2.1.0-beta.148` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
 - テスト: `node --check js/core/device-manager.js`; `node --check js/ui/ui-controller.js`; `node --check js/ui/race-renderer.js`; `node js/test/ui-logic.test.js`（Pass）。
 - 感想: 自動同期設定を入れたことで再接続後の手数を減らせる土台ができた。文言統一でユーザーへの意図も明確になった。
 - E2E確認手順メモ（手動）: 自動同期ONで接続→デバイス同期が走ること、OFFで現行通り自動同期しないこと、バッジ/ボタン表記が「レース設定送信」になっていることを確認する。***
