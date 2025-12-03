@@ -40,7 +40,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.148'
+    APP_VERSION: 'v2.1.0-beta.149'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -86,6 +86,21 @@ function setShowConnectDialog(val) {
     if (cb) cb.checked = showConnectDialog;
 }
 
+function showToast(message, type = 'info', durationMs = 2500) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerText = message;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, durationMs);
+}
+
 function showStartError(reason) {
     if (reason === 'no_pacers') {
         alert("ペーサーが設定されていません。設定後にSTARTしてください。");
@@ -114,11 +129,11 @@ async function autoSyncDevicesIfEnabled() {
 }
 
 function showConnectFeedback(ok) {
-    if (!showConnectDialog) return;
-    if (ok) {
-        alert("BLE接続に成功しました。");
-    } else {
-        alert("BLE接続に失敗しました。近くで再試行してください。");
+    const msgOk = "BLE接続に成功しました。";
+    const msgNg = "BLE接続に失敗しました。近くで再試行してください。";
+    showToast(ok ? msgOk : msgNg, ok ? 'success' : 'error');
+    if (showConnectDialog) {
+        alert(ok ? msgOk : msgNg);
     }
 }
 

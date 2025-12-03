@@ -14,7 +14,7 @@
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
 
 - 要求: 再接続時dummy扱いの仕様確定を進めつつ小刻みに進め、テスト/ログ/プッシュまで。
-  対応: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.148に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
+  対応: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.149に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
 
 - 要求: 小刻みに残作業を進め、再接続時の挙動認識も共有してほしい。gitプッシュも。
   対応: 再接続後はGlow-Cに設定が残る保証がないためレース設定送信とデバイス同期を再実施する方針をSTATUSに追記し、ダミー埋めが再読込で消える注意を明示（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.145に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
@@ -209,7 +209,7 @@
   対応: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.146に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
 
 - 要求: 自動同期設定と文言統一を進め、小刻みに対応（テスト/ログ/プッシュまで）。
-  対応: バージョンモーダルに「接続時に設置情報を自動同期」チェックを追加し、状態を永続化。ON時は接続/再接続完了後にdevice-list（dummy含む）を自動同期。バッジ/ボタン文言を「レース設定送信」に統一。バージョンをv2.1.0-beta.148に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
+  対応: バージョンモーダルに「接続時に設置情報を自動同期」チェックを追加し、状態を永続化。ON時は接続/再接続完了後にdevice-list（dummy含む）を自動同期。バッジ/ボタン文言を「レース設定送信」に統一。バージョンをv2.1.0-beta.149に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node --check js/ui/ui-controller.js`, `node --check js/ui/race-renderer.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
 
 - 要求: レース実行画面の「要同期」表記を「要レース設定送信」に統一し、バッジ色を赤にして明示すること。
   対応: syncNeededバッジ文言を「要レース設定送信」に統一し、バッジカラーを赤系に変更。関連テスト（race-renderer/race-view-model）を更新。`node --check js/utils/render-utils.js`, `node js/test/race-renderer.test.js`, `node js/test/race-view-model.test.js` を実行（Pass）。コミット/プッシュ予定。
