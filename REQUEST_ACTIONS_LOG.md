@@ -13,6 +13,9 @@
 - START/同期/stopRunner/ペース送信まわりの変更を含む場合は、対応欄で「SYNC_START_SPEC順守（変更なし）」など明記。
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
 
+- 要求: 再接続時dummy扱いの仕様確定を進めつつ小刻みに進め、テスト/ログ/プッシュまで。
+  対応: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.146に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/core/device-manager.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
+
 - 要求: 小刻みに残作業を進め、再接続時の挙動認識も共有してほしい。gitプッシュも。
   対応: 再接続後はGlow-Cに設定が残る保証がないためレース設定再送とデバイス同期を再実施する方針をSTATUSに追記し、ダミー埋めが再読込で消える注意を明示（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.145に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
 

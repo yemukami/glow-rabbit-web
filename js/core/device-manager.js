@@ -43,12 +43,13 @@ export function loadDeviceList() {
         try {
             deviceList = JSON.parse(savedList)
                 .filter(d => d && typeof d.mac === 'string')
-                .map((d, idx) => ({ 
-                    mac: d.mac, 
-                    id: idx + 1, 
-                    status: d.status === 'dummy' ? 'dummy' : 'active'
-                }))
-                .filter(d => normalizeMac(d.mac)); // drop blocked/dummy MACs
+                .map((d, idx) => {
+                    const isDummy = d.status === 'dummy' || d.mac === DUMMY_MAC;
+                    const normalized = normalizeMac(d.mac, { allowDummy: true });
+                    if (!normalized) return null;
+                    return { mac: normalized, id: idx + 1, status: isDummy ? 'dummy' : 'active' };
+                })
+                .filter(Boolean);
             // reassign ids after filtering
             deviceList = deviceList.map((d, idx) => ({ ...d, id: idx + 1 }));
         } catch(e) { console.error(e); }
@@ -69,14 +70,14 @@ function normalizePositiveInt(value, fallback) {
     return n;
 }
 
-function normalizeMac(mac) {
+function normalizeMac(mac, { allowDummy = false } = {}) {
     if (!mac || typeof mac !== 'string') return null;
     const cleaned = mac.replace(/[^0-9a-fA-F]/g, '');
     if (cleaned.length !== 12) return null;
     const pairs = cleaned.match(/.{2}/g);
     if (!pairs) return null;
     const normalized = pairs.map(p => p.toUpperCase()).join(':');
-    if (normalized === DUMMY_MAC) return null;
+    if (!allowDummy && normalized === DUMMY_MAC) return null;
     if (BLOCKED_MACS.has(normalized)) return null;
     return normalized;
 }

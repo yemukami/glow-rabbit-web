@@ -856,3 +856,9 @@
 - テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`（Pass）。
 - 感想: 運用上の注意点を共有できたので、手順の認識ズレを減らせそう。DOM移行残も引き続き整理予定。
 - E2E確認手順メモ（手動）: 挙動変更なし（運用メモ追記のみ）。***
+
+### 2025-12-xx 追加ログ（このターン-67）
+- 作業: device-managerでdummyをフィルタせず復元するようにし、再読込後もdummy配置を保持できるよう変更。バージョンを `v2.1.0-beta.146` に更新し、STATUS/NEXT/TEST_PLAN/REQUEST_ACTIONS_LOGを同期。
+- テスト: `node --check js/core/device-manager.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: 再読込時のdummy消失を防げたので、再接続後の再同期をしやすくなった。今後は再接続リカバリ導線の実装に進みやすい。
+- E2E確認手順メモ（手動）: 挙動変更なし（デバイスロード挙動のみ）。***
