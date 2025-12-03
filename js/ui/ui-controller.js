@@ -125,7 +125,7 @@ export function initUI() {
                 () => updateConnectionStatus(false), 
                 handleNotification
             );
-            updateConnectionStatus(!!connected);
+            updateConnectionStatus(true);
             if (connected) {
                 await autoSyncDevicesIfEnabled();
             }
