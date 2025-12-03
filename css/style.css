@@ -185,6 +185,9 @@ main { flex: 1; padding: 20px; overflow-y: auto; }
 .input-cell { width: 90%; padding: 10px; border: 1px solid #E1E5EA; border-radius: 8px; font-size: 15px; background: #FAFBFC; }
 .input-cell:focus { background: #fff; border-color: var(--primary-color); outline: none; }
 .input-start { width: 60px; text-align: center; font-weight: bold; color: var(--info-color); }
+.input-start.inline { height: 32px; border: 1px solid #E1E5EA; border-radius: 8px; background: #FAFBFC; padding: 4px 8px; font-size: 13px; font-weight: 600; color: var(--text-main); }
+.input-start.inline:focus { border-color: var(--primary-color); background: #fff; outline: none; }
+.input-start.inline::-webkit-inner-spin-button { margin-left: 4px; }
 
 /* --- DEVICES SCREEN --- */
 .device-settings-panel {
