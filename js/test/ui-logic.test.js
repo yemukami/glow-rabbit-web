@@ -40,7 +40,8 @@ global.document = {
             style: {}, 
             onclick: null,
             children: [],
-            querySelector: () => null
+            querySelector: () => null,
+            remove: () => {}
         };
     },
     querySelectorAll: () => [],
@@ -82,7 +83,7 @@ global.resetMock = () => {
 // Since we are running via 'node', we'll assume standard ES modules are enabled in package.json or use .mjs extension.
 // But here we will try to load them.
 
-import { initUI, updateConnectionStatus } from '../ui/ui-controller.js';
+import { initUI, updateConnectionStatus, connectBLEUi } from '../ui/ui-controller.js';
 import { races, loadRaces, saveRaces } from '../core/race-manager.js';
 import { markDeviceListDirty } from '../core/device-manager.js';
 
@@ -183,6 +184,18 @@ async function runTests() {
     } else {
         console.error("❌ FAIL: Disconnected status incorrect.", ble.innerHTML, btnConnect.innerHTML);
     }
+
+    // TEST 6: Connection Failure Path uses common flow
+    console.log("\n[Test 6] Connection Failure Rendering");
+    const originalRequest = navigator.bluetooth.requestDevice;
+    navigator.bluetooth.requestDevice = async () => { throw new Error("mock connect failure"); };
+    await connectBLEUi();
+    if (ble.innerHTML.includes('未接続') && btnConnect.innerHTML.includes('接続')) {
+        console.log("✅ PASS: Connection failure keeps disconnected status.");
+    } else {
+        console.error("❌ FAIL: Connection failure status incorrect.", ble.innerHTML, btnConnect.innerHTML);
+    }
+    navigator.bluetooth.requestDevice = originalRequest;
 }
 
 runTests().catch(e => console.error("TEST CRASHED:", e));
