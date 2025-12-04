@@ -40,7 +40,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.150'
+    APP_VERSION: 'v2.1.0-beta.151'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -123,6 +123,24 @@ async function checkDirtyAndSyncWithRender() {
     return result;
 }
 
+async function connectBLEUi() {
+    try {
+        const connected = await connectBLE(
+            () => updateConnectionStatus(false), 
+            handleNotification
+        );
+        const ok = connected === undefined ? !!isConnected : connected !== false;
+        updateConnectionStatus(ok);
+        if (ok) await autoSyncDevicesIfEnabled();
+        showConnectFeedback(ok);
+    } catch (e) {
+        console.error("[connectBLE] Failed:", e);
+        alert("BLE接続に失敗しました。近くで再試行してください。\n" + e.message);
+        updateConnectionStatus(false);
+        showConnectFeedback(false);
+    }
+}
+
 async function autoSyncDevicesIfEnabled() {
     if (!autoSyncOnConnect) return;
     try {
@@ -165,23 +183,7 @@ export function initUI() {
     
     // Bind Globals
     window.switchMode = switchMode;
-    window.connectBLE = async () => {
-        try {
-            const connected = await connectBLE(
-                () => updateConnectionStatus(false), 
-                handleNotification
-            );
-            const ok = connected === undefined ? !!isConnected : connected !== false;
-            updateConnectionStatus(ok);
-            if (ok) await autoSyncDevicesIfEnabled();
-            showConnectFeedback(ok);
-        } catch (e) {
-            console.error("[connectBLE] Failed:", e);
-            alert("BLE接続に失敗しました。近くで再試行してください。\n" + e.message);
-            updateConnectionStatus(false);
-            showConnectFeedback(false);
-        }
-    };
+    window.connectBLE = connectBLEUi;
     
     window.checkDirtyAndSync = checkDirtyAndSyncWithRender;
     
@@ -304,7 +306,7 @@ export function initUI() {
     const raceTbody = getRaceTableBody();
     attachRaceTableHandlers(raceTbody, {
         onToggleRow: toggleRow,
-        onConnect: connectBLE,
+        onConnect: connectBLEUi,
         onSync: syncRaceWrapper,
         onStart: startRaceWrapper,
         onStop: stopRaceWrapper,

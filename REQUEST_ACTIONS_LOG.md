@@ -13,6 +13,9 @@
 - START/同期/stopRunner/ペース送信まわりの変更を含む場合は、対応欄で「SYNC_START_SPEC順守（変更なし）」など明記。
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
 
+- 要求: ヘッダーと実行行の接続フロー差異を解消し、ログ/テスト/プッシュまで行うこと。
+  対応: ヘッダーと各行の接続ボタンが共通フロー（connectBLEUi）を通るよう統一し、接続/切断/自動同期の処理経路を一致させた（SYNC_START_SPEC順守・挙動変更なし）。バージョンをv2.1.0-beta.151に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
+
 - 要求: リファクタリングの優先度を考えつつ、接続/同期ステータスの共通化を進め、テスト/ログ/プッシュまで行うこと。
   対応: updateConnectionStatusをエクスポートし、ui-logicテストに接続成功/切断時のヘッダー＆バッジ更新を検証するケースを追加（SYNC_START_SPEC順守・挙動変更なし、バージョン据え置き）。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
 

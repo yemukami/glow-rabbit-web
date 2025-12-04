@@ -1,4 +1,4 @@
-# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.150)
+# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.151)
 
 ## Scope
 - Inline handler排除とデリゲーション化（Setup/Device UI）によるリファクタの安全確認
