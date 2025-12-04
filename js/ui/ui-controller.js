@@ -11,7 +11,7 @@ import { prepareRacePlans, sendInitialConfigs, syncRaceConfigs } from '../core/r
 import { clearEditingPace, clearRaceInterval, getEditingPaces, getElapsedTime, getExpandedRaceId, resetElapsedTime, setEditingPace, setElapsedTime, setExpandedRaceId, setRaceInterval, toggleExpandedRace } from './race-ui-state.js';
 import { attachRaceTableHandlers } from './race-table-events.js';
 import { markRaceUnsynced, markOtherRacesUnsynced } from './race-unsync-helpers.js';
-import { renderModalSegmentTable, renderSegmentTable } from './race-modal-renderer.js';
+import { renderModalSegmentTable, renderSegmentTable, addSegmentRow } from './race-modal-renderer.js';
 import { renderDeviceGridView, renderDeviceOverlayView } from './device-renderer.js';
 import { attachSetupTableHandlers } from './setup-table-events.js';
 import { renderSetupTable } from './setup-renderer.js';
@@ -208,6 +208,35 @@ function bindDeviceActions() {
     if (syncBtn) syncBtn.addEventListener('click', () => window.syncAllDevices());
 }
 
+function bindModalActions() {
+    document.querySelectorAll('.color-option[data-color]').forEach(el => {
+        el.addEventListener('click', () => selectModalColor(el.dataset.color));
+    });
+    const simpleTab = document.getElementById('tab-btn-simple');
+    const segTab = document.getElementById('tab-btn-segments');
+    if (simpleTab) simpleTab.addEventListener('click', () => switchModalTab('simple'));
+    if (segTab) segTab.addEventListener('click', () => switchModalTab('segments'));
+    const addSegBtn = document.getElementById('btn-add-segment');
+    if (addSegBtn) addSegBtn.addEventListener('click', () => {
+        const tbody = document.getElementById('segment-tbody');
+        addSegmentRow(tbody, "", "", updateSegmentSummaryFromDom);
+    });
+    const delBtn = document.getElementById('btn-modal-delete');
+    if (delBtn) delBtn.addEventListener('click', () => deletePacerFromModal());
+    const cancelBtn = document.getElementById('btn-modal-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', () => closeModal());
+    const saveBtn = document.getElementById('btn-modal-save');
+    if (saveBtn) saveBtn.addEventListener('click', () => saveModalData());
+    const versionOverlay = document.getElementById('modal-version');
+    if (versionOverlay) {
+        versionOverlay.addEventListener('click', (e) => {
+            if (e.target === versionOverlay) closeVersionModal();
+        });
+    }
+    const versionClose = document.getElementById('btn-version-close');
+    if (versionClose) versionClose.addEventListener('click', () => closeVersionModal());
+}
+
 export function initUI() {
     console.log("[Init] Starting UI Initialization...");
     
@@ -225,6 +254,7 @@ export function initUI() {
         bindHeaderEvents();
         bindSetupActions();
         bindDeviceActions();
+        bindModalActions();
     } catch (e) {
         console.error("[Init] Data Load Error:", e);
     }
@@ -580,7 +610,9 @@ async function syncRaceWrapper(id) {
         alert("対象レースが見つかりません。再読み込み後にやり直してください。");
         return;
     }
-    if (!r.pacers || r.pacers.length === 0) {
+    const pacerCount = (r.pacers || []).length;
+    console.log("[syncRaceWrapper] Start sync", { raceId: r.id, pacerCount });
+    if (pacerCount === 0) {
         alert("ペーサーが設定されていません。設定後に同期してください。");
         return;
     }

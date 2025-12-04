@@ -54,6 +54,12 @@
 - 感想: プレビュー確認のためのバージョン更新。次は設置同期→レース設定送信の不整合を引き続き調査する。
 - E2E確認手順メモ（手動）: なし（バージョン更新のみ）。
 
+### 2025-12-xx 追加ログ（モーダルリスナー化＋同期ログ追記）
+- 作業: モーダルの色選択/タブ/セグメント追加/保存・削除ボタン、バージョンモーダルをイベントリスナー化。レース設定送信ボタン押下時にraceIdとpacer数をログ出力するよう追加し、症状調査を容易にした。バージョンは `v2.1.0-beta.154` のまま。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: onclick依存をさらに減らし、pacer消失の有無を即座に確認できるログを追加。残りのonclick（checkboxのonchangeなど）も段階的に外す予定。
+- E2E確認手順メモ（手動）: レース設定送信前にコンソールでpacerCountログが出ることを確認し、モーダル操作（色選択/タブ切替/区間追加/保存/削除）が動作することを画面で確認する。従来の同期/START/STOPスモークも継続。
+
 ### 2025-12-xx 追加ログ（起動時エラー解消）
 - 作業: `ui-controller.js` の重複importで `renderRaceScreen` が二重定義になっていたSyntaxErrorを除去し、`connectBLE`がグローバルにバインドされる初期化が通るように修正。
 - テスト: `node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`（ともにPass）。ブラウザE2Eは未実施（接続環境後に実施予定）。

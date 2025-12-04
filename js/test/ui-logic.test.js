@@ -196,6 +196,17 @@ async function runTests() {
         console.error("❌ FAIL: Connection failure status incorrect.", ble.innerHTML, btnConnect.innerHTML);
     }
     navigator.bluetooth.requestDevice = originalRequest;
+
+    // TEST 7: Sync guard with pacers present
+    console.log("\n[Test 7] Sync with pacers does not show no-pacers guard");
+    races[0].pacers = [{ id: 1, color: 'red', pace: 60, currentDist: 0 }];
+    // syncRaceConfigs should succeed in dry run when pacer exists
+    const syncRes = await import('../core/race-sync-service.js').then(mod => mod.syncRaceConfigs(races[0], { dryRun: true }));
+    if (syncRes.ok) {
+        console.log("✅ PASS: syncRaceConfigs succeeds with pacer present.");
+    } else {
+        console.error("❌ FAIL: syncRaceConfigs failed with pacer present.", syncRes);
+    }
 }
 
 runTests().catch(e => console.error("TEST CRASHED:", e));
