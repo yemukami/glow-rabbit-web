@@ -18,6 +18,12 @@
 - 感想: jsdomでもdirty化の挙動が確認でき、抜け道検知の足場ができた。次は接続失敗/自動同期失敗パスのスタブ化を検討したい。
 - E2E確認手順メモ（手動）: dirty状態にした後でもヘッダーの設置同期バッジが「要設置同期」に変わることを画面上で確認する。従来の接続/同期/START/STOP確認も継続。
 
+### 2025-12-xx 追加ログ（接続表示のテスト追加）
+- 作業: updateConnectionStatusをエクスポートし、ui-logicテストに接続成功/切断時のヘッダー＆バッジ更新を確認するケースを追加（挙動変更なし、バージョン据え置き）。
+- テスト: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js`（Pass）。
+- 感想: 接続/切断パスの表示崩れをテストで検知できるようになった。残りは接続失敗/自動同期失敗のスタブ化を検討する。
+- E2E確認手順メモ（手動）: 接続成功/切断時にヘッダー表示・ボタン・設置同期バッジが更新されることを画面上で確認する。従来の手順も継続。
+
 ### 2025-12-xx 追加ログ（起動時エラー解消）
 - 作業: `ui-controller.js` の重複importで `renderRaceScreen` が二重定義になっていたSyntaxErrorを除去し、`connectBLE`がグローバルにバインドされる初期化が通るように修正。
 - テスト: `node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js`（ともにPass）。ブラウザE2Eは未実施（接続環境後に実施予定）。

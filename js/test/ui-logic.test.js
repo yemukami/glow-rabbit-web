@@ -44,7 +44,11 @@ global.document = {
         };
     },
     querySelectorAll: () => [],
-    querySelector: () => null,
+    querySelector: (sel) => {
+        if (!sel) return null;
+        const key = sel.startsWith('.') || sel.startsWith('#') ? sel.slice(1) : sel;
+        return global.document.getElementById(key);
+    },
     body: { appendChild: () => {} }
 };
 
@@ -78,7 +82,7 @@ global.resetMock = () => {
 // Since we are running via 'node', we'll assume standard ES modules are enabled in package.json or use .mjs extension.
 // But here we will try to load them.
 
-import { initUI } from '../ui/ui-controller.js';
+import { initUI, updateConnectionStatus } from '../ui/ui-controller.js';
 import { races, loadRaces, saveRaces } from '../core/race-manager.js';
 import { markDeviceListDirty } from '../core/device-manager.js';
 
@@ -98,6 +102,8 @@ async function runTests() {
     document.getElementById('setup-tbody'); 
     document.getElementById('device-sync-status');
     document.getElementById('screen-devices');
+    document.getElementById('ble-status');
+    document.getElementById('btn-connect');
 
     // Run Init
     initUI();
@@ -159,6 +165,23 @@ async function runTests() {
         console.log("✅ PASS: Dirty state updates device sync badge.");
     } else {
         console.error("❌ FAIL: Dirty state badge not updated.", badge.className, badge.textContent);
+    }
+
+    // TEST 5: Connection Status Rendering (success/failure)
+    console.log("\n[Test 5] Connection Status Rendering");
+    updateConnectionStatus(true);
+    const ble = document.getElementById('ble-status');
+    const btnConnect = document.getElementById('btn-connect');
+    if (ble.innerHTML.includes('接続完了') && btnConnect.innerHTML.includes('切断')) {
+        console.log("✅ PASS: Connected status rendered.");
+    } else {
+        console.error("❌ FAIL: Connected status incorrect.", ble.innerHTML, btnConnect.innerHTML);
+    }
+    updateConnectionStatus(false);
+    if (ble.innerHTML.includes('未接続') && btnConnect.innerHTML.includes('接続')) {
+        console.log("✅ PASS: Disconnected status rendered.");
+    } else {
+        console.error("❌ FAIL: Disconnected status incorrect.", ble.innerHTML, btnConnect.innerHTML);
     }
 }
 

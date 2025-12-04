@@ -833,3 +833,5 @@ function openDeviceActionMenu(i) {
 }
 
 // Device grid handlers moved to device-grid-events for clarity.
+
+export { updateConnectionStatus };
