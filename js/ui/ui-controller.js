@@ -195,17 +195,17 @@ function bindSetupActions() {
 
 function bindDeviceActions() {
     const fillBtn = document.getElementById('btn-fill-dummy');
-    if (fillBtn) fillBtn.addEventListener('click', () => fillWithDummy());
+    if (fillBtn) fillBtn.addEventListener('click', () => window.fillWithDummy());
     const downloadBtn = document.getElementById('btn-download-csv');
-    if (downloadBtn) downloadBtn.addEventListener('click', () => downloadCSV());
+    if (downloadBtn) downloadBtn.addEventListener('click', () => window.downloadCSV());
     const uploadBtn = document.getElementById('btn-upload-csv');
     const uploadInput = document.getElementById('csv-input');
     if (uploadBtn && uploadInput) uploadBtn.addEventListener('click', () => uploadInput.click());
-    if (uploadInput) uploadInput.addEventListener('change', (e) => importCSV(e.target));
+    if (uploadInput) uploadInput.addEventListener('change', (e) => window.importCSV(e.target));
     const clearBtn = document.getElementById('btn-clear-devices');
-    if (clearBtn) clearBtn.addEventListener('click', () => clearDeviceList());
+    if (clearBtn) clearBtn.addEventListener('click', () => window.clearDeviceList());
     const syncBtn = document.getElementById('btn-sync-devices');
-    if (syncBtn) syncBtn.addEventListener('click', () => syncAllDevices());
+    if (syncBtn) syncBtn.addEventListener('click', () => window.syncAllDevices());
 }
 
 export function initUI() {

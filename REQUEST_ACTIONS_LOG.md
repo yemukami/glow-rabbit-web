@@ -13,6 +13,9 @@
 - START/同期/stopRunner/ペース送信まわりの変更を含む場合は、対応欄で「SYNC_START_SPEC順守（変更なし）」など明記。
 - 不確定要素があれば「要人間確認」と書き、確認後に結果を追記。
 
+- 要求: リスナー化を進めつつ同期/接続フローの安全性を保ち、ログ/テスト/プッシュまで行うこと。
+  対応: ヘッダー接続/モード切替に加え設定/デバイス主要ボタンをイベントリスナー化し、デバイス同期ボタンは従来のガード付きフロー（window.syncAllDevices）経由で実行するよう修正。バージョンをv2.1.0-beta.153に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み（branch: refactor/event-listener-migration）。
+
 - 要求: クリックハンドラをイベントリスナー化しつつリファクタ優先度に沿って進め、ログ/テスト/プッシュまで行うこと。
   対応: ヘッダー接続ボタンとモード切替をonclickからイベントリスナーに移行し、共通フロー(connectBLEUi)に集約。バージョンをv2.1.0-beta.152に更新し、STATUS/NEXT/TEST_PLAN/TODAY/REQUEST_ACTIONS_LOGを同期（SYNC_START_SPEC順守・挙動変更なし）。`node --check js/ui/ui-controller.js`, `node js/test/ui-logic.test.js` を実行（Pass）。コミット/プッシュ済み。
 
