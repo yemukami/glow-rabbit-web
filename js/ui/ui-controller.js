@@ -40,7 +40,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.151'
+    APP_VERSION: 'v2.1.0-beta.152'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -163,6 +163,19 @@ function showConnectFeedback(ok) {
     }
 }
 
+function bindHeaderEvents() {
+    const connectBtn = document.getElementById('btn-connect');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', () => connectBLEUi());
+    }
+    const setupBtn = document.getElementById('btn-mode-setup');
+    const raceBtn = document.getElementById('btn-mode-race');
+    const devicesBtn = document.getElementById('btn-mode-devices');
+    if (setupBtn) setupBtn.addEventListener('click', () => switchMode('setup'));
+    if (raceBtn) raceBtn.addEventListener('click', () => switchMode('race'));
+    if (devicesBtn) devicesBtn.addEventListener('click', () => switchMode('devices'));
+}
+
 export function initUI() {
     console.log("[Init] Starting UI Initialization...");
     
@@ -177,6 +190,7 @@ export function initUI() {
         loadSettings();
         updateVersionDisplay(UI_CONSTANTS.APP_VERSION);
         renderDeviceSyncStatus();
+        bindHeaderEvents();
     } catch (e) {
         console.error("[Init] Data Load Error:", e);
     }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glow-Rabbit for Race v15 (Modular) - v2.1.0-beta.151</title>
+    <title>Glow-Rabbit for Race v15 (Modular) - v2.1.0-beta.152</title>
     <link rel="icon" href="image_c2633c.png" type="image/png">
     <link rel="stylesheet" href="css/style.css?v=2.0.1">
 </head>
@@ -12,16 +12,16 @@
 <header>
     <div class="header-left">
         <img src="image_c2633c.png" alt="Logo" class="logo-mark">
-                <div class="system-title">Glow-Rabbit for race<span class="version-inline">v2.1.0-beta.151</span></div>
+                <div class="system-title">Glow-Rabbit for race<span class="version-inline">v2.1.0-beta.152</span></div>
     </div>
     <div class="header-right">
         <div class="ble-status">● BLE未接続</div>
-        <button class="btn-sm btn-connect" onclick="connectBLE()">📡 接続</button>
-        <button class="btn-sm" style="border:none; background:transparent; font-size:18px; cursor:pointer;" onclick="openVersionModal()">⚙️</button>
+        <button class="btn-sm btn-connect" id="btn-connect">📡 接続</button>
+        <button class="btn-sm" id="btn-version" style="border:none; background:transparent; font-size:18px; cursor:pointer;" onclick="openVersionModal()">⚙️</button>
         <div class="mode-switch">
-            <button class="mode-btn" id="btn-mode-setup" onclick="switchMode('setup')">設定</button>
-            <button class="mode-btn active" id="btn-mode-race" onclick="switchMode('race')">実行</button>
-            <button class="mode-btn" id="btn-mode-devices" onclick="switchMode('devices')">設置</button>
+            <button class="mode-btn" id="btn-mode-setup">設定</button>
+            <button class="mode-btn active" id="btn-mode-race">実行</button>
+            <button class="mode-btn" id="btn-mode-devices">設置</button>
         </div>
     </div>
 </header>
