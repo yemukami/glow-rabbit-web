@@ -1,5 +1,5 @@
 import { races, saveRaces, loadRaces, addNewRace, getActiveRace, getRaceById } from '../core/race-manager.js';
-import { deviceList, deviceSettings, deviceInteraction, isDeviceListDirty, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSync, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
+import { deviceList, deviceSettings, deviceInteraction, isDeviceListDirty, markDeviceListDirty, loadDeviceList, updateSettings, addDeviceToList, swapDevices, replaceDevice, removeDevice, syncAllDevices, setDeviceToDummy, checkDirtyAndSyncState, fillRemainingWithDummy, saveDeviceList, isSyncing } from '../core/device-manager.js';
 import { connectBLE, isConnected, sendCommand } from '../ble/controller.js';
 import { BluetoothCommunity } from '../ble/protocol.js';
 import { PaceCalculator } from '../core/pace-calculator.js';
@@ -40,7 +40,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.154'
+    APP_VERSION: 'v2.1.0-beta.155'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -118,9 +118,19 @@ function showStartError(reason) {
 }
 
 async function checkDirtyAndSyncWithRender() {
-    const result = await checkDirtyAndSync();
+    const state = checkDirtyAndSyncState();
+    if (state.action === 'warn_unconnected') {
+        alert("BLE未接続です。同期は接続後に実施してください（今回は続行します）。");
+        renderDeviceSyncStatus();
+        return true;
+    }
+    if (state.action === 'needs_confirm') {
+        const ok = confirm("デバイスリストが変更されています。同期しますか？");
+        if (!ok) { renderDeviceSyncStatus(); return false; }
+        await syncAllDevices();
+    }
     renderDeviceSyncStatus();
-    return result;
+    return true;
 }
 
 async function connectBLEUi() {
@@ -260,98 +270,7 @@ export function initUI() {
     }
     
     // Bind Globals
-    window.switchMode = switchMode;
-    window.connectBLE = connectBLEUi;
-    
-    window.checkDirtyAndSync = checkDirtyAndSyncWithRender;
-    
-    // Setup
-    window.saveCompetitionTitle = saveCompetitionTitle;
-    window.addNewRow = addNewRow;
-    window.deleteRow = deleteRow;
-    window.openModal = openModal;
-    window.closeModal = closeModal;
-    window.selectModalColor = selectModalColor;
-    window.switchModalTab = switchModalTab;
-    window.saveModalData = saveModalData;
-    window.deletePacerFromModal = deletePacerFromModal;
-    window.updateData = updateData;
-    
-    // Race
-    window.toggleRow = toggleRow;
-    window.startRaceWrapper = startRaceWrapper;
-    window.syncRaceWrapper = syncRaceWrapper;
-    window.stopRaceWrapper = stopRaceWrapper;
-    window.finalizeRace = finalizeRace;
-    window.resetRace = resetRace;
-    window.updateStartPos = updateStartPos;
-    
-    window.startEditing = startEditing;
-    window.updateEditValue = updateEditValue;
-    window.adjustPace = adjustPace;
-    window.cancelPace = cancelPace;
-    window.commitPace = commitPace;
-    
-    window.closeVersionModal = closeVersionModal;
-    window.openVersionModal = openVersionModal;
-    window.toggleAutoSyncOnConnect = (checked) => setAutoSyncOnConnect(checked);
-    window.toggleConnectDialog = (checked) => setShowConnectDialog(checked);
-
-    // Devices
-    window.updateRaceSettings = (d, i) => { updateSettings(d, i); renderDeviceList(); };
-    window.fillWithDummy = fillWithDummy;
-    window.clearDeviceList = () => { 
-        if(confirm('全デバイスを削除してもよいですか？')) { 
-            deviceList.length = 0; 
-            markDeviceListDirty(true);
-            saveDeviceList();
-            renderDeviceList(); 
-        } 
-    };
-    window.syncAllDevices = async () => {
-        if (!requireConnection('デバイス同期')) return;
-        const expandedRaceId = getExpandedRaceId();
-        const r = getRaceById(expandedRaceId);
-        if (r && r.pacers && r.pacers.length > 0) {
-            const res = await syncRaceConfigs(r, { dryRun: false });
-            if (res.ok) { saveRaces(); }
-        }
-        try {
-            if(await syncAllDevices()) alert('同期完了');
-        } finally {
-            renderDeviceSyncStatus();
-        }
-    };
-    window.downloadCSV = downloadCSV;
-    window.importCSV = importCSV;
-    
-    window.openDeviceActionMenu = openDeviceActionMenu;
-    window.triggerStartReplace = startReplaceMode;
-    window.triggerStartSwap = startSwapMode;
-    window.triggerBlink = testBlinkDevice;
-    window.triggerDummy = (i) => { setDeviceToDummy(i); renderDeviceList(); };
-    window.triggerRemove = (i) => { removeDevice(i); renderDeviceList(); };
-    window.triggerMoveUp = (i) => { /* Need move logic in manager */ alert('Move Up Not Implemented yet'); };
-    window.triggerMoveDown = (i) => { /* Need move logic in manager */ alert('Move Down Not Implemented yet'); };
-    window.triggerReplace = (i) => { 
-        // Manual Replace Logic
-        const newMac = prompt("MAC Address?");
-        if(newMac) { 
-            const res = replaceDevice(i, newMac); 
-            if (!res || res.ok === false) {
-                if (res && res.reason === 'duplicate') {
-                    alert(`Duplicate MAC at position ${res.index + 1}. Replacement aborted.`);
-                } else {
-                    alert('Invalid MAC. Please enter 12 hex digits (e.g., AA:BB:CC:DD:EE:FF).');
-                }
-            } else {
-                renderDeviceList(); 
-            }
-        }
-    };
-
-    window.cancelReplace = cancelReplace;
-    window.confirmReplace = confirmReplace;
+    // No window bindings: all interactions are now event listeners or module calls
 
     console.log("[Init] Globals bound. Switching mode...");
 
@@ -804,9 +723,7 @@ function updateSegmentSummaryFromDom() {
 }
 
 // Fallback global bindings in case initUI fails early
-if (typeof window !== 'undefined') {
-    window.switchModalTab = window.switchModalTab || switchModalTab;
-}
+// Removed: no window bindings
 
 function renderDeviceList() {
     renderDeviceGridView(

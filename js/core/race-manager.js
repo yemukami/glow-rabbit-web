@@ -1,5 +1,5 @@
-export let races = [];
-export let activeRaceId = null;
+let races = [];
+let activeRaceId = null;
 
 export function setActiveRaceId(id) {
     activeRaceId = id;
@@ -49,4 +49,9 @@ export function loadRaces() {
 
 export function saveRaces() {
     localStorage.setItem('glow_races', JSON.stringify(races));
+}
+
+// Expose read-only snapshot for external usages if needed
+export function getRacesSnapshot() {
+    return races.map(r => ({ ...r }));
 }

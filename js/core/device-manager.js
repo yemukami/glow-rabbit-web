@@ -207,15 +207,10 @@ export function fillRemainingWithDummy() {
     saveDeviceList();
 }
 
-export async function checkDirtyAndSync() {
-    if (!isListDirty) return true;
+export function checkDirtyAndSyncState() {
+    if (!isListDirty) return { ok: true, action: 'skip' };
     if (!isConnected) {
-        alert("BLE未接続です。同期は接続後に実施してください（今回は続行します）。");
-        return true;
+        return { ok: true, action: 'warn_unconnected' };
     }
-    if (confirm("デバイスリストが変更されています。同期しますか？")) {
-        await syncAllDevices();
-        return true;
-    }
-    return false;
+    return { ok: false, action: 'needs_confirm' };
 }
