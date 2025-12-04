@@ -17,7 +17,7 @@
     <div class="header-right">
         <div class="ble-status">● BLE未接続</div>
         <button class="btn-sm btn-connect" id="btn-connect">📡 接続</button>
-        <button class="btn-sm" id="btn-version" style="border:none; background:transparent; font-size:18px; cursor:pointer;" onclick="openVersionModal()">⚙️</button>
+        <button class="btn-sm" id="btn-version" style="border:none; background:transparent; font-size:18px; cursor:pointer;">⚙️</button>
         <div class="mode-switch">
             <button class="mode-btn" id="btn-mode-setup">設定</button>
             <button class="mode-btn active" id="btn-mode-race">実行</button>
@@ -35,10 +35,10 @@
                     <input type="text" class="title-input" id="competition-title" value="第74回山形県長距離記録会" onchange="saveCompetitionTitle(this.value)">
                 </div>
                 <div class="setup-btn-group">
-                    <button class="btn-sm btn-outline" onclick="alert('CSV読込')">📂 CSV読込</button>
-                    <button class="btn-sm btn-outline" onclick="alert('履歴呼び出し')">📋 履歴</button>
-                    <button class="btn-sm btn-outline" onclick="alert('履歴から新規')">📑 コピー新規</button>
-                    <button class="btn-sm btn-danger" onclick="if(confirm('全レースをクリアしますか？')){clearRaces();}">🗑 クリア</button>
+                    <button class="btn-sm btn-outline" id="btn-setup-csv-load">📂 CSV読込</button>
+                    <button class="btn-sm btn-outline" id="btn-setup-history">📋 履歴</button>
+                    <button class="btn-sm btn-outline" id="btn-setup-copy">📑 コピー新規</button>
+                    <button class="btn-sm btn-danger" id="btn-clear-races">🗑 クリア</button>
                 </div>
             </div>
         </div>
@@ -52,7 +52,7 @@
             </thead>
             <tbody id="setup-tbody"></tbody>
         </table>
-        <button class="btn-add-new" onclick="addNewRow()">＋ 新しいレースを作成</button>
+        <button class="btn-add-new" id="btn-add-new">＋ 新しいレースを作成</button>
     </div>
 
     <div id="screen-race" class="screen active">
@@ -87,12 +87,12 @@
                 </select>
             </div>
             <div style="flex:1; display:flex; justify-content:flex-end; gap:10px; padding-bottom:5px;">
-                <button class="btn-sm btn-outline" onclick="fillWithDummy()">＋ 残りをダミーで埋める</button>
-                <button class="btn-sm btn-outline" onclick="downloadCSV()">⬇ CSV出力</button>
-                <button class="btn-sm btn-outline" onclick="document.getElementById('csv-input').click()">⬆ CSV取込</button>
+                <button class="btn-sm btn-outline" id="btn-fill-dummy">＋ 残りをダミーで埋める</button>
+                <button class="btn-sm btn-outline" id="btn-download-csv">⬇ CSV出力</button>
+                <button class="btn-sm btn-outline" id="btn-upload-csv">⬆ CSV取込</button>
                 <input type="file" id="csv-input" style="display:none" onchange="importCSV(this)" accept=".csv">
-                <button class="btn-sm btn-danger" onclick="clearDeviceList()">🗑 全削除</button>
-                <button class="btn-sm btn-primary" onclick="syncAllDevices()">🔄 同期</button>
+                <button class="btn-sm btn-danger" id="btn-clear-devices">🗑 全削除</button>
+                <button class="btn-sm btn-primary" id="btn-sync-devices">🔄 同期</button>
             </div>
         </div>
 

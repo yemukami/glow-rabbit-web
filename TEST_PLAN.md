@@ -1,4 +1,4 @@
-# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.151)
+# Test Plan - Renderer/Delegation Cleanup (v2.1.0-beta.153)
 
 ## Scope
 - Inline handler排除とデリゲーション化（Setup/Device UI）によるリファクタの安全確認
@@ -35,6 +35,7 @@
 
 ## Results
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js` (Pass、デバイス同期バッジ・接続表示・接続失敗パスのテスト追加)  
+- 2025-12-xx: `node --check js/ui/ui-controller.js`; `node js/test/ui-logic.test.js` (Pass、ヘッダー接続/モード切替のリスナー化後も起動確認)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/replace-modal-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-view.js`; `node js/test/ui-logic.test.js` (Pass)  
 - 2025-12-xx: `node --check js/ui/ui-controller.js`; `node --check js/ui/race-modal-renderer.js`; `node js/test/ui-logic.test.js` (Pass)  

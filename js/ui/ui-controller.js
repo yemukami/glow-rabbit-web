@@ -40,7 +40,7 @@ const UI_CONSTANTS = {
     FINISH_MARGIN_METERS: 50,
     PRESEND_MARGIN_METERS: 10,
     UPDATE_INTERVAL_MS: 100,
-    APP_VERSION: 'v2.1.0-beta.152'
+    APP_VERSION: 'v2.1.0-beta.153'
 };
 
 function formatDisplayPaceLabel(rawPace) {
@@ -168,12 +168,44 @@ function bindHeaderEvents() {
     if (connectBtn) {
         connectBtn.addEventListener('click', () => connectBLEUi());
     }
+    const versionBtn = document.getElementById('btn-version');
+    if (versionBtn) versionBtn.addEventListener('click', () => openVersionModal());
     const setupBtn = document.getElementById('btn-mode-setup');
     const raceBtn = document.getElementById('btn-mode-race');
     const devicesBtn = document.getElementById('btn-mode-devices');
     if (setupBtn) setupBtn.addEventListener('click', () => switchMode('setup'));
     if (raceBtn) raceBtn.addEventListener('click', () => switchMode('race'));
     if (devicesBtn) devicesBtn.addEventListener('click', () => switchMode('devices'));
+}
+
+function bindSetupActions() {
+    const addBtn = document.getElementById('btn-add-new');
+    if (addBtn) addBtn.addEventListener('click', () => addNewRow());
+    const clearBtn = document.getElementById('btn-clear-races');
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (confirm('全レースをクリアしますか？')) clearRaces();
+    });
+    const csvLoad = document.getElementById('btn-setup-csv-load');
+    if (csvLoad) csvLoad.addEventListener('click', () => alert('CSV読込'));
+    const historyBtn = document.getElementById('btn-setup-history');
+    if (historyBtn) historyBtn.addEventListener('click', () => alert('履歴呼び出し'));
+    const copyBtn = document.getElementById('btn-setup-copy');
+    if (copyBtn) copyBtn.addEventListener('click', () => alert('履歴から新規'));
+}
+
+function bindDeviceActions() {
+    const fillBtn = document.getElementById('btn-fill-dummy');
+    if (fillBtn) fillBtn.addEventListener('click', () => fillWithDummy());
+    const downloadBtn = document.getElementById('btn-download-csv');
+    if (downloadBtn) downloadBtn.addEventListener('click', () => downloadCSV());
+    const uploadBtn = document.getElementById('btn-upload-csv');
+    const uploadInput = document.getElementById('csv-input');
+    if (uploadBtn && uploadInput) uploadBtn.addEventListener('click', () => uploadInput.click());
+    if (uploadInput) uploadInput.addEventListener('change', (e) => importCSV(e.target));
+    const clearBtn = document.getElementById('btn-clear-devices');
+    if (clearBtn) clearBtn.addEventListener('click', () => clearDeviceList());
+    const syncBtn = document.getElementById('btn-sync-devices');
+    if (syncBtn) syncBtn.addEventListener('click', () => syncAllDevices());
 }
 
 export function initUI() {
@@ -191,6 +223,8 @@ export function initUI() {
         updateVersionDisplay(UI_CONSTANTS.APP_VERSION);
         renderDeviceSyncStatus();
         bindHeaderEvents();
+        bindSetupActions();
+        bindDeviceActions();
     } catch (e) {
         console.error("[Init] Data Load Error:", e);
     }
