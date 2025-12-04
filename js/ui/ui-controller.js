@@ -186,6 +186,8 @@ function bindHeaderEvents() {
     if (setupBtn) setupBtn.addEventListener('click', () => switchMode('setup'));
     if (raceBtn) raceBtn.addEventListener('click', () => switchMode('race'));
     if (devicesBtn) devicesBtn.addEventListener('click', () => switchMode('devices'));
+    const titleInput = document.getElementById('competition-title');
+    if (titleInput) titleInput.addEventListener('change', (e) => saveCompetitionTitle(e.target.value));
 }
 
 function bindSetupActions() {
@@ -216,6 +218,10 @@ function bindDeviceActions() {
     if (clearBtn) clearBtn.addEventListener('click', () => window.clearDeviceList());
     const syncBtn = document.getElementById('btn-sync-devices');
     if (syncBtn) syncBtn.addEventListener('click', () => window.syncAllDevices());
+    const distInput = document.getElementById('setting-distance');
+    if (distInput) distInput.addEventListener('change', (e) => updateRaceSettings(e.target.value, null));
+    const intervalSelect = document.getElementById('setting-interval');
+    if (intervalSelect) intervalSelect.addEventListener('change', (e) => updateRaceSettings(null, e.target.value));
 }
 
 function bindModalActions() {

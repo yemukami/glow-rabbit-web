@@ -32,7 +32,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="flex:1; margin-right:20px;">
                     <label style="font-size:11px; color:#8E8E93; display:block; margin-bottom:2px;">大会名</label>
-                    <input type="text" class="title-input" id="competition-title" value="第74回山形県長距離記録会" onchange="saveCompetitionTitle(this.value)">
+                    <input type="text" class="title-input" id="competition-title" value="第74回山形県長距離記録会">
                 </div>
                 <div class="setup-btn-group">
                     <button class="btn-sm btn-outline" id="btn-setup-csv-load">📂 CSV読込</button>
@@ -75,11 +75,11 @@
         <div class="device-settings-panel">
             <div class="setting-group">
                 <label class="setting-label">総距離 (m)</label>
-                <input type="number" id="setting-distance" class="setting-input" value="400" step="100" onchange="updateRaceSettings(this.value, null)">
+                <input type="number" id="setting-distance" class="setting-input" value="400" step="100">
             </div>
             <div class="setting-group">
                 <label class="setting-label">間隔 (m)</label>
-                <select id="setting-interval" class="setting-select" onchange="updateRaceSettings(null, this.value)">
+                <select id="setting-interval" class="setting-select">
                     <option value="1">1m</option>
                     <option value="2" selected>2m</option>
                     <option value="4">4m</option>
@@ -90,7 +90,7 @@
                 <button class="btn-sm btn-outline" id="btn-fill-dummy">＋ 残りをダミーで埋める</button>
                 <button class="btn-sm btn-outline" id="btn-download-csv">⬇ CSV出力</button>
                 <button class="btn-sm btn-outline" id="btn-upload-csv">⬆ CSV取込</button>
-                <input type="file" id="csv-input" style="display:none" onchange="importCSV(this)" accept=".csv">
+                <input type="file" id="csv-input" style="display:none" accept=".csv">
                 <button class="btn-sm btn-danger" id="btn-clear-devices">🗑 全削除</button>
                 <button class="btn-sm btn-primary" id="btn-sync-devices">🔄 同期</button>
             </div>
