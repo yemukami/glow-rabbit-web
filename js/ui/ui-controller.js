@@ -207,17 +207,17 @@ function bindSetupActions() {
 
 function bindDeviceActions() {
     const fillBtn = document.getElementById('btn-fill-dummy');
-    if (fillBtn) fillBtn.addEventListener('click', () => window.fillWithDummy());
+    if (fillBtn) fillBtn.addEventListener('click', () => fillWithDummy());
     const downloadBtn = document.getElementById('btn-download-csv');
-    if (downloadBtn) downloadBtn.addEventListener('click', () => window.downloadCSV());
+    if (downloadBtn) downloadBtn.addEventListener('click', () => downloadCSV());
     const uploadBtn = document.getElementById('btn-upload-csv');
     const uploadInput = document.getElementById('csv-input');
     if (uploadBtn && uploadInput) uploadBtn.addEventListener('click', () => uploadInput.click());
-    if (uploadInput) uploadInput.addEventListener('change', (e) => window.importCSV(e.target));
+    if (uploadInput) uploadInput.addEventListener('change', (e) => importCSV(e.target));
     const clearBtn = document.getElementById('btn-clear-devices');
-    if (clearBtn) clearBtn.addEventListener('click', () => window.clearDeviceList());
+    if (clearBtn) clearBtn.addEventListener('click', () => clearDeviceListUi());
     const syncBtn = document.getElementById('btn-sync-devices');
-    if (syncBtn) syncBtn.addEventListener('click', () => window.syncAllDevices());
+    if (syncBtn) syncBtn.addEventListener('click', () => syncAllDevicesUi());
     const distInput = document.getElementById('setting-distance');
     if (distInput) distInput.addEventListener('change', (e) => updateRaceSettings(e.target.value, null));
     const intervalSelect = document.getElementById('setting-interval');
@@ -730,6 +730,30 @@ function updateSegmentSummaryFromDom() {
 
 // Fallback global bindings in case initUI fails early
 // Removed: no window bindings
+
+function clearDeviceListUi() {
+    if(confirm('全デバイスを削除してもよいですか？')) { 
+        deviceList.length = 0; 
+        markDeviceListDirty(true);
+        saveDeviceList();
+        renderDeviceList(); 
+    } 
+}
+
+async function syncAllDevicesUi() {
+    if (!requireConnection('デバイス同期')) return;
+    const expandedRaceId = getExpandedRaceId();
+    const r = getRaceById(expandedRaceId);
+    if (r && r.pacers && r.pacers.length > 0) {
+        const res = await syncRaceConfigs(r, { dryRun: false });
+        if (res.ok) { saveRaces(); }
+    }
+    try {
+        if(await syncAllDevices()) alert('同期完了');
+    } finally {
+        renderDeviceSyncStatus();
+    }
+}
 
 function renderDeviceList() {
     renderDeviceGridView(
